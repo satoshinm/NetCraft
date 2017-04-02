@@ -2607,19 +2607,6 @@ int main(int argc, char **argv) {
     // INITIALIZATION //
 #ifndef __EMSCRIPTEN__
     curl_global_init(CURL_GLOBAL_DEFAULT);
-#else
-    EM_ASM(
-        document.addEventListener('keydown', (e) => {
-            // Blacklisted keystrokes - used in game, not for browser
-            // TODO: add more as needed. dynamically add all CRAFT_KEY_?
-            if ([32, // space
-                37,39,38,40, // left,right,up,down
-                ].includes(e.keyCode)) {
-                // Prevent browser default action, so for example, space doesn't both jump and page down
-                e.preventDefault();
-            }
-        });
-    );
 #endif
     srand(time(NULL));
     rand();
