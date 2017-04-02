@@ -5,6 +5,7 @@
 #endif
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 #endif
 #include <math.h>
 #include <stdio.h>
@@ -2603,10 +2604,20 @@ static GLuint sky_buffer;
 static int g_running;
 static int g_inner_break;
 
+#ifdef __EMSCRIPTEN__
+EM_BOOL browser_keydown_cb(int eventType, const EmscriptenKeyboardEvent *event, void *userData) {
+    fprintf(stderr, "browser_keydown, g->typing=%d\n", g->typing);
+    // TODO: this doesn't usefully detect if should cancel the event
+    return 1;
+}
+#endif
+
 int main(int argc, char **argv) {
     // INITIALIZATION //
 #ifndef __EMSCRIPTEN__
     curl_global_init(CURL_GLOBAL_DEFAULT);
+#else
+    emscripten_set_keydown_callback(NULL, NULL, 0, browser_keydown_cb);
 #endif
     srand(time(NULL));
     rand();
