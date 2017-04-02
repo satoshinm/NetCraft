@@ -1,8 +1,16 @@
-## Craft
+## NetCraft
 
 Minecraft clone for Windows, Mac OS X and Linux. Just a few thousand lines of C using modern OpenGL (shaders). Online multiplayer support is included using a Python-based server.
 
+Based on Michael Fogleman's [Craft](https://github.com/fogleman/Craft):
+
 http://www.michaelfogleman.com/craft/
+
+Supports running in a web browser (using emscripten):
+
+![Screenshot](http://i.imgur.com/Fw2wQL7.png)
+
+and also natively, as with the original Craft:
 
 ![Screenshot](http://i.imgur.com/SH7wcas.png)
 
