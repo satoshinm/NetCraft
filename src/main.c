@@ -2607,6 +2607,17 @@ int main(int argc, char **argv) {
     // INITIALIZATION //
 #ifndef __EMSCRIPTEN__
     curl_global_init(CURL_GLOBAL_DEFAULT);
+#else
+    EM_ASM(
+        document.addEventListener('keydown', (e) => {
+            // Command, R, and L - let these through to allow reloading and focusing address bar (browser chrome)
+            // TODO: instead, blacklist only keys we recognize in game?
+            if ([91,82,76].includes(e.keyCode)) return;
+
+            // Prevent browser default action, so for example, space doesn't both jump and page down
+            e.preventDefault();
+        });
+    );
 #endif
     srand(time(NULL));
     rand();
