@@ -170,7 +170,7 @@ float time_of_day() {
         return 0.5;
     }
     float t;
-    t = glfwGetTime();
+    t = glfwGetTime() + g->day_length/1.5;
     t = t / g->day_length;
     t = t - (int)t;
     return t;
