@@ -2589,6 +2589,9 @@ void reset_model() {
 }
 
 void one_iter();
+int main_init();
+void main_shutdown();
+// TODO: move to g? or?
 static FPS fps = {0, 0, 0};
 static double last_commit;
 static double last_update;
@@ -2747,7 +2750,38 @@ int main(int argc, char **argv) {
 
     // OUTER LOOP //
     g_running = 1;
+#ifdef __EMSCRIPTEN__
+    if (main_init() != 0) {
+        fprintf(stderr, "main_init failed");
+        return -1;
+    }
+    emscripten_set_main_loop(one_iter, 60, 1);
+    glfwSwapInterval(VSYNC);
+    //main_shutdown(); // called in one_iter() if g_inner_break
+#else
     while (g_running) {
+        if (main_init() != 0) {
+            fprintf(stderr, "main_init failed");
+            return -1;
+        }
+        glfwSwapInterval(VSYNC);
+        g_inner_break = 0;
+        while (1) {
+            one_iter();
+            if (g_inner_break) break;
+        }
+        main_shutdown();
+    }
+#endif
+
+    glfwTerminate();
+#ifndef __EMSCRIPTEN__
+    curl_global_cleanup();
+#endif
+    return 0;
+}
+
+int main_init() {
         // DATABASE INITIALIZATION //
         if (g->mode == MODE_OFFLINE || USE_CACHE) {
             db_enable();
@@ -2792,17 +2826,11 @@ int main(int argc, char **argv) {
 
         // BEGIN MAIN LOOP //
         previous = glfwGetTime();
-#ifdef __EMSCRIPTEN__
-        emscripten_set_main_loop(one_iter, 60, 1);
-#else
-        glfwSwapInterval(VSYNC);
-        g_inner_break = 0;
-        while (1) {
-            one_iter();
-            if (g_inner_break) break;
-        }
-#endif
 
+    return 0;
+}
+
+void main_shutdown() {
         // SHUTDOWN //
         db_save_state(s->x, s->y, s->z, s->rx, s->ry);
         db_close();
@@ -2812,14 +2840,8 @@ int main(int argc, char **argv) {
         del_buffer(sky_buffer);
         delete_all_chunks();
         delete_all_players();
-    }
-
-    glfwTerminate();
-#ifndef __EMSCRIPTEN__
-    curl_global_cleanup();
-#endif
-    return 0;
 }
+
 
 void one_iter() {
             // WINDOW SIZE AND SCALE //
@@ -2992,5 +3014,12 @@ void one_iter() {
                 g->mode_changed = 0;
                 g_inner_break = 1;
             }
+
+#ifdef __EMSCRIPTEN__
+    if (g_inner_break) {
+        main_shutdown();
+        main_init();
+    }
+#endif
 }
 
