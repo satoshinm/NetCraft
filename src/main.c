@@ -2589,7 +2589,7 @@ void reset_model() {
 }
 
 void one_iter();
-int main_init();
+void main_init(void *);
 void main_shutdown();
 // TODO: move to g? or?
 static FPS fps = {0, 0, 0};
@@ -2751,18 +2751,12 @@ int main(int argc, char **argv) {
     // OUTER LOOP //
     g_running = 1;
 #ifdef __EMSCRIPTEN__
-    if (main_init() != 0) {
-        fprintf(stderr, "main_init failed");
-        return -1;
-    }
+    emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
+    emscripten_set_main_loop(one_iter, 0, 1);
     //main_shutdown(); // called in one_iter() if g_inner_break
 #else
     while (g_running) {
-        if (main_init() != 0) {
-            fprintf(stderr, "main_init failed");
-            return -1;
-        }
-        glfwSwapInterval(VSYNC);
+        main_init(NULL);
         g_inner_break = 0;
         while (1) {
             one_iter();
@@ -2798,12 +2792,13 @@ void client_socket_error(int fd, int err, const char *msg, void *userData) {
     // TODO: handle error
 }
 
-int main_init() {
+void main_init(void *unused) {
         // DATABASE INITIALIZATION //
         if (g->mode == MODE_OFFLINE || USE_CACHE) {
             db_enable();
             if (db_init(g->db_path)) {
-                return -1;
+                fprintf(stderr, "fatal error: db_init failed!\n");
+                exit(-1);
             }
             if (g->mode == MODE_ONLINE) {
                 // TODO: support proper caching of signs (handle deletions)
@@ -2827,7 +2822,7 @@ int main_init() {
         } else {
             main_inited();
         }
-        return 0;
+    fprintf(stderr, "main_init returning, so main loop should now be unblocked\n");
 }
 
 void main_inited() {
@@ -2854,9 +2849,6 @@ void main_inited() {
 
         // BEGIN MAIN LOOP //
         previous = glfwGetTime();
-
-    emscripten_set_main_loop(one_iter, 0, 1);
-    glfwSwapInterval(VSYNC);
 }
 
 void main_shutdown() {
@@ -2876,6 +2868,7 @@ void main_shutdown() {
 
 
 void one_iter() {
+    glfwSwapInterval(VSYNC);
             // WINDOW SIZE AND SCALE //
             g->scale = get_scale_factor();
             glfwGetFramebufferSize(g->window, &g->width, &g->height);
@@ -3051,8 +3044,9 @@ void one_iter() {
 
 #ifdef __EMSCRIPTEN__
     if (g_inner_break) {
+        fprintf(stderr, "g_inner_break=true so shutting down and re-main_init\n");
         main_shutdown();
-        main_init();
+        main_init(NULL);
     }
 #endif
 }
