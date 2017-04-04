@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "client.h"
 #include "tinycthread.h"
 
@@ -152,6 +153,22 @@ void client_talk(const char *text) {
     client_send(buffer);
 }
 
+#ifdef __EMSCRIPTEN__
+void client_message(int fd, void *userData) {
+    fprintf(stderr, "client_message callback %d\n", fd);
+
+    char buf[4096];
+    int len = recv(fd, &buf, sizeof(buf), 0);
+
+    fprintf(stderr, "read %d bytes\n", len);
+    if (len == -1) return;
+
+    buf[len] = 0;
+
+    void (*parse_buffer)(char *) = userData;
+    parse_buffer(buf);
+}
+#else
 char *client_recv() {
     if (!client_enabled) {
         return 0;
@@ -208,6 +225,7 @@ int recv_worker(void *arg) {
     free(data);
     return 0;
 }
+#endif
 
 void client_connect(char *hostname, int port) {
     if (!client_enabled) {
@@ -228,6 +246,10 @@ void client_connect(char *hostname, int port) {
         exit(1);
     }
     if (connect(sd, (struct sockaddr *)&address, sizeof(address)) == -1) {
+#ifdef __EMSCRIPTEN__
+        // Websockets are async, so connect() always returns EINPROGRESS
+        if (errno == EINPROGRESS) return;
+#endif
         perror("connect");
         exit(1);
     }
@@ -240,11 +262,13 @@ void client_start() {
     running = 1;
     queue = (char *)calloc(QUEUE_SIZE, sizeof(char));
     qsize = 0;
+#ifndef __EMSCRIPTEN__ // emscripten gets async message callbacks instead, no receiver thread
     mtx_init(&mutex, mtx_plain);
     if (thrd_create(&recv_thread, recv_worker, NULL) != thrd_success) {
         perror("thrd_create");
         exit(1);
     }
+#endif
 }
 
 void client_stop() {

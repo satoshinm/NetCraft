@@ -2755,8 +2755,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "main_init failed");
         return -1;
     }
-    emscripten_set_main_loop(one_iter, 60, 1);
-    glfwSwapInterval(VSYNC);
     //main_shutdown(); // called in one_iter() if g_inner_break
 #else
     while (g_running) {
@@ -2781,6 +2779,33 @@ int main(int argc, char **argv) {
     return 0;
 }
 
+void main_inited();
+
+void client_opened(int fd, void *userData) {
+    fprintf(stderr, "client_opened: %d %p\n", fd, userData);
+    client_start();
+    client_version(1);
+    login();
+    main_inited();
+}
+
+void client_connected(int fd, void *userData) {
+    fprintf(stderr, "client_connected\n");
+}
+
+void client_listened(int fd, void *userData) {
+    fprintf(stderr, "client_listened\n");
+}
+
+void client_closed(int fd, void *userData) {
+    fprintf(stderr, "client_closed\n");
+}
+
+void client_socket_error(int fd, int err, const char *msg, void *userData) {
+    fprintf(stderr, "client_socket_error: fd=%d, err=%d, msg=%s, userData=%p\n", fd, err, msg, userData);
+    // TODO: handle error
+}
+
 int main_init() {
         // DATABASE INITIALIZATION //
         if (g->mode == MODE_OFFLINE || USE_CACHE) {
@@ -2797,12 +2822,25 @@ int main_init() {
         // CLIENT INITIALIZATION //
         if (g->mode == MODE_ONLINE) {
             client_enable();
+#ifdef __EMSCRIPTEN__
+            emscripten_set_socket_error_callback("error", client_socket_error);
+            emscripten_set_socket_open_callback("open", client_opened);
+            emscripten_set_socket_listen_callback("listen", client_listened);
+            emscripten_set_socket_connection_callback("connection", client_connected);
+            emscripten_set_socket_message_callback(parse_buffer, client_message);
+            emscripten_set_socket_close_callback("close", client_closed);
             client_connect(g->server_addr, g->server_port);
-            client_start();
-            client_version(1);
-            login();
+#else
+            client_connect(g->server_addr, g->server_port);
+            client_connected(-1, NULL);
+#endif
+        } else {
+            main_inited();
         }
+        return 0;
+}
 
+void main_inited() {
         // LOCAL VARIABLES //
         reset_model();
         //FPS fps = {0, 0, 0};
@@ -2827,7 +2865,8 @@ int main_init() {
         // BEGIN MAIN LOOP //
         previous = glfwGetTime();
 
-    return 0;
+    emscripten_set_main_loop(one_iter, 60, 1);
+    glfwSwapInterval(VSYNC);
 }
 
 void main_shutdown() {
@@ -2840,6 +2879,9 @@ void main_shutdown() {
         del_buffer(sky_buffer);
         delete_all_chunks();
         delete_all_players();
+#ifdef __EMSCRIPTEN__
+    emscripten_cancel_main_loop();
+#endif
 }
 
 
@@ -2869,12 +2911,14 @@ void one_iter() {
             // HANDLE MOVEMENT //
             handle_movement(dt);
 
+#ifndef __EMSCRIPTEN__ // emscripten uses the client_message callback instead
             // HANDLE DATA FROM SERVER //
             char *buffer = client_recv();
             if (buffer) {
                 parse_buffer(buffer);
                 free(buffer);
             }
+#endif
 
             // FLUSH DATABASE //
             if (now - last_commit > COMMIT_INTERVAL) {

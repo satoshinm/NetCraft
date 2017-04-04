@@ -14,6 +14,7 @@ void client_connect(char *hostname, int port);
 void client_start();
 void client_stop();
 void client_send(char *data);
+void client_message(int fd, void *userData);
 char *client_recv();
 void client_version(int version);
 void client_login(const char *username, const char *identity_token);
