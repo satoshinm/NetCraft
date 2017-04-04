@@ -206,6 +206,10 @@ Client-side caching to the sqlite database can be performance intensive when con
 
 In multiplayer mode, players can observe one another in the main view or in a picture-in-picture view. Implementation of the PnP was surprisingly simple - just change the viewport and render the scene again from the other player’s point of view.
 
+Multiplayer is supported in both the native and web clients. To connect to a server from the web client, the server must support websockets, this can be accomplished using [websockify](https://github.com/novnc/websockify) as follows:
+
+    ./websockify.py 4081 localhost:4080
+
 #### Collision Testing
 
 Hit testing (what block the user is pointing at) is implemented by scanning a ray from the player’s position outward, following their sight vector. This is not a precise method, so the step rate can be made smaller to be more accurate.

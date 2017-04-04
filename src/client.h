@@ -1,7 +1,11 @@
 #ifndef _client_h_
 #define _client_h_
 
+#ifdef __EMSCRIPTEN__
+#define DEFAULT_PORT 4081
+#else
 #define DEFAULT_PORT 4080
+#endif
 
 void client_enable();
 void client_disable();
@@ -10,6 +14,7 @@ void client_connect(char *hostname, int port);
 void client_start();
 void client_stop();
 void client_send(char *data);
+void client_message(int fd, void *userData);
 char *client_recv();
 void client_version(int version);
 void client_login(const char *username, const char *identity_token);
