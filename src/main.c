@@ -2789,14 +2789,6 @@ void client_opened(int fd, void *userData) {
     main_inited();
 }
 
-void client_connected(int fd, void *userData) {
-    fprintf(stderr, "client_connected\n");
-}
-
-void client_listened(int fd, void *userData) {
-    fprintf(stderr, "client_listened\n");
-}
-
 void client_closed(int fd, void *userData) {
     fprintf(stderr, "client_closed\n");
 }
@@ -2825,8 +2817,6 @@ int main_init() {
 #ifdef __EMSCRIPTEN__
             emscripten_set_socket_error_callback("error", client_socket_error);
             emscripten_set_socket_open_callback("open", client_opened);
-            emscripten_set_socket_listen_callback("listen", client_listened);
-            emscripten_set_socket_connection_callback("connection", client_connected);
             emscripten_set_socket_message_callback(parse_buffer, client_message);
             emscripten_set_socket_close_callback("close", client_closed);
             client_connect(g->server_addr, g->server_port);
