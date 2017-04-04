@@ -1,7 +1,11 @@
 #ifndef _client_h_
 #define _client_h_
 
+#ifdef __EMSCRIPTEN__
+#define DEFAULT_PORT 4081
+#else
 #define DEFAULT_PORT 4080
+#endif
 
 void client_enable();
 void client_disable();
