@@ -2861,13 +2861,11 @@ void main_shutdown() {
         del_buffer(sky_buffer);
         delete_all_chunks();
         delete_all_players();
-#ifdef __EMSCRIPTEN__
-    emscripten_cancel_main_loop();
-#endif
 }
 
 
 void one_iter() {
+    fprintf(stderr, "one_iter\n");
     glfwSwapInterval(VSYNC);
             // WINDOW SIZE AND SCALE //
             g->scale = get_scale_factor();
@@ -3046,7 +3044,12 @@ void one_iter() {
     if (g_inner_break) {
         fprintf(stderr, "g_inner_break=true so shutting down and re-main_init\n");
         main_shutdown();
-        main_init(NULL);
+        fprintf(stderr, "cancelling main loop\n");
+        emscripten_cancel_main_loop();
+        fprintf(stderr, "main_shutdown() returned, now main_init()\n");
+        //main_init(NULL);
+        emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
+        emscripten_set_main_loop(one_iter, 0, 1);
     }
 #endif
 }
