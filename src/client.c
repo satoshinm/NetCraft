@@ -155,12 +155,10 @@ void client_talk(const char *text) {
 
 #ifdef __EMSCRIPTEN__
 void client_message(int fd, void *userData) {
-    fprintf(stderr, "client_message callback %d\n", fd);
-
     char buf[4096];
     int len = recv(fd, &buf, sizeof(buf), 0);
 
-    fprintf(stderr, "read %d bytes\n", len);
+    //fprintf(stderr, "read %d bytes\n", len);
     if (len == -1) return;
 
     buf[len] = 0;

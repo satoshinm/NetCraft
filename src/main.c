@@ -2822,7 +2822,6 @@ void main_init(void *unused) {
         } else {
             main_inited();
         }
-    fprintf(stderr, "main_init returning, so main loop should now be unblocked\n");
 }
 
 void main_inited() {
@@ -2865,7 +2864,6 @@ void main_shutdown() {
 
 
 void one_iter() {
-    fprintf(stderr, "one_iter\n");
     glfwSwapInterval(VSYNC);
             // WINDOW SIZE AND SCALE //
             g->scale = get_scale_factor();
@@ -3043,13 +3041,9 @@ void one_iter() {
 #ifdef __EMSCRIPTEN__
     if (g_inner_break) {
         g_inner_break = 0;
-        fprintf(stderr, "g_inner_break=true so shutting down and re-main_init\n");
         main_shutdown();
-        fprintf(stderr, "cancelling main loop\n");
         emscripten_cancel_main_loop();
-        fprintf(stderr, "main_shutdown() returned, now main_init()\n");
-        //main_init(NULL);
-        emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
+        emscripten_push_main_loop_blocker(main_init, NULL);
         emscripten_set_main_loop(one_iter, 0, 1);
     }
 #endif
