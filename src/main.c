@@ -3042,6 +3042,7 @@ void one_iter() {
 
 #ifdef __EMSCRIPTEN__
     if (g_inner_break) {
+        g_inner_break = 0;
         fprintf(stderr, "g_inner_break=true so shutting down and re-main_init\n");
         main_shutdown();
         fprintf(stderr, "cancelling main loop\n");
