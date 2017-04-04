@@ -2855,7 +2855,7 @@ void main_inited() {
         // BEGIN MAIN LOOP //
         previous = glfwGetTime();
 
-    emscripten_set_main_loop(one_iter, 60, 1);
+    emscripten_set_main_loop(one_iter, 0, 1);
     glfwSwapInterval(VSYNC);
 }
 
