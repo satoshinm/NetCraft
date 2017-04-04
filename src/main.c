@@ -2817,7 +2817,7 @@ void main_init(void *unused) {
             client_connect(g->server_addr, g->server_port);
 #else
             client_connect(g->server_addr, g->server_port);
-            client_connected(-1, NULL);
+            client_opened(-1, NULL);
 #endif
         } else {
             main_inited();
