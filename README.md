@@ -1,8 +1,16 @@
-## Craft
+## NetCraft
 
 Minecraft clone for Windows, Mac OS X and Linux. Just a few thousand lines of C using modern OpenGL (shaders). Online multiplayer support is included using a Python-based server.
 
+Based on Michael Fogleman's [Craft](https://github.com/fogleman/Craft):
+
 http://www.michaelfogleman.com/craft/
+
+Supports running in a web browser (using emscripten):
+
+![Screenshot](http://i.imgur.com/Fw2wQL7.png)
+
+and also natively, as with the original Craft:
 
 ![Screenshot](http://i.imgur.com/SH7wcas.png)
 
@@ -101,6 +109,7 @@ the client.
 - Space to jump.
 - Left Click to destroy a block.
 - Right Click or Cmd + Left Click to create a block.
+- Ctrl + Right Click to toggle a block as a light source.
 - 1-9 to select the block type to create.
 - E to cycle through the block types.
 - Tab to toggle between walking and flying.
@@ -109,6 +118,9 @@ the client.
 - F to show the scene in orthographic mode.
 - O to observe players in the main view.
 - P to observe players in the picture-in-picture view.
+- T to type text into chat.
+- Forward slash (/) to enter a command.
+- Backquote (`) to write text on any block (signs).
 - Arrow keys emulate mouse movement.
 - Enter emulates mouse click.
 
@@ -193,6 +205,10 @@ Multiplayer mode is implemented using plain-old sockets. A simple, ASCII, line-b
 Client-side caching to the sqlite database can be performance intensive when connecting to a server for the first time. For this reason, sqlite writes are performed on a background thread. All writes occur in a transaction for performance. The transaction is committed every 5 seconds as opposed to some logical amount of work completed. A ring / circular buffer is used as a queue for what data is to be written to the database.
 
 In multiplayer mode, players can observe one another in the main view or in a picture-in-picture view. Implementation of the PnP was surprisingly simple - just change the viewport and render the scene again from the other player’s point of view.
+
+Multiplayer is supported in both the native and web clients. To connect to a server from the web client, the server must support websockets, this can be accomplished using [websockify](https://github.com/novnc/websockify) as follows:
+
+    ./websockify.py 4081 localhost:4080
 
 #### Collision Testing
 

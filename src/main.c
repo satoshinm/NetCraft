@@ -170,7 +170,7 @@ float time_of_day() {
         return 0.5;
     }
     float t;
-    t = glfwGetTime();
+    t = glfwGetTime() + g->day_length/1.5;
     t = t / g->day_length;
     t = t - (int)t;
     return t;
@@ -2589,6 +2589,9 @@ void reset_model() {
 }
 
 void one_iter();
+void main_init(void *);
+void main_shutdown();
+// TODO: move to g? or?
 static FPS fps = {0, 0, 0};
 static double last_commit;
 static double last_update;
@@ -2747,12 +2750,55 @@ int main(int argc, char **argv) {
 
     // OUTER LOOP //
     g_running = 1;
+#ifdef __EMSCRIPTEN__
+    emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
+    emscripten_set_main_loop(one_iter, 0, 1);
+    //main_shutdown(); // called in one_iter() if g_inner_break
+#else
     while (g_running) {
+        main_init(NULL);
+        g_inner_break = 0;
+        while (1) {
+            one_iter();
+            if (g_inner_break) break;
+        }
+        main_shutdown();
+    }
+#endif
+
+    glfwTerminate();
+#ifndef __EMSCRIPTEN__
+    curl_global_cleanup();
+#endif
+    return 0;
+}
+
+void main_inited();
+
+void client_opened(int fd, void *userData) {
+    fprintf(stderr, "client_opened: %d %p\n", fd, userData);
+    client_start();
+    client_version(1);
+    login();
+    main_inited();
+}
+
+void client_closed(int fd, void *userData) {
+    fprintf(stderr, "client_closed\n");
+}
+
+void client_socket_error(int fd, int err, const char *msg, void *userData) {
+    fprintf(stderr, "client_socket_error: fd=%d, err=%d, msg=%s, userData=%p\n", fd, err, msg, userData);
+    // TODO: handle error
+}
+
+void main_init(void *unused) {
         // DATABASE INITIALIZATION //
         if (g->mode == MODE_OFFLINE || USE_CACHE) {
             db_enable();
             if (db_init(g->db_path)) {
-                return -1;
+                fprintf(stderr, "fatal error: db_init failed!\n");
+                exit(-1);
             }
             if (g->mode == MODE_ONLINE) {
                 // TODO: support proper caching of signs (handle deletions)
@@ -2763,12 +2809,22 @@ int main(int argc, char **argv) {
         // CLIENT INITIALIZATION //
         if (g->mode == MODE_ONLINE) {
             client_enable();
+#ifdef __EMSCRIPTEN__
+            emscripten_set_socket_error_callback("error", client_socket_error);
+            emscripten_set_socket_open_callback("open", client_opened);
+            emscripten_set_socket_message_callback(parse_buffer, client_message);
+            emscripten_set_socket_close_callback("close", client_closed);
             client_connect(g->server_addr, g->server_port);
-            client_start();
-            client_version(1);
-            login();
+#else
+            client_connect(g->server_addr, g->server_port);
+            client_opened(-1, NULL);
+#endif
+        } else {
+            main_inited();
         }
+}
 
+void main_inited() {
         // LOCAL VARIABLES //
         reset_model();
         //FPS fps = {0, 0, 0};
@@ -2792,17 +2848,9 @@ int main(int argc, char **argv) {
 
         // BEGIN MAIN LOOP //
         previous = glfwGetTime();
-#ifdef __EMSCRIPTEN__
-        emscripten_set_main_loop(one_iter, 60, 1);
-#else
-        glfwSwapInterval(VSYNC);
-        g_inner_break = 0;
-        while (1) {
-            one_iter();
-            if (g_inner_break) break;
-        }
-#endif
+}
 
+void main_shutdown() {
         // SHUTDOWN //
         db_save_state(s->x, s->y, s->z, s->rx, s->ry);
         db_close();
@@ -2812,16 +2860,11 @@ int main(int argc, char **argv) {
         del_buffer(sky_buffer);
         delete_all_chunks();
         delete_all_players();
-    }
-
-    glfwTerminate();
-#ifndef __EMSCRIPTEN__
-    curl_global_cleanup();
-#endif
-    return 0;
 }
 
+
 void one_iter() {
+    glfwSwapInterval(VSYNC);
             // WINDOW SIZE AND SCALE //
             g->scale = get_scale_factor();
             glfwGetFramebufferSize(g->window, &g->width, &g->height);
@@ -2847,12 +2890,14 @@ void one_iter() {
             // HANDLE MOVEMENT //
             handle_movement(dt);
 
+#ifndef __EMSCRIPTEN__ // emscripten uses the client_message callback instead
             // HANDLE DATA FROM SERVER //
             char *buffer = client_recv();
             if (buffer) {
                 parse_buffer(buffer);
                 free(buffer);
             }
+#endif
 
             // FLUSH DATABASE //
             if (now - last_commit > COMMIT_INTERVAL) {
@@ -2992,5 +3037,15 @@ void one_iter() {
                 g->mode_changed = 0;
                 g_inner_break = 1;
             }
+
+#ifdef __EMSCRIPTEN__
+    if (g_inner_break) {
+        g_inner_break = 0;
+        main_shutdown();
+        emscripten_cancel_main_loop();
+        emscripten_push_main_loop_blocker(main_init, NULL);
+        emscripten_set_main_loop(one_iter, 0, 1);
+    }
+#endif
 }
 
