@@ -192,7 +192,6 @@ float get_daylight() {
 int get_scale_factor() {
     int window_width, window_height;
     int buffer_width, buffer_height;
-    // TODO: how is this different or is it different than emscripten_get_canvas_size()?
     glfwGetWindowSize(g->window, &window_width, &window_height);
     glfwGetFramebufferSize(g->window, &buffer_width, &buffer_height);
     int result = buffer_width / window_width;
@@ -2617,8 +2616,9 @@ EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userDat
   double cssW, cssH;
   emscripten_get_element_css_size(0, &cssW, &cssH);
   printf("Canvas resized: WebGL RTT size: %dx%d, canvas CSS size: %02gx%02g\n", w, h, cssW, cssH);
+
+  glfwSetWindowSize(g->window, w, h);
   return 0;
-  // TODO: resize drawing area or what?
 }
 #endif
 
