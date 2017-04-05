@@ -59,12 +59,12 @@ else ()
     set(CURL_LIBRARIES "")
 endif ()
 
-if(APPLE)
+if(APPLE OR EMSCRIPTEN)
     target_link_libraries(craft glfw
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
 endif()
 
-if(UNIX)
+if(UNIX AND NOT EMSCRIPTEN)
     target_link_libraries(craft dl glfw
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
 endif()
