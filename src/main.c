@@ -5,6 +5,7 @@
 #endif
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 #endif
 #include <math.h>
 #include <stdio.h>
@@ -191,6 +192,7 @@ float get_daylight() {
 int get_scale_factor() {
     int window_width, window_height;
     int buffer_width, buffer_height;
+    // TODO: how is this different or is it different than emscripten_get_canvas_size()?
     glfwGetWindowSize(g->window, &window_width, &window_height);
     glfwGetFramebufferSize(g->window, &buffer_width, &buffer_height);
     int result = buffer_width / window_width;
@@ -2606,6 +2608,20 @@ static GLuint sky_buffer;
 static int g_running;
 static int g_inner_break;
 
+
+#ifdef __EMSCRIPTEN__
+EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData)
+{
+  int w, h, fs;
+  emscripten_get_canvas_size(&w, &h, &fs);
+  double cssW, cssH;
+  emscripten_get_element_css_size(0, &cssW, &cssH);
+  printf("Canvas resized: WebGL RTT size: %dx%d, canvas CSS size: %02gx%02g\n", w, h, cssW, cssH);
+  return 0;
+  // TODO: resize drawing area or what?
+}
+#endif
+
 int main(int argc, char **argv) {
     // INITIALIZATION //
 #ifndef __EMSCRIPTEN__
@@ -2641,6 +2657,17 @@ int main(int argc, char **argv) {
     glLogicOp(GL_INVERT);
 #endif
     glClearColor(0, 0, 0, 1);
+
+#ifdef __EMSCRIPTEN__
+    // Soft "fullscreen" = maximizes the canvas in the browser client area
+    EmscriptenFullscreenStrategy s;
+    memset(&s, 0, sizeof(s));
+    s.scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
+    s.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
+    s.filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT; // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST?
+    s.canvasResizedCallback = on_canvassize_changed;
+    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen(0, &s);
+#endif
 
     // LOAD TEXTURES //
     GLuint texture;
