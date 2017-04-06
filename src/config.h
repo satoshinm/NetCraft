@@ -13,6 +13,7 @@
 #define USE_CACHE 1
 #define DAY_LENGTH 600
 #define INVERT_MOUSE 0
+#define PLAYER_NAME_DISTANCE 96 // Maximum distance to display a player's name at
 
 // rendering options
 #define SHOW_LIGHTS 1
@@ -50,5 +51,7 @@
 #define DELETE_CHUNK_RADIUS 14
 #define CHUNK_SIZE 32
 #define COMMIT_INTERVAL 5
+#define ORTHO_ZOOM_MIN 8
+#define ORTHO_ZOOM_MAX 128
 
 #endif
