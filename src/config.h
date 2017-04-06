@@ -13,6 +13,7 @@
 #define USE_CACHE 1
 #define DAY_LENGTH 600
 #define INVERT_MOUSE 0
+#define PLAYER_NAME_DISTANCE 96 // Maximum distance to display a player's name at
 
 // rendering options
 #define SHOW_LIGHTS 1
