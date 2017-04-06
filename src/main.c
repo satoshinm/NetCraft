@@ -2620,6 +2620,14 @@ EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userDat
   glfwSetWindowSize(g->window, w, h);
   return 0;
 }
+
+EM_BOOL on_pointerlockchange(int eventType, const EmscriptenPointerlockChangeEvent *pointerlockChangeEvent, void *userData) {
+    if (!pointerlockChangeEvent->isActive) {
+        printf("pointerlockchange deactivated, so enabling cursor\n");
+        glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+    return 0;
+}
 #endif
 
 int main(int argc, char **argv) {
@@ -2641,7 +2649,9 @@ int main(int argc, char **argv) {
     }
 
     glfwMakeContextCurrent(g->window);
-#ifndef __EMSCRIPTEN__ // web pointer lock requires user action to activate
+#ifdef __EMSCRIPTEN__
+    emscripten_set_pointerlockchange_callback(NULL, NULL, 0, on_pointerlockchange);
+#else // web pointer lock requires user action to activate, start off disabled
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 #endif
     glfwSetKeyCallback(g->window, on_key);
