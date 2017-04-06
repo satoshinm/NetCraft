@@ -144,6 +144,7 @@ typedef struct {
     int item_index;
     int scale;
     int ortho;
+    float ortho_zoom;
     float fov;
     int suppress_char;
     int mode;
@@ -1339,7 +1340,7 @@ void ensure_chunks_worker(Player *player, Worker *worker) {
     float matrix[16];
     set_matrix_3d(
         matrix, g->width, g->height,
-        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->render_radius);
+        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
     float planes[6][4];
     frustum_planes(planes, g->render_radius, matrix);
     int p = chunked(s->x);
@@ -1622,7 +1623,7 @@ int render_chunks(Attrib *attrib, Player *player) {
     float matrix[16];
     set_matrix_3d(
         matrix, g->width, g->height,
-        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->render_radius);
+        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
     float planes[6][4];
     frustum_planes(planes, g->render_radius, matrix);
     glUseProgram(attrib->program);
@@ -1657,7 +1658,7 @@ void render_signs(Attrib *attrib, Player *player) {
     float matrix[16];
     set_matrix_3d(
         matrix, g->width, g->height,
-        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->render_radius);
+        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
     float planes[6][4];
     frustum_planes(planes, g->render_radius, matrix);
     glUseProgram(attrib->program);
@@ -1690,7 +1691,7 @@ void render_sign(Attrib *attrib, Player *player) {
     float matrix[16];
     set_matrix_3d(
         matrix, g->width, g->height,
-        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->render_radius);
+        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
     glUseProgram(attrib->program);
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     glUniform1i(attrib->sampler, 3);
@@ -1710,7 +1711,7 @@ void render_players(Attrib *attrib, Player *player) {
     float matrix[16];
     set_matrix_3d(
         matrix, g->width, g->height,
-        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->render_radius);
+        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
     glUseProgram(attrib->program);
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     glUniform3f(attrib->camera, s->x, s->y, s->z);
@@ -1729,7 +1730,7 @@ void render_sky(Attrib *attrib, Player *player, GLuint buffer) {
     float matrix[16];
     set_matrix_3d(
         matrix, g->width, g->height,
-        0, 0, 0, s->rx, s->ry, g->fov, 0, g->render_radius);
+        0, 0, 0, s->rx, s->ry, g->fov, 0, 0, g->render_radius);
     glUseProgram(attrib->program);
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     glUniform1i(attrib->sampler, 2);
@@ -1742,7 +1743,7 @@ void render_wireframe(Attrib *attrib, Player *player) {
     float matrix[16];
     set_matrix_3d(
         matrix, g->width, g->height,
-        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->render_radius);
+        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
     int hx, hy, hz;
     int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
     if (is_obstacle(hw)) {
@@ -2180,6 +2181,16 @@ void on_middle_click() {
     }
 }
 
+void change_ortho_zoom(double ydelta) {
+    g->ortho_zoom += ydelta;
+
+    if (g->ortho_zoom > ORTHO_ZOOM_MAX) {
+        g->ortho_zoom = ORTHO_ZOOM_MAX;
+    } else if (g->ortho_zoom < ORTHO_ZOOM_MIN) {
+        g->ortho_zoom = ORTHO_ZOOM_MIN;
+    }
+}
+
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int control = mods & (GLFW_MOD_CONTROL | GLFW_MOD_SUPER);
     int exclusive =
@@ -2278,6 +2289,15 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             g->observe2 = (g->observe2 + 1) % g->player_count;
         }
     }
+    if (g->ortho) {
+        if (key == '-') {
+            change_ortho_zoom(-1.0);
+        }
+
+        else if (key == '=' || key == '+') {
+            change_ortho_zoom(1.0);
+        }
+    }
 }
 
 void on_char(GLFWwindow *window, unsigned int u) {
@@ -2313,7 +2333,7 @@ void on_char(GLFWwindow *window, unsigned int u) {
     }
 }
 
-void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
+void _on_scroll_blockselect(double ydelta) {
     static double ypos = 0;
     ypos += ydelta;
     if (ypos < -SCROLL_THRESHOLD) {
@@ -2328,6 +2348,15 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
         ypos = 0;
     }
 }
+
+void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
+    if (g->ortho) {
+        change_ortho_zoom(ydelta);
+    } else {
+        _on_scroll_blockselect(ydelta);
+    }
+}
+
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     int control = mods & (GLFW_MOD_CONTROL | GLFW_MOD_SUPER);
@@ -2580,6 +2609,7 @@ void reset_model() {
     g->observe2 = 0;
     g->flying = 0;
     g->item_index = 0;
+    g->ortho_zoom = 32;
     memset(g->typing_buffer, 0, sizeof(char) * MAX_TEXT_LENGTH);
     g->typing = 0;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);

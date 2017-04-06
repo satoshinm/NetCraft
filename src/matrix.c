@@ -211,7 +211,7 @@ void set_matrix_2d(float *matrix, int width, int height) {
 void set_matrix_3d(
     float *matrix, int width, int height,
     float x, float y, float z, float rx, float ry,
-    float fov, int ortho, int radius)
+    float fov, int ortho, float ortho_zoom, int radius)
 {
     float a[16];
     float b[16];
@@ -226,8 +226,8 @@ void set_matrix_3d(
     mat_rotate(b, 0, 1, 0, -rx);
     mat_multiply(a, b, a);
     if (ortho) {
-        int size = ortho;
-        mat_ortho(b, -size * aspect, size * aspect, -size, size, -zfar, zfar);
+        float ortho_aspect = ortho_zoom * aspect;
+        mat_ortho(b, -ortho_aspect, ortho_aspect, -ortho_zoom, ortho_zoom, -zfar, zfar);
     }
     else {
         mat_perspective(b, fov, aspect, znear, zfar);

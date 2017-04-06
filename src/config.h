@@ -50,5 +50,7 @@
 #define DELETE_CHUNK_RADIUS 14
 #define CHUNK_SIZE 32
 #define COMMIT_INTERVAL 5
+#define ORTHO_ZOOM_MIN 8
+#define ORTHO_ZOOM_MAX 128
 
 #endif
