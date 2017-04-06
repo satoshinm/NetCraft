@@ -16,6 +16,8 @@ if (EMSCRIPTEN)
     # Generate HTML file wrapper in addition to .js
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
 else ()
+    FILE(COPY textures DESTINATION .)
+    FILE(COPY shaders DESTINATION .)
     add_executable(
         craft
         ${SOURCE_FILES}
