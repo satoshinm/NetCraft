@@ -7,6 +7,10 @@
 #define DEFAULT_PORT 4080
 #endif
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 void client_enable();
 void client_disable();
 int get_client_enabled();
