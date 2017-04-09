@@ -2450,11 +2450,11 @@ EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e,
             EmscriptenFullscreenStrategy strategy = {
                 .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
                 .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
-                .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST,
+                .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
                 .canvasResizedCallback = on_canvassize_changed,
                 .canvasResizedCallbackUserData = NULL
             };
-            EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_TRUE, &strategy);
+            EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy("#canvas", EM_TRUE, &strategy);
         } else {
             printf("Exiting fullscreen...\n");
             EMSCRIPTEN_RESULT ret = emscripten_exit_fullscreen();
