@@ -2417,6 +2417,26 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 }
 
 #ifdef __EMSCRIPTEN__
+EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData);
+
+// Soft "fullscreen" = maximizes the canvas in the browser client area, this is normal
+// Toggle switches between soft and hard fullscreen
+void fullscreen_enter_soft() {
+    EmscriptenFullscreenStrategy strategy = {
+        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT, // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST
+        .canvasResizedCallback = on_canvassize_changed,
+        .canvasResizedCallbackUserData = NULL
+    };
+
+    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen(0, &strategy);
+}
+
+void fullscreen_exit_soft() {
+    emscripten_exit_soft_fullscreen();
+}
+
 EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData)
 {
     if (eventType == EMSCRIPTEN_EVENT_KEYDOWN && (!strcmp(e->key, "F11"))) { // TODO: configurable key, ala CRAFT_KEY_FULLSCREEN
@@ -2424,20 +2444,22 @@ EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e,
         EMSCRIPTEN_RESULT ret = emscripten_get_fullscreen_status(&fsce);
 
         if (!fsce.isFullscreen) {
+            fullscreen_exit_soft();
             printf("Requesting fullscreen...\n");
 
             EmscriptenFullscreenStrategy strategy = {
                 .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
-                .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_NONE,
+                .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
                 .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST,
-                .canvasResizedCallback = NULL,
+                .canvasResizedCallback = on_canvassize_changed,
                 .canvasResizedCallbackUserData = NULL
             };
-            //emscripten_request_fullscreen_strategy(NULL, EM_TRUE, &strategy);
-            emscripten_request_fullscreen("#canvas", EM_TRUE);
+            EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_TRUE, &strategy);
         } else {
             printf("Exiting fullscreen...\n");
-            emscripten_exit_fullscreen();
+            EMSCRIPTEN_RESULT ret = emscripten_exit_fullscreen();
+
+            fullscreen_enter_soft();
         }
 
         return 1; // consume key
@@ -2445,6 +2467,7 @@ EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e,
         return 0;
     }
 }
+
 #endif
 
 void init_fullscreen_monitor_dimensions() {
@@ -2782,14 +2805,7 @@ int main(int argc, char **argv) {
     glClearColor(0, 0, 0, 1);
 
 #ifdef __EMSCRIPTEN__
-    // Soft "fullscreen" = maximizes the canvas in the browser client area
-    EmscriptenFullscreenStrategy s;
-    memset(&s, 0, sizeof(s));
-    s.scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
-    s.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
-    s.filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT; // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST?
-    s.canvasResizedCallback = on_canvassize_changed;
-    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen(0, &s);
+    fullscreen_enter_soft();
 #endif
 
     // LOAD TEXTURES //
