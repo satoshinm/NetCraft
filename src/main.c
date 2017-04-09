@@ -2419,9 +2419,10 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 #ifdef __EMSCRIPTEN__
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData);
 
-// Soft "fullscreen" = maximizes the canvas in the browser client area, this is normal
-// Toggle switches between soft and hard fullscreen
-void fullscreen_enter_soft() {
+void windowed_full_enter() {
+    // Emscripten soft fullscreen interacts unexpectedly with hard fullscreen, so don't use it TODO: investigate/fix
+    // (Soft "fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen)
+    /*
     EmscriptenFullscreenStrategy strategy = {
         .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
         .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
@@ -2430,11 +2431,23 @@ void fullscreen_enter_soft() {
         .canvasResizedCallbackUserData = NULL
     };
 
-    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen(0, &strategy);
+    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
+    */
+    EM_ASM(
+        window.setTimeout(() => {
+            const canvas = document.body.getElementsByTagName('canvas')[0];
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            // TODO: aspect ratio
+            canvas.style.top = '0';
+            canvas.style.position = 'absolute';
+        }, 100);
+    );
+    printf("fullscreen_enter_soft()\n");
 }
 
-void fullscreen_exit_soft() {
-    emscripten_exit_soft_fullscreen();
+void windowed_full_exit() {
+    //emscripten_exit_soft_fullscreen();
 }
 
 EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData)
@@ -2444,7 +2457,7 @@ EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e,
         EMSCRIPTEN_RESULT ret = emscripten_get_fullscreen_status(&fsce);
 
         if (!fsce.isFullscreen) {
-            fullscreen_exit_soft();
+            windowed_full_exit();
             printf("Requesting fullscreen...\n");
 
             EmscriptenFullscreenStrategy strategy = {
@@ -2459,7 +2472,8 @@ EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e,
             printf("Exiting fullscreen...\n");
             EMSCRIPTEN_RESULT ret = emscripten_exit_fullscreen();
 
-            fullscreen_enter_soft();
+            // TODO: also call when exited unsolicited
+            windowed_full_enter();
         }
 
         return 1; // consume key
@@ -2805,7 +2819,7 @@ int main(int argc, char **argv) {
     glClearColor(0, 0, 0, 1);
 
 #ifdef __EMSCRIPTEN__
-    fullscreen_enter_soft();
+    windowed_full_enter();
 #endif
 
     // LOAD TEXTURES //
