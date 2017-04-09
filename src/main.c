@@ -2374,7 +2374,9 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
     if (g->ortho) {
         change_ortho_zoom(ydelta);
     } else {
+#if SCROLL_BLOCK_SELECT
         _on_scroll_blockselect(ydelta);
+#endif
     }
 }
 
