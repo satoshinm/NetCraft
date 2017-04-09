@@ -138,6 +138,13 @@ typedef struct {
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
     int width;
     int height;
+    int window_width;
+    int window_height;
+    int window_xpos;
+    int window_ypos;
+    GLFWmonitor *fullscreen_monitor;
+    int fullscreen_width;
+    int fullscreen_height;
     int observe1;
     int observe2;
     int flying;
@@ -190,14 +197,14 @@ float get_daylight() {
     }
 }
 
-int get_scale_factor() {
+int get_scale_factor(GLFWwindow *window) {
     int window_width, window_height;
     int buffer_width, buffer_height;
-    glfwGetWindowSize(g->window, &window_width, &window_height);
+    glfwGetWindowSize(window, &window_width, &window_height);
     if (window_width <= 0 || window_height <= 0) {
         return 0;
     }
-    glfwGetFramebufferSize(g->window, &buffer_width, &buffer_height);
+    glfwGetFramebufferSize(window, &buffer_width, &buffer_height);
     int result = buffer_width / window_width;
     result = MAX(1, result);
     result = MIN(2, result);
@@ -2194,6 +2201,8 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
+void fullscreen_exit();
+void fullscreen_enter();
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int control = mods & (GLFW_MOD_CONTROL | GLFW_MOD_SUPER);
     int exclusive =
@@ -2220,6 +2229,15 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
+#ifndef __EMSCRIPTEN__ // emscripten handled instead in fullscreen_key_callback
+    if (key == CRAFT_KEY_FULLSCREEN) {
+        if (glfwGetWindowMonitor(g->window)) {
+            fullscreen_exit();
+        } else {
+            fullscreen_enter();
+        }
+    }
+#endif
     if (key == GLFW_KEY_ENTER) {
         if (g->typing) {
             if (mods & GLFW_MOD_SHIFT) {
@@ -2398,19 +2416,132 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
-void create_window() {
-    int window_width = WINDOW_WIDTH;
-    int window_height = WINDOW_HEIGHT;
-    GLFWmonitor *monitor = NULL;
-    if (FULLSCREEN) {
-        int mode_count;
-        monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode *modes = glfwGetVideoModes(monitor, &mode_count);
-        window_width = modes[mode_count - 1].width;
-        window_height = modes[mode_count - 1].height;
+#ifdef __EMSCRIPTEN__
+EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData);
+
+void windowed_full_enter() {
+    // Emscripten's soft "fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
+    EmscriptenFullscreenStrategy strategy = {
+        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT, // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST
+        .canvasResizedCallback = on_canvassize_changed,
+        .canvasResizedCallbackUserData = NULL
+    };
+
+    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
+    /*
+    EM_ASM(
+        window.setTimeout(() => {
+            const canvas = document.body.getElementsByTagName('canvas')[0];
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            // TODO: aspect ratio
+            canvas.style.top = '0';
+            canvas.style.position = 'absolute';
+        }, 100);
+    );
+    */
+    printf("windowed_full_enter()\n");
+}
+
+void windowed_full_exit() {
+    emscripten_exit_soft_fullscreen();
+}
+
+EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData)
+{
+    if (eventType == EMSCRIPTEN_EVENT_KEYDOWN && (!strcmp(e->key, "F11"))) { // TODO: configurable key, ala CRAFT_KEY_FULLSCREEN
+        EmscriptenFullscreenChangeEvent fsce;
+        EMSCRIPTEN_RESULT ret = emscripten_get_fullscreen_status(&fsce);
+
+        if (!fsce.isFullscreen) {
+            windowed_full_exit();
+            printf("Requesting fullscreen...\n");
+
+            /*
+            EmscriptenFullscreenStrategy strategy = {
+                .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+                .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+                .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
+                .canvasResizedCallback = on_canvassize_changed,
+                .canvasResizedCallbackUserData = NULL
+            };
+            EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy("#canvas", EM_TRUE, &strategy);
+            */
+            // For some reason, the emscripten JavaScript call stretches the canvas as we expect, but the above C api doesn't?
+            EM_ASM(Module.requestFullscreen(1, 1));
+
+        } else {
+            printf("Exiting fullscreen...\n");
+            EMSCRIPTEN_RESULT ret = emscripten_exit_fullscreen();
+
+            // TODO: also call when exited unsolicited
+            windowed_full_enter();
+        }
+
+        return 1; // consume key
+    } else {
+        return 0;
     }
+}
+
+EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
+    printf("fullscreen_change_callback, isFullscreen=%d\n", event->isFullscreen);
+
+    if (!event->isFullscreen) {
+        // Go back to windowed mode with full-sized <canvas>, when user escapes out (instead of F11)
+        windowed_full_enter();
+    }
+
+    return EM_TRUE;
+}
+
+#endif
+
+void init_fullscreen_monitor_dimensions() {
+    int mode_count;
+    g->fullscreen_monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
+    g->fullscreen_width = modes[mode_count - 1].width;
+    g->fullscreen_height= modes[mode_count - 1].height;
+
+    GLFWwindow *test_window = glfwCreateWindow(
+        g->fullscreen_width, g->fullscreen_height, "Craft", NULL, NULL);
+    int scale = get_scale_factor(test_window);
+    glfwDestroyWindow(test_window);
+    g->fullscreen_width /= scale;
+    g->fullscreen_height /= scale;
+
+#ifdef __EMSCRIPTEN__
+    emscripten_set_keydown_callback(NULL, NULL, EM_TRUE, fullscreen_key_callback);
+    emscripten_set_fullscreenchange_callback(NULL, NULL, EM_TRUE, fullscreen_change_callback);
+#endif
+}
+
+void fullscreen_exit() {
+#ifndef __EMSCRIPTEN__
+    glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
+#endif
+}
+
+void fullscreen_enter() {
+#ifndef __EMSCRIPTEN__
+    glfwGetWindowPos(g->window, &g->window_xpos, &g->window_ypos);
+    glfwGetWindowSize(g->window, &g->window_width, &g->window_height);
+    glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
+#endif
+}
+
+void create_window() {
+    init_fullscreen_monitor_dimensions();
+
     g->window = glfwCreateWindow(
-        window_width, window_height, "Craft", monitor, NULL);
+        WINDOW_WIDTH, WINDOW_HEIGHT, "Craft", NULL, NULL);
+
+    if (FULLSCREEN) {
+        fullscreen_enter();
+    }
 }
 
 void handle_mouse_input() {
@@ -2704,14 +2835,7 @@ int main(int argc, char **argv) {
     glClearColor(0, 0, 0, 1);
 
 #ifdef __EMSCRIPTEN__
-    // Soft "fullscreen" = maximizes the canvas in the browser client area
-    EmscriptenFullscreenStrategy s;
-    memset(&s, 0, sizeof(s));
-    s.scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
-    s.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
-    s.filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT; // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST?
-    s.canvasResizedCallback = on_canvassize_changed;
-    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen(0, &s);
+    windowed_full_enter();
 #endif
 
     // LOAD TEXTURES //
@@ -2938,7 +3062,7 @@ void main_shutdown() {
 void one_iter() {
     glfwSwapInterval(VSYNC);
             // WINDOW SIZE AND SCALE //
-            g->scale = get_scale_factor();
+            g->scale = get_scale_factor(g->window);
             glfwGetFramebufferSize(g->window, &g->width, &g->height);
             glViewport(0, 0, g->width, g->height);
 
