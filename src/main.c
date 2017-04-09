@@ -2459,6 +2459,7 @@ EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e,
             windowed_full_exit();
             printf("Requesting fullscreen...\n");
 
+            /*
             EmscriptenFullscreenStrategy strategy = {
                 .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
                 .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
@@ -2467,6 +2468,10 @@ EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e,
                 .canvasResizedCallbackUserData = NULL
             };
             EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy("#canvas", EM_TRUE, &strategy);
+            */
+            // For some reason, the emscripten JavaScript call stretches the canvas as we expect, but the above C api doesn't?
+            EM_ASM(Module.requestFullscreen(1, 1));
+
         } else {
             printf("Exiting fullscreen...\n");
             EMSCRIPTEN_RESULT ret = emscripten_exit_fullscreen();
