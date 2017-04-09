@@ -107,7 +107,7 @@ the client.
 ### Controls
 
 - Left Click to destroy a block.
-- Right Click or Cmd + Left Click to create a block.
+- Right Click or Ctrl + Left Click to create a block.
 - Ctrl + Right Click to toggle a block as a light source.
 - Middle Click to change the current block selection to the targeted block
 - WASD to move forward, left, backward, right.

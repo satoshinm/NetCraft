@@ -2203,10 +2203,10 @@ void change_ortho_zoom(double ydelta) {
 
 void fullscreen_exit();
 void fullscreen_enter();
-static int control_down = 0;
+static int super_down = 0;
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    int control = mods & (GLFW_MOD_CONTROL | GLFW_MOD_SUPER);
-    control_down = control;
+    int control = mods & GLFW_MOD_CONTROL;
+    super_down = mods & GLFW_MOD_SUPER;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
@@ -2324,7 +2324,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
 }
 
 void on_char(GLFWwindow *window, unsigned int u) {
-    if (control_down) {
+    if (super_down) {
         // TODO: why does emscripten call on_char if control is down? Cmd-` -> `
         printf("on_char ignoring u=%d since control_down\n", u);
         return;
@@ -2389,7 +2389,7 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
 
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
-    int control = mods & (GLFW_MOD_CONTROL | GLFW_MOD_SUPER);
+    int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action != GLFW_PRESS) {
