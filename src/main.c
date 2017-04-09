@@ -2443,7 +2443,7 @@ void windowed_full_enter() {
             canvas.style.position = 'absolute';
         }, 100);
     );
-    printf("fullscreen_enter_soft()\n");
+    printf("windowed_full_enter()\n");
 }
 
 void windowed_full_exit() {
@@ -2482,6 +2482,17 @@ EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e,
     }
 }
 
+EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
+    printf("fullscreen_change_callback, isFullscreen=%d\n", event->isFullscreen);
+
+    if (!event->isFullscreen) {
+        // Go back to windowed mode with full-sized <canvas>, when user escapes out (instead of F11)
+        windowed_full_enter();
+    }
+
+    return EM_TRUE;
+}
+
 #endif
 
 void init_fullscreen_monitor_dimensions() {
@@ -2500,6 +2511,7 @@ void init_fullscreen_monitor_dimensions() {
 
 #ifdef __EMSCRIPTEN__
     emscripten_set_keydown_callback(NULL, NULL, EM_TRUE, fullscreen_key_callback);
+    emscripten_set_fullscreenchange_callback(NULL, NULL, EM_TRUE, fullscreen_change_callback);
 #endif
 }
 
