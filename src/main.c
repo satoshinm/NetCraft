@@ -2229,6 +2229,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
+#ifndef __EMSCRIPTEN__ // emscripten handled instead in fullscreen_key_callback
     if (key == CRAFT_KEY_FULLSCREEN) {
         if (glfwGetWindowMonitor(g->window)) {
             fullscreen_exit();
@@ -2236,6 +2237,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             fullscreen_enter();
         }
     }
+#endif
     if (key == GLFW_KEY_ENTER) {
         if (g->typing) {
             if (mods & GLFW_MOD_SHIFT) {
@@ -2414,7 +2416,38 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
-void get_fullscreen_monitor_dimensions() {
+#ifdef __EMSCRIPTEN__
+EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData)
+{
+    if (eventType == EMSCRIPTEN_EVENT_KEYDOWN && (!strcmp(e->key, "F11"))) { // TODO: configurable key, ala CRAFT_KEY_FULLSCREEN
+        EmscriptenFullscreenChangeEvent fsce;
+        EMSCRIPTEN_RESULT ret = emscripten_get_fullscreen_status(&fsce);
+
+        if (!fsce.isFullscreen) {
+            printf("Requesting fullscreen...\n");
+
+            EmscriptenFullscreenStrategy strategy = {
+                .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+                .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_NONE,
+                .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST,
+                .canvasResizedCallback = NULL,
+                .canvasResizedCallbackUserData = NULL
+            };
+            //emscripten_request_fullscreen_strategy(NULL, EM_TRUE, &strategy);
+            emscripten_request_fullscreen("#canvas", EM_TRUE);
+        } else {
+            printf("Exiting fullscreen...\n");
+            emscripten_exit_fullscreen();
+        }
+
+        return 1; // consume key
+    } else {
+        return 0;
+    }
+}
+#endif
+
+void init_fullscreen_monitor_dimensions() {
     int mode_count;
     g->fullscreen_monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
@@ -2427,20 +2460,28 @@ void get_fullscreen_monitor_dimensions() {
     glfwDestroyWindow(test_window);
     g->fullscreen_width /= scale;
     g->fullscreen_height /= scale;
+
+#ifdef __EMSCRIPTEN__
+    emscripten_set_keydown_callback(NULL, NULL, EM_TRUE, fullscreen_key_callback);
+#endif
 }
 
 void fullscreen_exit() {
+#ifndef __EMSCRIPTEN__
     glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
+#endif
 }
 
 void fullscreen_enter() {
+#ifndef __EMSCRIPTEN__
     glfwGetWindowPos(g->window, &g->window_xpos, &g->window_ypos);
     glfwGetWindowSize(g->window, &g->window_width, &g->window_height);
     glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
+#endif
 }
 
 void create_window() {
-    get_fullscreen_monitor_dimensions();
+    init_fullscreen_monitor_dimensions();
 
     g->window = glfwCreateWindow(
         WINDOW_WIDTH, WINDOW_HEIGHT, "Craft", NULL, NULL);
