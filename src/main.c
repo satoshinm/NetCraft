@@ -2420,9 +2420,7 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData);
 
 void windowed_full_enter() {
-    // Emscripten soft fullscreen interacts unexpectedly with hard fullscreen, so don't use it TODO: investigate/fix
-    // (Soft "fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen)
-    /*
+    // Emscripten's soft "fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
     EmscriptenFullscreenStrategy strategy = {
         .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
         .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
@@ -2432,7 +2430,7 @@ void windowed_full_enter() {
     };
 
     EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
-    */
+    /*
     EM_ASM(
         window.setTimeout(() => {
             const canvas = document.body.getElementsByTagName('canvas')[0];
@@ -2443,11 +2441,12 @@ void windowed_full_enter() {
             canvas.style.position = 'absolute';
         }, 100);
     );
+    */
     printf("windowed_full_enter()\n");
 }
 
 void windowed_full_exit() {
-    //emscripten_exit_soft_fullscreen();
+    emscripten_exit_soft_fullscreen();
 }
 
 EM_BOOL fullscreen_key_callback(int eventType, const EmscriptenKeyboardEvent *e, void *userData)
