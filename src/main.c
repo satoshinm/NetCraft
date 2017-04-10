@@ -2448,6 +2448,24 @@ EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userDat
     return EM_FALSE;
 }
 
+void on_window_size(GLFWwindow* window, int width, int height) {
+    static int inFullscreen = 0;
+    static int wasFullscreen = 0;
+
+    int isInFullscreen = EM_ASM_INT_V(return !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement));
+    if (isInFullscreen && !wasFullscreen) {
+        printf("Successfully transitioned to fullscreen mode!\n");
+        wasFullscreen = isInFullscreen;
+
+        // Set canvas size to full screen, all the pixels
+        EM_ASM("Browser.setCanvasSize(screen.width, screen.height)");
+    }
+
+    if (wasFullscreen && !isInFullscreen) {
+        wasFullscreen = isInFullscreen;
+    }
+}
+
 // Emscripten's "soft fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
 void maximize_canvas() {
     EmscriptenFullscreenStrategy strategy = {
@@ -2514,6 +2532,8 @@ void fullscreen_toggle() {
 }
 
 #else // !__EMSCRIPTEN__
+void on_window_size(GLFWwindow* window, int width, int height) {}
+
 void fullscreen_toggle() {
     if (glfwGetWindowMonitor(g->window)) {
         glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
@@ -2843,6 +2863,7 @@ int main(int argc, char **argv) {
 #else // web pointer lock requires user action to activate, start off disabled
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 #endif
+    glfwSetWindowSizeCallback(g->window, on_window_size);
     glfwSetKeyCallback(g->window, on_key);
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
