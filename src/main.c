@@ -2422,8 +2422,6 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 #ifdef __EMSCRIPTEN__
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
-    // Note: would've likde to use canvasResizedCallback, but it is
-    // only available in https://kripken.github.io/emscripten-site/docs/api_reference/html5.h.html#c.EmscriptenFullscreenStrategy
     int w = 0;
     int h = 0;
     int isFullscreen = 0;
