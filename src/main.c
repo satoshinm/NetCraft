@@ -2420,6 +2420,18 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 }
 
 #ifdef __EMSCRIPTEN__
+void browser_resize_callback() { // exported and called in shell.html
+    // Resize window to match canvas size (as browser is resized).
+    // Note: would've likde to use canvasResizedCallback, but it is
+    // only available in https://kripken.github.io/emscripten-site/docs/api_reference/html5.h.html#c.EmscriptenFullscreenStrategy
+    int canvas_width = 0;
+    int canvas_height = 0;
+    int isFullscreen = 0;
+    emscripten_get_canvas_size(&canvas_width, &canvas_height, &isFullscreen);
+    printf("canvas size changed: %d x %d\n", canvas_width, canvas_height);
+    glfwSetWindowSize(g->window, canvas_width, canvas_height);
+}
+
 // Emscripten's "soft fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
 void maximize_canvas() {
     EmscriptenFullscreenStrategy strategy = {
@@ -2431,6 +2443,8 @@ void maximize_canvas() {
     };
 
     EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
+
+    browser_resize_callback();
 }
 
 EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
@@ -2826,6 +2840,10 @@ int main(int argc, char **argv) {
 
 #ifdef __EMSCRIPTEN__
     maximize_canvas();
+
+    EM_ASM(
+        window.addEventListener('resize', function() { Module.ccall('browser_resize_callback', null, [], []); });
+    );
 #endif
 
     // LOAD TEXTURES //
@@ -3050,27 +3068,8 @@ void main_shutdown() {
         delete_all_players();
 }
 
-
 void one_iter() {
     glfwSwapInterval(VSYNC);
-
-#ifdef __EMSCRIPTEN__
-    // Resize window to match canvas size (as browser is resized).
-    // TODO: can this be switched to events? would like to use canvasResizedCallback, but it is
-    // only available in https://kripken.github.io/emscripten-site/docs/api_reference/html5.h.html#c.EmscriptenFullscreenStrategy
-    int canvas_width = 0;
-    int canvas_height = 0;
-    int isFullscreen = 0;
-    static int last_canvas_width = 0;
-    static int last_canvas_height = 0;
-    emscripten_get_canvas_size(&canvas_width, &canvas_height, &isFullscreen);
-    if (!isFullscreen && (canvas_width != last_canvas_width || canvas_height != last_canvas_height)) {
-        printf("canvas size changed: %d x %d -> %d x %d\n", last_canvas_width, last_canvas_height, canvas_width, canvas_height);
-        glfwSetWindowSize(g->window, canvas_width, canvas_height);
-    }
-    last_canvas_width = canvas_width;
-    last_canvas_height = canvas_height;
-#endif
 
             // WINDOW SIZE AND SCALE //
             g->scale = get_scale_factor(g->window);
