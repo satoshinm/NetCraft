@@ -2431,9 +2431,21 @@ EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userDat
 
     double cssW, cssH;
     emscripten_get_element_css_size(0, &cssW, &cssH);
-    printf("Canvas resized: WebGL RTT size: %dx%d, canvas CSS size: %02gx%02g\n", w, h, cssW, cssH);
 
     glfwSetWindowSize(g->window, w, h);
+
+    int fb_w, fb_h;
+    glfwGetFramebufferSize(g->window, &fb_w, &fb_h);
+
+    // http://www.glfw.org/docs/latest/window.html#window_size
+    // "Note
+    // Do not pass the window size to glViewport or other pixel-based OpenGL calls.
+    // The window size is in screen coordinates, not pixels. Use the framebuffer
+    // size, which is in pixels, for pixel-based calls."
+    int w_w, w_h;
+    glfwGetWindowSize(g->window, &w_w, &w_h);
+    printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
+
 
     return EM_FALSE;
 }
