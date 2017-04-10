@@ -2448,6 +2448,21 @@ EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userDat
     return EM_FALSE;
 }
 
+// Emscripten's "soft fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
+void maximize_canvas() {
+    EmscriptenFullscreenStrategy strategy = {
+        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT, // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST
+        .canvasResizedCallback = on_canvassize_changed,
+        .canvasResizedCallbackUserData = NULL
+    };
+
+    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
+
+    on_canvassize_changed(0, NULL, NULL);
+}
+
 void on_window_size(GLFWwindow* window, int width, int height) {
     static int inFullscreen = 0;
     static int wasFullscreen = 0;
@@ -2463,22 +2478,8 @@ void on_window_size(GLFWwindow* window, int width, int height) {
 
     if (wasFullscreen && !isInFullscreen) {
         wasFullscreen = isInFullscreen;
+        maximize_canvas();
     }
-}
-
-// Emscripten's "soft fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
-void maximize_canvas() {
-    EmscriptenFullscreenStrategy strategy = {
-        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
-        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
-        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT, // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST
-        .canvasResizedCallback = on_canvassize_changed,
-        .canvasResizedCallbackUserData = NULL
-    };
-
-    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
-
-    on_canvassize_changed(0, NULL, NULL);
 }
 
 EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
