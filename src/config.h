@@ -8,6 +8,7 @@
 #define WINDOW_HEIGHT 768
 #define VSYNC 1
 #define SCROLL_THRESHOLD 0.1
+#define SCROLL_BLOCK_SELECT 1
 #define MAX_MESSAGES 4
 #define DB_PATH "craft.db"
 #define USE_CACHE 1
@@ -43,6 +44,7 @@
 #define CRAFT_KEY_CHAT 't'
 #define CRAFT_KEY_COMMAND '/'
 #define CRAFT_KEY_SIGN '`'
+#define CRAFT_KEY_FULLSCREEN GLFW_KEY_F11
 
 // advanced parameters
 #define CREATE_CHUNK_RADIUS 10

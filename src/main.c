@@ -138,6 +138,13 @@ typedef struct {
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
     int width;
     int height;
+    int window_width;
+    int window_height;
+    int window_xpos;
+    int window_ypos;
+    GLFWmonitor *fullscreen_monitor;
+    int fullscreen_width;
+    int fullscreen_height;
     int observe1;
     int observe2;
     int flying;
@@ -190,14 +197,14 @@ float get_daylight() {
     }
 }
 
-int get_scale_factor() {
+int get_scale_factor(GLFWwindow *window) {
     int window_width, window_height;
     int buffer_width, buffer_height;
-    glfwGetWindowSize(g->window, &window_width, &window_height);
+    glfwGetWindowSize(window, &window_width, &window_height);
     if (window_width <= 0 || window_height <= 0) {
         return 0;
     }
-    glfwGetFramebufferSize(g->window, &buffer_width, &buffer_height);
+    glfwGetFramebufferSize(window, &buffer_width, &buffer_height);
     int result = buffer_width / window_width;
     result = MAX(1, result);
     result = MIN(2, result);
@@ -2194,8 +2201,11 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
+void fullscreen_toggle();
+static int super_down = 0;
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    int control = mods & (GLFW_MOD_CONTROL | GLFW_MOD_SUPER);
+    int control = mods & GLFW_MOD_CONTROL;
+    super_down = mods & GLFW_MOD_SUPER;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
@@ -2209,6 +2219,10 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             }
         }
     }
+    if (key == CRAFT_KEY_FULLSCREEN) { // allow GLFW_REPEAT for F11
+        fullscreen_toggle();
+    }
+
     if (action != GLFW_PRESS) {
         return;
     }
@@ -2304,6 +2318,11 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
 }
 
 void on_char(GLFWwindow *window, unsigned int u) {
+    if (super_down) {
+        // TODO: why does emscripten call on_char if control is down? Cmd-` -> `
+        printf("on_char ignoring u=%d since control_down\n", u);
+        return;
+    }
     if (g->suppress_char) {
         g->suppress_char = 0;
         return;
@@ -2356,13 +2375,15 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
     if (g->ortho) {
         change_ortho_zoom(ydelta);
     } else {
+#if SCROLL_BLOCK_SELECT
         _on_scroll_blockselect(ydelta);
+#endif
     }
 }
 
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
-    int control = mods & (GLFW_MOD_CONTROL | GLFW_MOD_SUPER);
+    int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action != GLFW_PRESS) {
@@ -2398,19 +2419,161 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
-void create_window() {
-    int window_width = WINDOW_WIDTH;
-    int window_height = WINDOW_HEIGHT;
-    GLFWmonitor *monitor = NULL;
-    if (FULLSCREEN) {
-        int mode_count;
-        monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode *modes = glfwGetVideoModes(monitor, &mode_count);
-        window_width = modes[mode_count - 1].width;
-        window_height = modes[mode_count - 1].height;
+#ifdef __EMSCRIPTEN__
+EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
+    // Resize window to match canvas size (as browser is resized).
+    int w = 0;
+    int h = 0;
+    int isFullscreen = 0;
+    emscripten_get_canvas_size(&w, &h, &isFullscreen);
+
+    double cssW, cssH;
+    emscripten_get_element_css_size(0, &cssW, &cssH);
+
+    glfwSetWindowSize(g->window, w, h);
+
+    int fb_w, fb_h;
+    glfwGetFramebufferSize(g->window, &fb_w, &fb_h);
+
+    // http://www.glfw.org/docs/latest/window.html#window_size
+    // "Note
+    // Do not pass the window size to glViewport or other pixel-based OpenGL calls.
+    // The window size is in screen coordinates, not pixels. Use the framebuffer
+    // size, which is in pixels, for pixel-based calls."
+    int w_w, w_h;
+    glfwGetWindowSize(g->window, &w_w, &w_h);
+    printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
+
+
+    return EM_FALSE;
+}
+
+// Emscripten's "soft fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
+void maximize_canvas() {
+    EmscriptenFullscreenStrategy strategy = {
+        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT, // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST
+        .canvasResizedCallback = on_canvassize_changed,
+        .canvasResizedCallbackUserData = NULL
+    };
+
+    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
+
+    on_canvassize_changed(0, NULL, NULL);
+}
+
+void on_window_size(GLFWwindow* window, int width, int height) {
+    static int inFullscreen = 0;
+    static int wasFullscreen = 0;
+
+    int isInFullscreen = EM_ASM_INT_V(return !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement));
+    if (isInFullscreen && !wasFullscreen) {
+        printf("Successfully transitioned to fullscreen mode!\n");
+        wasFullscreen = isInFullscreen;
+
+        // Set canvas size to full screen, all the pixels
+        EM_ASM("Browser.setCanvasSize(screen.width, screen.height)");
     }
+
+    if (wasFullscreen && !isInFullscreen) {
+        wasFullscreen = isInFullscreen;
+        maximize_canvas();
+    }
+}
+
+EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
+    printf("fullscreen_change_callback, isFullscreen=%d\n", event->isFullscreen);
+
+    if (!event->isFullscreen) {
+        // Go back to windowed mode with full-sized <canvas>, when user escapes out (instead of F11)
+        maximize_canvas();
+    }
+
+    return EM_TRUE;
+}
+
+void fullscreen_toggle() {
+    printf("fullscreen_toggle\n");
+    EmscriptenFullscreenChangeEvent fsce;
+
+    emscripten_get_fullscreen_status(&fsce);
+
+    if (fsce.isFullscreen) {
+        printf("Exiting fullscreen...\n");
+        emscripten_exit_fullscreen();
+
+        printf("Maximizing to canvas...\n");
+        maximize_canvas();
+    } else {
+        emscripten_exit_soft_fullscreen();
+
+        // Workaround https://github.com/kripken/emscripten/issues/5124#issuecomment-292849872
+        // Force JSEvents.canPerformEventHandlerRequests() in library_html5.js to be true
+        // For some reason it is not set even though we are in an event handler and it works
+        EM_ASM(JSEvents.inEventHandler = true);
+        EM_ASM(JSEvents.currentEventHandler = {allowsDeferredCalls:true});
+
+        // Enter fullscreen
+        /* this returns 1=EMSCRIPTEN_RESULT_DEFERRED if EM_TRUE is given to defer
+         * or -2=EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED if EM_FALSE
+         * but the EM_ASM() JS works immediately?
+         */
+        EmscriptenFullscreenStrategy strategy = {
+            .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+            .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+            .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
+            .canvasResizedCallback = on_canvassize_changed,
+            .canvasResizedCallbackUserData = NULL
+        };
+        EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_FALSE, &strategy);
+        printf("emscripten_request_fullscreen_strategy = %d\n", ret);
+        //EM_ASM(Module.requestFullscreen(1, 1));
+    }
+}
+
+#else // !__EMSCRIPTEN__
+void on_window_size(GLFWwindow* window, int width, int height) {}
+
+void fullscreen_toggle() {
+    if (glfwGetWindowMonitor(g->window)) {
+        glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
+    } else {
+        glfwGetWindowPos(g->window, &g->window_xpos, &g->window_ypos);
+        glfwGetWindowSize(g->window, &g->window_width, &g->window_height);
+        glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
+    }
+}
+#endif
+
+void init_fullscreen_monitor_dimensions() {
+    int mode_count;
+    g->fullscreen_monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
+    g->fullscreen_width = modes[mode_count - 1].width;
+    g->fullscreen_height= modes[mode_count - 1].height;
+
+    GLFWwindow *test_window = glfwCreateWindow(
+        g->fullscreen_width, g->fullscreen_height, "Craft", NULL, NULL);
+    int scale = get_scale_factor(test_window);
+    glfwDestroyWindow(test_window);
+    g->fullscreen_width /= scale;
+    g->fullscreen_height /= scale;
+
+#ifdef __EMSCRIPTEN__
+    emscripten_set_fullscreenchange_callback(NULL, NULL, EM_TRUE, fullscreen_change_callback);
+#endif
+}
+
+void create_window() {
+    init_fullscreen_monitor_dimensions();
+
     g->window = glfwCreateWindow(
-        window_width, window_height, "Craft", monitor, NULL);
+        WINDOW_WIDTH, WINDOW_HEIGHT, "Craft", NULL, NULL);
+
+    if (FULLSCREEN) {
+        fullscreen_toggle();
+    }
 }
 
 void handle_mouse_input() {
@@ -2446,6 +2609,32 @@ void handle_mouse_input() {
     }
 }
 
+// Partial workaround stuck keys in web, TODO: fix upstream in https://github.com/kripken/emscripten/issues/5122 and delete all this
+// When blurred, treat all keys as released. However, once the player refocuses
+// the game, then the keys will be stuck, again. Emscripten fix may be only possibility.
+// This is only for character keys, TODO: also for modifier keys like Command
+static int blurred = 0;
+int craftGetKey(GLFWwindow *window, int key) {
+    if (blurred) {
+        return GLFW_RELEASE;
+    }
+
+    return glfwGetKey(window, key);
+}
+#ifdef __EMSCRIPTEN__
+EM_BOOL on_focus(int eventType, const EmscriptenFocusEvent *focusEvent, void *userData) {
+   switch(eventType) {
+       case EMSCRIPTEN_EVENT_BLUR:
+           blurred = 1;
+           break;
+       case EMSCRIPTEN_EVENT_FOCUS:
+           blurred = 0;
+           break;
+   }
+   return EM_FALSE;
+}
+#endif
+
 void handle_movement(double dt) {
     static float dy = 0;
     State *s = &g->players->state;
@@ -2453,21 +2642,21 @@ void handle_movement(double dt) {
     int sx = 0;
     if (!g->typing) {
         float m = dt * 1.0;
-        g->ortho = glfwGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
-        g->fov = glfwGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
-        if (glfwGetKey(g->window, CRAFT_KEY_FORWARD)) sz--;
-        if (glfwGetKey(g->window, CRAFT_KEY_BACKWARD)) sz++;
-        if (glfwGetKey(g->window, CRAFT_KEY_LEFT)) sx--;
-        if (glfwGetKey(g->window, CRAFT_KEY_RIGHT)) sx++;
-        if (glfwGetKey(g->window, GLFW_KEY_LEFT)) s->rx -= m;
-        if (glfwGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
-        if (glfwGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
-        if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
+        g->ortho = craftGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
+        g->fov = craftGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
+        if (craftGetKey(g->window, CRAFT_KEY_FORWARD)) sz--;
+        if (craftGetKey(g->window, CRAFT_KEY_BACKWARD)) sz++;
+        if (craftGetKey(g->window, CRAFT_KEY_LEFT)) sx--;
+        if (craftGetKey(g->window, CRAFT_KEY_RIGHT)) sx++;
+        if (craftGetKey(g->window, GLFW_KEY_LEFT)) s->rx -= m;
+        if (craftGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
+        if (craftGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
+        if (craftGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
     }
     float vx, vy, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
-        if (glfwGetKey(g->window, CRAFT_KEY_JUMP)) {
+        if (craftGetKey(g->window, CRAFT_KEY_JUMP)) {
             if (g->flying) {
                 vy = 1;
             }
@@ -2642,18 +2831,6 @@ static int g_inner_break;
 
 
 #ifdef __EMSCRIPTEN__
-EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData)
-{
-  int w, h, fs;
-  emscripten_get_canvas_size(&w, &h, &fs);
-  double cssW, cssH;
-  emscripten_get_element_css_size(0, &cssW, &cssH);
-  printf("Canvas resized: WebGL RTT size: %dx%d, canvas CSS size: %02gx%02g\n", w, h, cssW, cssH);
-
-  glfwSetWindowSize(g->window, w, h);
-  return 0;
-}
-
 EM_BOOL on_pointerlockchange(int eventType, const EmscriptenPointerlockChangeEvent *pointerlockChangeEvent, void *userData) {
     if (!pointerlockChangeEvent->isActive) {
         printf("pointerlockchange deactivated, so enabling cursor\n");
@@ -2687,6 +2864,7 @@ int main(int argc, char **argv) {
 #else // web pointer lock requires user action to activate, start off disabled
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 #endif
+    glfwSetWindowSizeCallback(g->window, on_window_size);
     glfwSetKeyCallback(g->window, on_key);
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
@@ -2704,14 +2882,7 @@ int main(int argc, char **argv) {
     glClearColor(0, 0, 0, 1);
 
 #ifdef __EMSCRIPTEN__
-    // Soft "fullscreen" = maximizes the canvas in the browser client area
-    EmscriptenFullscreenStrategy s;
-    memset(&s, 0, sizeof(s));
-    s.scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH;
-    s.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
-    s.filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT; // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST?
-    s.canvasResizedCallback = on_canvassize_changed;
-    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen(0, &s);
+    maximize_canvas();
 #endif
 
     // LOAD TEXTURES //
@@ -2823,6 +2994,8 @@ int main(int argc, char **argv) {
     // OUTER LOOP //
     g_running = 1;
 #ifdef __EMSCRIPTEN__
+    emscripten_set_blur_callback(NULL, NULL, EM_TRUE, on_focus);
+    emscripten_set_focus_callback(NULL, NULL, EM_TRUE, on_focus);
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
     //main_shutdown(); // called in one_iter() if g_inner_break
@@ -2934,11 +3107,11 @@ void main_shutdown() {
         delete_all_players();
 }
 
-
 void one_iter() {
     glfwSwapInterval(VSYNC);
+
             // WINDOW SIZE AND SCALE //
-            g->scale = get_scale_factor();
+            g->scale = get_scale_factor(g->window);
             glfwGetFramebufferSize(g->window, &g->width, &g->height);
             glViewport(0, 0, g->width, g->height);
 
