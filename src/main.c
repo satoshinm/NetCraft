@@ -3053,6 +3053,25 @@ void main_shutdown() {
 
 void one_iter() {
     glfwSwapInterval(VSYNC);
+
+#ifdef __EMSCRIPTEN__
+    // Resize window to match canvas size (as browser is resized).
+    // TODO: can this be switched to events? would like to use canvasResizedCallback, but it is
+    // only available in https://kripken.github.io/emscripten-site/docs/api_reference/html5.h.html#c.EmscriptenFullscreenStrategy
+    int canvas_width = 0;
+    int canvas_height = 0;
+    int isFullscreen = 0;
+    static int last_canvas_width = 0;
+    static int last_canvas_height = 0;
+    emscripten_get_canvas_size(&canvas_width, &canvas_height, &isFullscreen);
+    if (!isFullscreen && (canvas_width != last_canvas_width || canvas_height != last_canvas_height)) {
+        printf("canvas size changed: %d x %d -> %d x %d\n", last_canvas_width, last_canvas_height, canvas_width, canvas_height);
+        glfwSetWindowSize(g->window, canvas_width, canvas_height);
+    }
+    last_canvas_width = canvas_width;
+    last_canvas_height = canvas_height;
+#endif
+
             // WINDOW SIZE AND SCALE //
             g->scale = get_scale_factor(g->window);
             glfwGetFramebufferSize(g->window, &g->width, &g->height);
