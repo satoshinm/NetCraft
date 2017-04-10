@@ -2420,16 +2420,22 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 }
 
 #ifdef __EMSCRIPTEN__
-void browser_resize_callback() { // exported and called in shell.html
+EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
     // Note: would've likde to use canvasResizedCallback, but it is
     // only available in https://kripken.github.io/emscripten-site/docs/api_reference/html5.h.html#c.EmscriptenFullscreenStrategy
-    int canvas_width = 0;
-    int canvas_height = 0;
+    int w = 0;
+    int h = 0;
     int isFullscreen = 0;
-    emscripten_get_canvas_size(&canvas_width, &canvas_height, &isFullscreen);
-    printf("canvas size changed: %d x %d\n", canvas_width, canvas_height);
-    glfwSetWindowSize(g->window, canvas_width, canvas_height);
+    emscripten_get_canvas_size(&w, &h, &isFullscreen);
+
+    double cssW, cssH;
+    emscripten_get_element_css_size(0, &cssW, &cssH);
+    printf("Canvas resized: WebGL RTT size: %dx%d, canvas CSS size: %02gx%02g\n", w, h, cssW, cssH);
+
+    glfwSetWindowSize(g->window, w, h);
+
+    return EM_FALSE;
 }
 
 // Emscripten's "soft fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
@@ -2438,13 +2444,13 @@ void maximize_canvas() {
         .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
         .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
         .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT, // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST
-        .canvasResizedCallback = NULL, // TODO: is this needed?
+        .canvasResizedCallback = on_canvassize_changed,
         .canvasResizedCallbackUserData = NULL
     };
 
     EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
 
-    browser_resize_callback();
+    on_canvassize_changed(0, NULL, NULL);
 }
 
 EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
@@ -2459,36 +2465,41 @@ EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChan
 }
 
 void fullscreen_toggle() {
-	printf("fullscreen_toggle\n");
+    printf("fullscreen_toggle\n");
     EmscriptenFullscreenChangeEvent fsce;
 
     emscripten_get_fullscreen_status(&fsce);
 
     if (fsce.isFullscreen) {
-		printf("Exiting fullscreen...\n");
-		emscripten_exit_fullscreen();
+        printf("Exiting fullscreen...\n");
+        emscripten_exit_fullscreen();
 
-		printf("Maximizing to canvas...\n");
-		maximize_canvas();
+        printf("Maximizing to canvas...\n");
+        maximize_canvas();
     } else {
-		emscripten_exit_soft_fullscreen();
+        emscripten_exit_soft_fullscreen();
 
-		// Enter fullscreen
-		/* this returns 1=EMSCRIPTEN_RESULT_DEFERRED if EM_TRUE is given to defer
-		 * or -2=EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED if EM_FALSE
-		 * but the EM_ASM() JS works immediately?
-		 *
-		EmscriptenFullscreenStrategy strategy = {
-			.scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
-			.canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
-			.filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
-			.canvasResizedCallback = /on_canvassize_changed,
-			.canvasResizedCallbackUserData = NULL
-		};
-		EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_FALSE, &strategy);
-		printf("emscripten_request_fullscreen_strategy = %d\n", ret);
-		*/
-		EM_ASM(Module.requestFullscreen(1, 1));
+        // Workaround https://github.com/kripken/emscripten/issues/5124#issuecomment-292849872
+        // Force JSEvents.canPerformEventHandlerRequests() in library_html5.js to be true
+        // For some reason it is not set even though we are in an event handler and it works
+        EM_ASM(JSEvents.inEventHandler = true);
+        EM_ASM(JSEvents.currentEventHandler = {allowsDeferredCalls:true});
+
+        // Enter fullscreen
+        /* this returns 1=EMSCRIPTEN_RESULT_DEFERRED if EM_TRUE is given to defer
+         * or -2=EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED if EM_FALSE
+         * but the EM_ASM() JS works immediately?
+         */
+        EmscriptenFullscreenStrategy strategy = {
+            .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+            .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+            .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
+            .canvasResizedCallback = on_canvassize_changed,
+            .canvasResizedCallbackUserData = NULL
+        };
+        EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_FALSE, &strategy);
+        printf("emscripten_request_fullscreen_strategy = %d\n", ret);
+        //EM_ASM(Module.requestFullscreen(1, 1));
     }
 }
 
@@ -2840,10 +2851,6 @@ int main(int argc, char **argv) {
 
 #ifdef __EMSCRIPTEN__
     maximize_canvas();
-
-    EM_ASM(
-        window.addEventListener('resize', function() { Module.ccall('browser_resize_callback', null, [], []); });
-    );
 #endif
 
     // LOAD TEXTURES //
