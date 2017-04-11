@@ -114,7 +114,7 @@ the client.
 - Space to jump.
 - 1-9 to select the block type to create.
 - E, or the scrollwheel to cycle through the block types.
-- Tab to toggle between walking and flying.
+- Tab to toggle between walking and flying (when flying, space to ascend, shift to descend).
 - ZXCVBN to move in exact directions along the XYZ axes.
 - Z to zoom.
 - F to show the scene in orthographic mode.
