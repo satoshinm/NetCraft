@@ -1,13 +1,17 @@
 NetCraft
 ========
 
-Minecraft clone for Windows, Mac OS X and Linux. Just a few thousand lines of C using modern OpenGL (shaders). Online multiplayer support is included using a Python-based server.
+Voxel game for modern web browsers (Chrome, Firefox, Safari) and desktop operating systems (Windows, macOS, Linux).
+Just a few thousand lines of C using modern OpenGL (shaders). Online multiplayer support is included using a Python-based server
+or through [WebSandboxMC](https://github.com/satoshinm/WebSandboxMC/).
+
+**Live demo: https://satoshinm.github.io/NetCraft/**
 
 Based on Michael Fogleman's [Craft](https://github.com/fogleman/Craft):
 
 http://www.michaelfogleman.com/craft/
 
-Supports running in a web browser (using emscripten):
+Supports running in a web browser with WebGL (built using emscripten), including multiplayer through WebSockets:
 
 ![Screenshot](http://i.imgur.com/Fw2wQL7.png)
 
@@ -27,15 +31,68 @@ and also natively, as with the original Craft:
 
 ### Download
 
-Mac and Windows binaries are available on the website.
-
-http://www.michaelfogleman.com/craft/
-
 See below to run from source.
 
-### Install Dependencies
+### Web builds
 
-#### Mac OS X
+To build for the web, compiling to JavaScript, install [Emscripten](http://emscripten.org) and run:
+
+    git clone https://github.com/satoshinm/NetCraft.git
+    cd NetCraft
+    mkdir build
+    cmake -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..
+    make
+
+then open craft.html in your HTML5/WebGL-compatible web browser, and it will load craft.js. The game should
+function similarly to the native build (see below).
+
+Web-specific code is marked in the C source with `#ifdef __EMSCRIPTEN__`.
+
+
+#### Optimized web builds
+
+The default emscripten build configuration is unoptimized, for ease of development, but you
+can optimize using `-DCMAKE_BUILD_TYPE=Release` to cmake, for example:
+
+    mkdir release-build-js
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..
+    make
+
+This process takes longer, but generates a minified craft.js (using `-O3` to emcc), several
+times smaller. The optimized builds may require running from a web server instead
+of a local file due to origin restrictions, an easy way to do this is using Python:
+
+    python -m SimpleHTTPServer
+
+then browsing to http://localhost:8000/craft.html.
+
+#### WebAssembly web build
+
+Finally to enable the use of [WebAssembly](http://webassembly.org) (through
+emscripten's `-s WASM` flag to emcc), pass `-DWASM=1` to cmake:
+
+    mkdir wasm-build
+    cmake -DWASM=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..
+    make
+
+This creates a binary file `craft.wasm` with the bulk of the application code,
+instead of JavaScript, for better performance. Note not all browsers support WebAssembly yet (check [caniuse](https://caniuse.com/#feat=wasm))
+and this build type should be considered very experimental.
+
+### Native builds
+
+Building natively for desktop operating systems is also supported.
+
+You can have both native and web builds in different directories, building from the same
+source. This is useful for testing web-based regressions and ensuring native functionality.
+I use the following directories, each you can run `make` from for different build types:
+
+* build
+* release-build-js
+* wasm-build
+* native-build (see below)
+
+#### macOS
 
 Download and install [CMake](http://www.cmake.org/cmake/resources/software.html)
 if you don't already have it. You may use [Homebrew](http://brew.sh) to simplify
@@ -66,24 +123,12 @@ Use the following commands in place of the ones described in the next section.
 Once you have the dependencies (see above), run the following commands in your
 terminal.
 
-    git clone https://github.com/fogleman/Craft.git
-    cd Craft
-    mkdir build
-    pushd build
+    mkdir native-build
+    cd native-build
     cmake ..
     make
-    popd
-    ./build/craft
+    ./craft
 
-To build for the web (experimental), install [Emscripten](http://emscripten.org) and instead run:
-
-    cmake -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..
-
-### Multiplayer
-
-Register for an account!
-
-https://craft.michaelfogleman.com/
 
 #### Client
 
@@ -95,6 +140,12 @@ Or, with the "/online" command in the game itself.
 
     /online craft.michaelfogleman.com
 
+In the web-based version, you can pass command-line arguments after `#` in the URL.
+This URL will connect to a WebSocket server running locally if you have one:
+
+    https://satoshinm.github.io/NetCraft/#localhost
+
+
 #### Server
 
 You can run your own server or connect to mine. The server is written in Python
@@ -103,6 +154,16 @@ the client.
 
     gcc -std=c99 -O3 -fPIC -shared -o world -I src -I deps/noise deps/noise/noise.c src/world.c
     python server.py [HOST [PORT]]
+
+Multiplayer is supported in both the native and web clients. To connect to a server
+from the web client, the server must support WebSockets; the Python server can be bridged
+using [websockify](https://github.com/novnc/websockify) as follows:
+
+    ./websockify.py 4081 localhost:4080
+
+Or for an alternative Java-based Bukkit plugin WebSocket server, check out:
+
+    https://github.com/satoshinm/WebSandboxMC/
 
 ### Controls
 
@@ -209,10 +270,6 @@ Client-side caching to the sqlite database can be performance intensive when con
 
 In multiplayer mode, players can observe one another in the main view or in a picture-in-picture view. Implementation of the PnP was surprisingly simple - just change the viewport and render the scene again from the other player’s point of view.
 
-Multiplayer is supported in both the native and web clients. To connect to a server from the web client, the server must support websockets, this can be accomplished using [websockify](https://github.com/novnc/websockify) as follows:
-
-    ./websockify.py 4081 localhost:4080
-
 #### Collision Testing
 
 Hit testing (what block the user is pointing at) is implemented by scanning a ray from the player’s position outward, following their sight vector. This is not a precise method, so the step rate can be made smaller to be more accurate.
@@ -237,3 +294,4 @@ http://0fps.wordpress.com/2013/07/03/ambient-occlusion-for-minecraft-like-worlds
 * lodepng is used for loading PNG textures.
 * sqlite3 is used for saving the blocks added / removed by the user.
 * tinycthread is used for cross-platform threading.
+* emscripten is used for compiling to the web platform.
