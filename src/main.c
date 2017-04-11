@@ -2547,6 +2547,7 @@ void fullscreen_toggle() {
 #endif
 
 void init_fullscreen_monitor_dimensions() {
+#ifndef __EMSCRIPTEN__
     int mode_count;
     g->fullscreen_monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
@@ -2559,8 +2560,7 @@ void init_fullscreen_monitor_dimensions() {
     glfwDestroyWindow(test_window);
     g->fullscreen_width /= scale;
     g->fullscreen_height /= scale;
-
-#ifdef __EMSCRIPTEN__
+#else
     emscripten_set_fullscreenchange_callback(NULL, NULL, EM_TRUE, fullscreen_change_callback);
 #endif
 }
