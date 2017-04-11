@@ -1751,12 +1751,16 @@ void render_wireframe(Attrib *attrib, Player *player) {
     if (is_obstacle(hw)) {
         glUseProgram(attrib->program);
         glLineWidth(1);
+#ifndef __EMSCRIPTEN__
         glEnable(GL_COLOR_LOGIC_OP);
+#endif
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
         GLuint wireframe_buffer = gen_wireframe_buffer(hx, hy, hz, 0.53);
         draw_lines(attrib, wireframe_buffer, 3, 24);
         del_buffer(wireframe_buffer);
+#ifndef __EMSCRIPTEN__
         glDisable(GL_COLOR_LOGIC_OP);
+#endif
     }
 }
 
@@ -1765,12 +1769,16 @@ void render_crosshairs(Attrib *attrib) {
     set_matrix_2d(matrix, g->width, g->height);
     glUseProgram(attrib->program);
     glLineWidth(4 * g->scale);
+#ifndef __EMSCRIPTEN__ // invalid capability TODO: an alternative, see crosshair differences in https://github.com/satoshinm/NetCraft/pull/53
     glEnable(GL_COLOR_LOGIC_OP);
+#endif
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     GLuint crosshair_buffer = gen_crosshair_buffer();
     draw_lines(attrib, crosshair_buffer, 2, 4);
     del_buffer(crosshair_buffer);
+#ifndef __EMSCRIPTEN__
     glDisable(GL_COLOR_LOGIC_OP);
+#endif
 }
 
 void render_item(Attrib *attrib) {
