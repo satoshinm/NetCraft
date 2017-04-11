@@ -313,17 +313,13 @@ GLuint gen_text_buffer(float x, float y, float n, char *text) {
 void draw_triangles_3d_ao(Attrib *attrib, GLuint buffer, int count) {
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
-    glEnableVertexAttribArray(attrib->normal);
     glEnableVertexAttribArray(attrib->uv);
     glVertexAttribPointer(attrib->position, 3, GL_FLOAT, GL_FALSE,
         sizeof(GLfloat) * 10, 0);
-    glVertexAttribPointer(attrib->normal, 3, GL_FLOAT, GL_FALSE,
-        sizeof(GLfloat) * 10, (GLvoid *)(sizeof(GLfloat) * 3));
     glVertexAttribPointer(attrib->uv, 4, GL_FLOAT, GL_FALSE,
         sizeof(GLfloat) * 10, (GLvoid *)(sizeof(GLfloat) * 6));
     glDrawArrays(GL_TRIANGLES, 0, count);
     glDisableVertexAttribArray(attrib->position);
-    glDisableVertexAttribArray(attrib->normal);
     glDisableVertexAttribArray(attrib->uv);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -342,20 +338,16 @@ void draw_triangles_3d_text(Attrib *attrib, GLuint buffer, int count) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void draw_triangles_3d(Attrib *attrib, GLuint buffer, int count) {
+void draw_triangles_3d_sky(Attrib *attrib, GLuint buffer, int count) {
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
-    glEnableVertexAttribArray(attrib->normal);
     glEnableVertexAttribArray(attrib->uv);
     glVertexAttribPointer(attrib->position, 3, GL_FLOAT, GL_FALSE,
         sizeof(GLfloat) * 8, 0);
-    glVertexAttribPointer(attrib->normal, 3, GL_FLOAT, GL_FALSE,
-        sizeof(GLfloat) * 8, (GLvoid *)(sizeof(GLfloat) * 3));
     glVertexAttribPointer(attrib->uv, 2, GL_FLOAT, GL_FALSE,
         sizeof(GLfloat) * 8, (GLvoid *)(sizeof(GLfloat) * 6));
     glDrawArrays(GL_TRIANGLES, 0, count);
     glDisableVertexAttribArray(attrib->position);
-    glDisableVertexAttribArray(attrib->normal);
     glDisableVertexAttribArray(attrib->uv);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -1745,7 +1737,7 @@ void render_sky(Attrib *attrib, Player *player, GLuint buffer) {
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     glUniform1i(attrib->sampler, 2);
     glUniform1f(attrib->timer, time_of_day());
-    draw_triangles_3d(attrib, buffer, 512 * 3);
+    draw_triangles_3d_sky(attrib, buffer, 512 * 3);
 }
 
 void render_wireframe(Attrib *attrib, Player *player) {
@@ -1759,12 +1751,16 @@ void render_wireframe(Attrib *attrib, Player *player) {
     if (is_obstacle(hw)) {
         glUseProgram(attrib->program);
         glLineWidth(1);
+#ifndef __EMSCRIPTEN__
         glEnable(GL_COLOR_LOGIC_OP);
+#endif
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
         GLuint wireframe_buffer = gen_wireframe_buffer(hx, hy, hz, 0.53);
         draw_lines(attrib, wireframe_buffer, 3, 24);
         del_buffer(wireframe_buffer);
+#ifndef __EMSCRIPTEN__
         glDisable(GL_COLOR_LOGIC_OP);
+#endif
     }
 }
 
@@ -1773,12 +1769,16 @@ void render_crosshairs(Attrib *attrib) {
     set_matrix_2d(matrix, g->width, g->height);
     glUseProgram(attrib->program);
     glLineWidth(4 * g->scale);
+#ifndef __EMSCRIPTEN__ // invalid capability TODO: an alternative, see crosshair differences in https://github.com/satoshinm/NetCraft/pull/53
     glEnable(GL_COLOR_LOGIC_OP);
+#endif
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     GLuint crosshair_buffer = gen_crosshair_buffer();
     draw_lines(attrib, crosshair_buffer, 2, 4);
     del_buffer(crosshair_buffer);
+#ifndef __EMSCRIPTEN__
     glDisable(GL_COLOR_LOGIC_OP);
+#endif
 }
 
 void render_item(Attrib *attrib) {
@@ -2957,7 +2957,7 @@ int main(int argc, char **argv) {
         "shaders/sky_vertex.glsl", "shaders/sky_fragment.glsl");
     sky_attrib.program = program;
     sky_attrib.position = glGetAttribLocation(program, "position");
-    sky_attrib.normal = glGetAttribLocation(program, "normal");
+    sky_attrib.normal = -1; // unused
     sky_attrib.uv = glGetAttribLocation(program, "uv");
     sky_attrib.matrix = glGetUniformLocation(program, "matrix");
     sky_attrib.sampler = glGetUniformLocation(program, "sampler");
