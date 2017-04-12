@@ -3034,11 +3034,13 @@ void client_opened(int fd, void *userData) {
 }
 
 void client_closed(int fd, void *userData) {
-    fprintf(stderr, "client_closed\n");
+    add_message("Client closed the connection");
 }
 
 void client_socket_error(int fd, int err, const char *msg, void *userData) {
     fprintf(stderr, "client_socket_error: fd=%d, err=%d, msg=%s, userData=%p\n", fd, err, msg, userData);
+    add_message("WebSocket error occurred:");
+    add_message(msg);
     // TODO: handle error
 }
 
