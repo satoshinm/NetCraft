@@ -313,17 +313,13 @@ GLuint gen_text_buffer(float x, float y, float n, char *text) {
 void draw_triangles_3d_ao(Attrib *attrib, GLuint buffer, int count) {
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
-    glEnableVertexAttribArray(attrib->normal);
     glEnableVertexAttribArray(attrib->uv);
     glVertexAttribPointer(attrib->position, 3, GL_FLOAT, GL_FALSE,
         sizeof(GLfloat) * 10, 0);
-    glVertexAttribPointer(attrib->normal, 3, GL_FLOAT, GL_FALSE,
-        sizeof(GLfloat) * 10, (GLvoid *)(sizeof(GLfloat) * 3));
     glVertexAttribPointer(attrib->uv, 4, GL_FLOAT, GL_FALSE,
         sizeof(GLfloat) * 10, (GLvoid *)(sizeof(GLfloat) * 6));
     glDrawArrays(GL_TRIANGLES, 0, count);
     glDisableVertexAttribArray(attrib->position);
-    glDisableVertexAttribArray(attrib->normal);
     glDisableVertexAttribArray(attrib->uv);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -342,20 +338,16 @@ void draw_triangles_3d_text(Attrib *attrib, GLuint buffer, int count) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void draw_triangles_3d(Attrib *attrib, GLuint buffer, int count) {
+void draw_triangles_3d_sky(Attrib *attrib, GLuint buffer, int count) {
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
-    glEnableVertexAttribArray(attrib->normal);
     glEnableVertexAttribArray(attrib->uv);
     glVertexAttribPointer(attrib->position, 3, GL_FLOAT, GL_FALSE,
         sizeof(GLfloat) * 8, 0);
-    glVertexAttribPointer(attrib->normal, 3, GL_FLOAT, GL_FALSE,
-        sizeof(GLfloat) * 8, (GLvoid *)(sizeof(GLfloat) * 3));
     glVertexAttribPointer(attrib->uv, 2, GL_FLOAT, GL_FALSE,
         sizeof(GLfloat) * 8, (GLvoid *)(sizeof(GLfloat) * 6));
     glDrawArrays(GL_TRIANGLES, 0, count);
     glDisableVertexAttribArray(attrib->position);
-    glDisableVertexAttribArray(attrib->normal);
     glDisableVertexAttribArray(attrib->uv);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -1745,7 +1737,7 @@ void render_sky(Attrib *attrib, Player *player, GLuint buffer) {
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     glUniform1i(attrib->sampler, 2);
     glUniform1f(attrib->timer, time_of_day());
-    draw_triangles_3d(attrib, buffer, 512 * 3);
+    draw_triangles_3d_sky(attrib, buffer, 512 * 3);
 }
 
 void render_wireframe(Attrib *attrib, Player *player) {
@@ -1759,12 +1751,16 @@ void render_wireframe(Attrib *attrib, Player *player) {
     if (is_obstacle(hw)) {
         glUseProgram(attrib->program);
         glLineWidth(1);
+#ifndef __EMSCRIPTEN__
         glEnable(GL_COLOR_LOGIC_OP);
+#endif
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
         GLuint wireframe_buffer = gen_wireframe_buffer(hx, hy, hz, 0.53);
         draw_lines(attrib, wireframe_buffer, 3, 24);
         del_buffer(wireframe_buffer);
+#ifndef __EMSCRIPTEN__
         glDisable(GL_COLOR_LOGIC_OP);
+#endif
     }
 }
 
@@ -1773,12 +1769,16 @@ void render_crosshairs(Attrib *attrib) {
     set_matrix_2d(matrix, g->width, g->height);
     glUseProgram(attrib->program);
     glLineWidth(4 * g->scale);
+#ifndef __EMSCRIPTEN__ // invalid capability TODO: an alternative, see crosshair differences in https://github.com/satoshinm/NetCraft/pull/53
     glEnable(GL_COLOR_LOGIC_OP);
+#endif
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     GLuint crosshair_buffer = gen_crosshair_buffer();
     draw_lines(attrib, crosshair_buffer, 2, 4);
     del_buffer(crosshair_buffer);
+#ifndef __EMSCRIPTEN__
     glDisable(GL_COLOR_LOGIC_OP);
+#endif
 }
 
 void render_item(Attrib *attrib) {
@@ -2035,6 +2035,19 @@ void tree(Block *block) {
     }
 }
 
+void set_db_path() {
+    snprintf(g->db_path, MAX_PATH_LENGTH,
+        "cache.%s.%d.db", g->server_addr, g->server_port);
+
+#ifdef __EMSCRIPTEN__
+    // WebSocket URLs contain characters unsuitable for filenames; transliterate
+    for (int i = 0; i < strlen(g->db_path); ++i) {
+        if (g->db_path[i] == '/') g->db_path[i] = '_';
+        if (g->db_path[i] == ':') g->db_path[i] = '-';
+    }
+#endif
+}
+
 void parse_command(const char *buffer, int forward) {
     char username[128] = {0};
     char token[128] = {0};
@@ -2066,8 +2079,7 @@ void parse_command(const char *buffer, int forward) {
         g->mode = MODE_ONLINE;
         strncpy(g->server_addr, server_addr, MAX_ADDR_LENGTH);
         g->server_port = server_port;
-        snprintf(g->db_path, MAX_PATH_LENGTH,
-            "cache.%s.%d.db", g->server_addr, g->server_port);
+        set_db_path();
     }
     else if (sscanf(buffer, "/offline %128s", filename) == 1) {
         g->mode_changed = 1;
@@ -2547,6 +2559,7 @@ void fullscreen_toggle() {
 #endif
 
 void init_fullscreen_monitor_dimensions() {
+#ifndef __EMSCRIPTEN__
     int mode_count;
     g->fullscreen_monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
@@ -2559,8 +2572,7 @@ void init_fullscreen_monitor_dimensions() {
     glfwDestroyWindow(test_window);
     g->fullscreen_width /= scale;
     g->fullscreen_height /= scale;
-
-#ifdef __EMSCRIPTEN__
+#else
     emscripten_set_fullscreenchange_callback(NULL, NULL, EM_TRUE, fullscreen_change_callback);
 #endif
 }
@@ -2662,6 +2674,11 @@ void handle_movement(double dt) {
             }
             else if (dy == 0) {
                 dy = 8;
+            }
+        }
+        if (craftGetKey(g->window, CRAFT_KEY_CROUCH)) {
+            if (g->flying) {
+                vy = -1;
             }
         }
     }
@@ -2957,7 +2974,7 @@ int main(int argc, char **argv) {
         "shaders/sky_vertex.glsl", "shaders/sky_fragment.glsl");
     sky_attrib.program = program;
     sky_attrib.position = glGetAttribLocation(program, "position");
-    sky_attrib.normal = glGetAttribLocation(program, "normal");
+    sky_attrib.normal = -1; // unused
     sky_attrib.uv = glGetAttribLocation(program, "uv");
     sky_attrib.matrix = glGetUniformLocation(program, "matrix");
     sky_attrib.sampler = glGetUniformLocation(program, "sampler");
@@ -2968,8 +2985,7 @@ int main(int argc, char **argv) {
         g->mode = MODE_ONLINE;
         strncpy(g->server_addr, argv[1], MAX_ADDR_LENGTH);
         g->server_port = argc == 3 ? atoi(argv[2]) : DEFAULT_PORT;
-        snprintf(g->db_path, MAX_PATH_LENGTH,
-            "cache.%s.%d.db", g->server_addr, g->server_port);
+        set_db_path();
     }
     else {
         g->mode = MODE_OFFLINE;
@@ -3029,11 +3045,13 @@ void client_opened(int fd, void *userData) {
 }
 
 void client_closed(int fd, void *userData) {
-    fprintf(stderr, "client_closed\n");
+    add_message("Client closed the connection");
 }
 
 void client_socket_error(int fd, int err, const char *msg, void *userData) {
     fprintf(stderr, "client_socket_error: fd=%d, err=%d, msg=%s, userData=%p\n", fd, err, msg, userData);
+    add_message("WebSocket error occurred:");
+    add_message(msg);
     // TODO: handle error
 }
 

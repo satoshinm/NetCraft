@@ -5,7 +5,6 @@ precision mediump float;
 uniform mat4 matrix;
 
 attribute vec4 position;
-attribute vec3 normal;
 attribute vec2 uv;
 
 varying vec2 fragment_uv;

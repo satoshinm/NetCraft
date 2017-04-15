@@ -32,7 +32,15 @@ add_definitions(-std=c99 -O3)
 
 if (EMSCRIPTEN)
     # Emscripten default is GLFW 2.x but we use GLFW 3.x, also include data files
-    set_target_properties(craft PROPERTIES LINK_FLAGS "-O2 -s USE_GLFW=3 --pre-js ../src/pre.js --shell-file ../src/shell.html --embed-file ../shaders/ -s TOTAL_MEMORY=33554432 --embed-file ../textures/")
+    set_target_properties(craft PROPERTIES LINK_FLAGS "-s USE_GLFW=3 --pre-js ../src/pre.js --shell-file ../src/shell.html --embed-file ../shaders/ -s TOTAL_MEMORY=33554432 --embed-file ../textures/")
+
+    if (CMAKE_RELEASE_TYPE EQUAL "Release")
+        set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -O3")
+    endif ()
+
+    if (WASM)
+        set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -s WASM=1")
+    endif ()
 endif ()
 
 if (NOT EMSCRIPTEN)
