@@ -2035,6 +2035,19 @@ void tree(Block *block) {
     }
 }
 
+void set_db_path() {
+    snprintf(g->db_path, MAX_PATH_LENGTH,
+        "cache.%s.%d.db", g->server_addr, g->server_port);
+
+#ifdef __EMSCRIPTEN__
+    // WebSocket URLs contain characters unsuitable for filenames; transliterate
+    for (int i = 0; i < strlen(g->db_path); ++i) {
+        if (g->db_path[i] == '/') g->db_path[i] = '_';
+        if (g->db_path[i] == ':') g->db_path[i] = '-';
+    }
+#endif
+}
+
 void parse_command(const char *buffer, int forward) {
     char username[128] = {0};
     char token[128] = {0};
@@ -2066,8 +2079,7 @@ void parse_command(const char *buffer, int forward) {
         g->mode = MODE_ONLINE;
         strncpy(g->server_addr, server_addr, MAX_ADDR_LENGTH);
         g->server_port = server_port;
-        snprintf(g->db_path, MAX_PATH_LENGTH,
-            "cache.%s.%d.db", g->server_addr, g->server_port);
+        set_db_path();
     }
     else if (sscanf(buffer, "/offline %128s", filename) == 1) {
         g->mode_changed = 1;
@@ -2973,8 +2985,7 @@ int main(int argc, char **argv) {
         g->mode = MODE_ONLINE;
         strncpy(g->server_addr, argv[1], MAX_ADDR_LENGTH);
         g->server_port = argc == 3 ? atoi(argv[2]) : DEFAULT_PORT;
-        snprintf(g->db_path, MAX_PATH_LENGTH,
-            "cache.%s.%d.db", g->server_addr, g->server_port);
+        set_db_path();
     }
     else {
         g->mode = MODE_OFFLINE;

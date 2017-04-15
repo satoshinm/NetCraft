@@ -14,6 +14,9 @@
 #include <errno.h>
 #include "client.h"
 #include "tinycthread.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 #define QUEUE_SIZE 1048576
 #define RECV_SIZE 4096
@@ -243,6 +246,34 @@ void client_connect(char *hostname, int port) {
         perror("socket");
         exit(1);
     }
+#ifdef __EMSCRIPTEN__
+    // Override the address passed to connect(), for WebSockets:
+    // If ws:// or wss:// URL is given, pass it directly - this is how secure WebSockets
+    // can be used, example: wss://localhost:1234/craftws. Or alternate paths.
+    // Otherwise, use hostname and port, ws scheme, and /craftws path by default.
+    EM_ASM_ARGS({
+            function getString(p) {
+                var s = String(); // not '' because empty C character constant warning
+                var c = 0; // var since let fails uglify-js in release-build-js
+                while ((c = Module.HEAP8[p++])) {
+                    s += String.fromCharCode(c);
+                }
+                return s;
+            }
+            const host = getString($0);
+            const port = $1;
+            console.log('websocket inputs, host='+host+', port='+port);
+            const ws = 'ws:' + String.fromCharCode(47) + String.fromCharCode(47); // to avoid //
+            const wss = 'wss:' + String.fromCharCode(47) + String.fromCharCode(47);
+            if (host.startsWith(ws) || host.startsWith(wss)) {
+                Module['websocket']['url'] = host;
+            } else {
+                Module['websocket']['url'] = ws + host + ':' + port + '/craftws';
+            }
+            console.log('websocket url:', Module['websocket']['url']);
+        }, hostname, port);
+#endif
+
     if (connect(sd, (struct sockaddr *)&address, sizeof(address)) == -1) {
 #ifdef __EMSCRIPTEN__
         // Websockets are async, so connect() always returns EINPROGRESS

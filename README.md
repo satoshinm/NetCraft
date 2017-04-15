@@ -165,6 +165,10 @@ Or for an alternative Java-based Bukkit plugin WebSocket server, check out:
 
     https://github.com/satoshinm/WebSandboxMC/
 
+The web-based client will connect to WebSockets at the path `/craftws` by default. Full
+URLs can be given in place of the hostname to connect at other paths, or to use SSL (wss://).
+`/online localhost` is equivalent to `/online ws://localhost:4081/craftws`.
+
 ### Controls
 
 - Left Click to destroy a block.
