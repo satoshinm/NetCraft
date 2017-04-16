@@ -3198,6 +3198,9 @@ void one_iter() {
             g->scale = get_scale_factor(g->window);
             glfwGetFramebufferSize(g->window, &g->width, &g->height);
 
+            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_DEPTH_BUFFER_BIT);
+
             // TODO: at eye offset, translation matrix
             // left eye
             glViewport(0, 0, g->width/2, g->height);
@@ -3234,8 +3237,6 @@ void render_scene() {
             Player *player = g->players + g->observe1;
 
             // RENDER 3-D SCENE //
-            //glClear(GL_COLOR_BUFFER_BIT); // TODO: is this necessary? clears other scene - likely yes: http://stackoverflow.com/questions/19469194/why-do-we-have-to-clear-depth-buffer-in-opengl-during-rendering/19469291#19469291 - but probably needs to be scissored to viewport? or do before
-            glClear(GL_DEPTH_BUFFER_BIT);
             render_sky(&sky_attrib, player, sky_buffer);
             glClear(GL_DEPTH_BUFFER_BIT);
             int face_count = render_chunks(&block_attrib, player);
