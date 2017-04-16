@@ -1,7 +1,7 @@
 dependencies:
     pre:
         - sudo apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
-        - sudo apt-get build-dep libglfw3-dev
+        - sudo apt-get install libglfw3-dev
         - mkdir native-build
         - cd native-build && cmake ..
 test:
