@@ -1,6 +1,6 @@
 dependencies:
     pre:
-        - apt-get install libxrandr-dev
+        - sudo apt-get install libxrandr-dev
         - mkdir native-build
         - cd native-build && cmake ..
 test:
