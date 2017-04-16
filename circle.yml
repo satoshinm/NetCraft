@@ -1,5 +1,6 @@
 dependencies:
     pre:
+        - sleep 60
         - sudo apt-get install libxrandr-dev
         - sudo apt-get install x11proto-xinerama-dev
         - mkdir native-build
@@ -7,4 +8,3 @@ dependencies:
 test:
     override:
         - cd native-build && make
-        - sleep 60
