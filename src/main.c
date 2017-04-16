@@ -3143,11 +3143,6 @@ void render_scene();
 void one_iter() {
     glfwSwapInterval(VSYNC);
 
-            // WINDOW SIZE AND SCALE //
-            g->scale = get_scale_factor(g->window);
-            glfwGetFramebufferSize(g->window, &g->width, &g->height);
-            glViewport(0, 0, g->width, g->height);
-
             // FRAME RATE //
             if (g->time_changed) {
                 g->time_changed = 0;
@@ -3198,6 +3193,11 @@ void one_iter() {
             for (int i = 1; i < g->player_count; i++) {
                 interpolate_player(g->players + i);
             }
+
+            // WINDOW SIZE AND SCALE //
+            g->scale = get_scale_factor(g->window);
+            glfwGetFramebufferSize(g->window, &g->width, &g->height);
+            glViewport(0, 0, g->width, g->height);
 
             render_scene();
 
