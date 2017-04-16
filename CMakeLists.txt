@@ -75,7 +75,7 @@ if(APPLE OR EMSCRIPTEN)
 endif()
 
 if(UNIX AND NOT EMSCRIPTEN)
-    target_link_libraries(craft dl glfw
+    target_link_libraries(craft dl glfw OpenGL
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
 endif()
 
