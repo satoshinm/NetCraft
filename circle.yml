@@ -1,8 +1,7 @@
 dependencies:
     pre:
-        - sleep 60
-        - sudo apt-get install libxrandr-dev
-        - sudo apt-get install x11proto-xinerama-dev
+        - sudo apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
+        - sudo apt-get build-dep glfw
         - mkdir native-build
         - cd native-build && cmake ..
 test:
