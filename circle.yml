@@ -1,6 +1,7 @@
+dependencies:
+    pre:
+        - mkdir native-build
+        - cd native-build && cmake ..
 test:
     override:
-        - mkdir native-build
-        - cd native-build
-        - cmake ..
-        - make
+        - cd native-build && make
