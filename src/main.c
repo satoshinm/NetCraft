@@ -3139,6 +3139,7 @@ void main_shutdown() {
         delete_all_players();
 }
 
+void render_scene();
 void one_iter() {
     glfwSwapInterval(VSYNC);
 
@@ -3197,6 +3198,33 @@ void one_iter() {
             for (int i = 1; i < g->player_count; i++) {
                 interpolate_player(g->players + i);
             }
+
+            render_scene();
+
+            // SWAP AND POLL //
+            glfwSwapBuffers(g->window);
+            glfwPollEvents();
+            if (glfwWindowShouldClose(g->window)) {
+                g_running = 0;
+                g_inner_break = 1;
+            }
+            if (g->mode_changed) {
+                g->mode_changed = 0;
+                g_inner_break = 1;
+            }
+
+#ifdef __EMSCRIPTEN__
+    if (g_inner_break) {
+        g_inner_break = 0;
+        main_shutdown();
+        emscripten_cancel_main_loop();
+        emscripten_push_main_loop_blocker(main_init, NULL);
+        emscripten_set_main_loop(one_iter, 0, 1);
+    }
+#endif
+}
+
+void render_scene() {
             Player *player = g->players + g->observe1;
 
             // RENDER 3-D SCENE //
@@ -3303,26 +3331,5 @@ void one_iter() {
                 }
             }
 
-            // SWAP AND POLL //
-            glfwSwapBuffers(g->window);
-            glfwPollEvents();
-            if (glfwWindowShouldClose(g->window)) {
-                g_running = 0;
-                g_inner_break = 1;
-            }
-            if (g->mode_changed) {
-                g->mode_changed = 0;
-                g_inner_break = 1;
-            }
-
-#ifdef __EMSCRIPTEN__
-    if (g_inner_break) {
-        g_inner_break = 0;
-        main_shutdown();
-        emscripten_cancel_main_loop();
-        emscripten_push_main_loop_blocker(main_init, NULL);
-        emscripten_set_main_loop(one_iter, 0, 1);
-    }
-#endif
 }
 
