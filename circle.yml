@@ -1,6 +1,7 @@
 dependencies:
     pre:
         - sudo apt-get install libxrandr-dev
+        - sudo apt-get install x11proto-xinerama-dev
         - mkdir native-build
         - cd native-build && cmake ..
 test:
