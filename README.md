@@ -7,6 +7,8 @@ or through [WebSandboxMC](https://github.com/satoshinm/WebSandboxMC/).
 
 **Live demo: https://satoshinm.github.io/NetCraft/**
 
+[![CircleCI](https://circleci.com/gh/satoshinm/NetCraft.svg?style=svg)](https://circleci.com/gh/satoshinm/NetCraft)
+
 Based on Michael Fogleman's [Craft](https://github.com/fogleman/Craft):
 
 http://www.michaelfogleman.com/craft/
