@@ -193,6 +193,7 @@ URLs can be given in place of the hostname to connect at other paths, or to use 
 - Enter emulates mouse click.
 - F11 to toggle fullscreen/windowed mode.
 - F3 to toggle debug info text.
+- F1 to toggle all user interface elements.
 
 ### Chat Commands
 
