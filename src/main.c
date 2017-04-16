@@ -167,6 +167,7 @@ typedef struct {
     Block copy1;
     int show_info_text;
     int show_ui;
+    int show_vr;
 } Model;
 
 static Model model;
@@ -2254,6 +2255,9 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (key == CRAFT_KEY_UI) {
         g->show_ui = !g->show_ui;
     }
+    if (key == CRAFT_KEY_VR) {
+        g->show_vr = !g->show_vr;
+    }
     if (key == GLFW_KEY_ENTER) {
         if (g->typing) {
             if (mods & GLFW_MOD_SHIFT) {
@@ -2840,6 +2844,7 @@ void reset_model() {
     g->time_changed = 1;
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
+    g->show_vr = 0;
 }
 
 void one_iter();
@@ -3201,14 +3206,21 @@ void one_iter() {
             glClear(GL_COLOR_BUFFER_BIT);
             glClear(GL_DEPTH_BUFFER_BIT);
 
-            // TODO: at eye offset, translation matrix
-            // left eye
-            glViewport(0, 0, g->width/2, g->height);
-            render_scene();
+            if (g->show_vr) {
+                // TODO: at eye offset, translation matrix
+                // TODO: are the aspect ratios correct? seems to be squished!
+                // TODO: lens distortion for native, and/or on web build, WebVR: https://github.com/w3c/webvr
+                // left eye
+                glViewport(0, 0, g->width/2, g->height);
+                render_scene();
 
-            // right eye
-            glViewport(g->width/2, 0, g->width, g->height);
-            render_scene();
+                // right eye
+                glViewport(g->width/2, 0, g->width, g->height);
+                render_scene();
+            } else {
+                glViewport(0, 0, g->width, g->height);
+                render_scene();
+            }
 
             // SWAP AND POLL //
             glfwSwapBuffers(g->window);
