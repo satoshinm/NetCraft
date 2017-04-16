@@ -7,3 +7,4 @@ dependencies:
 test:
     override:
         - cd native-build && make
+        - sleep 60
