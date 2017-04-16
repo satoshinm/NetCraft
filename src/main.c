@@ -165,6 +165,7 @@ typedef struct {
     Block block1;
     Block copy0;
     Block copy1;
+    int show_info_text;
 } Model;
 
 static Model model;
@@ -2246,6 +2247,9 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
+    if (key == CRAFT_KEY_DEBUG) {
+        g->show_info_text = !g->show_info_text;
+    }
     if (key == GLFW_KEY_ENTER) {
         if (g->typing) {
             if (mods & GLFW_MOD_SHIFT) {
@@ -2830,6 +2834,7 @@ void reset_model() {
     g->day_length = DAY_LENGTH;
     glfwSetTime(g->day_length / 3.0);
     g->time_changed = 1;
+    g->show_info_text = SHOW_INFO_TEXT;
 }
 
 void one_iter();
@@ -3216,7 +3221,7 @@ void one_iter() {
             float ts = 12 * g->scale;
             float tx = ts / 2;
             float ty = g->height - ts;
-            if (SHOW_INFO_TEXT) {
+            if (g->show_info_text) {
                 int hour = time_of_day() * 24;
                 char am_pm = hour < 12 ? 'a' : 'p';
                 hour = hour % 12;
