@@ -64,7 +64,7 @@ endif()
 
 if (NOT EMSCRIPTEN)
     find_package(CURL REQUIRED)
-    find_package(OPENGL REQUIRED)
+    find_package(OpenGL REQUIRED)
     include_directories(${CURL_INCLUDE_DIR})
 else ()
     set(CURL_LIBRARIES "")
