@@ -2678,7 +2678,11 @@ void handle_movement(double dt) {
         }
         if (craftGetKey(g->window, CRAFT_KEY_CROUCH)) {
             if (g->flying) {
-                vy = -1;
+                int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
+                    == GLFW_CURSOR_DISABLED;
+                if (exclusive) {
+                    vy = -1;
+                }
             }
         }
     }
