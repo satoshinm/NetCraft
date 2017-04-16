@@ -64,6 +64,7 @@ endif()
 
 if (NOT EMSCRIPTEN)
     find_package(CURL REQUIRED)
+    find_package(OPENGL REQUIRED)
     include_directories(${CURL_INCLUDE_DIR})
 else ()
     set(CURL_LIBRARIES "")
@@ -75,7 +76,8 @@ if(APPLE OR EMSCRIPTEN)
 endif()
 
 if(UNIX AND NOT EMSCRIPTEN)
-    target_link_libraries(craft dl glfw OpenGL
+    target_link_libraries(craft dl glfw
+        ${OPENGL_gl_LIBRARY}
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
 endif()
 
