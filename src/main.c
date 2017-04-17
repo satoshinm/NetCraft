@@ -133,6 +133,7 @@ typedef struct {
     Player players[MAX_PLAYERS];
     int player_count;
     int typing;
+    int just_clicked;
     char typing_buffer[MAX_TEXT_LENGTH];
     int message_index;
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
@@ -2403,6 +2404,7 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
 
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
+    g->just_clicked = 1;
     int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
@@ -2605,6 +2607,15 @@ void handle_mouse_input() {
     if (exclusive && (px || py)) {
         double mx, my;
         glfwGetCursorPos(g->window, &mx, &my);
+        if (g->just_clicked) {
+            // If the user had pressed or released a mouse button immediately before, ignore
+            // the first mouse movement -- workaround bug(?) in Firefox, where clicking caused
+            // player to look down and rotate. TODO: investigate further, is it Firefox's issue?
+            px = mx;
+            py = my;
+            g->just_clicked = 0;
+            return;
+        }
         float m = 0.0025;
         s->rx += (mx - px) * m;
         if (INVERT_MOUSE) {
@@ -2833,6 +2844,7 @@ void reset_model() {
     g->ortho_zoom = 32;
     memset(g->typing_buffer, 0, sizeof(char) * MAX_TEXT_LENGTH);
     g->typing = 0;
+    g->just_clicked = 0;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);
     g->message_index = 0;
     g->day_length = DAY_LENGTH;
