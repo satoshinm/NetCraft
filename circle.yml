@@ -1,0 +1,14 @@
+dependencies:
+    pre:
+        - sudo apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
+        - sudo apt-get install libglfw-dev
+        - mkdir native-build
+        - cd native-build && cmake ..
+test:
+    override:
+        - cd native-build && make
+general:
+    artifacts:
+        - "native-build/craft"
+        - "native-build/textures"
+        - "native-build/shaders"

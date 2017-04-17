@@ -133,6 +133,7 @@ typedef struct {
     Player players[MAX_PLAYERS];
     int player_count;
     int typing;
+    int just_clicked;
     char typing_buffer[MAX_TEXT_LENGTH];
     int message_index;
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
@@ -165,6 +166,8 @@ typedef struct {
     Block block1;
     Block copy0;
     Block copy1;
+    int show_info_text;
+    int show_ui;
 } Model;
 
 static Model model;
@@ -2246,6 +2249,12 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
+    if (key == CRAFT_KEY_DEBUG) {
+        g->show_info_text = !g->show_info_text;
+    }
+    if (key == CRAFT_KEY_UI) {
+        g->show_ui = !g->show_ui;
+    }
     if (key == GLFW_KEY_ENTER) {
         if (g->typing) {
             if (mods & GLFW_MOD_SHIFT) {
@@ -2395,6 +2404,7 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
 
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
+    g->just_clicked = 1;
     int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
@@ -2597,6 +2607,15 @@ void handle_mouse_input() {
     if (exclusive && (px || py)) {
         double mx, my;
         glfwGetCursorPos(g->window, &mx, &my);
+        if (g->just_clicked) {
+            // If the user had pressed or released a mouse button immediately before, ignore
+            // the first mouse movement -- workaround bug(?) in Firefox, where clicking caused
+            // player to look down and rotate. TODO: investigate further, is it Firefox's issue?
+            px = mx;
+            py = my;
+            g->just_clicked = 0;
+            return;
+        }
         float m = 0.0025;
         s->rx += (mx - px) * m;
         if (INVERT_MOUSE) {
@@ -2678,7 +2697,11 @@ void handle_movement(double dt) {
         }
         if (craftGetKey(g->window, CRAFT_KEY_CROUCH)) {
             if (g->flying) {
-                vy = -1;
+                int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
+                    == GLFW_CURSOR_DISABLED;
+                if (exclusive) {
+                    vy = -1;
+                }
             }
         }
     }
@@ -2821,11 +2844,14 @@ void reset_model() {
     g->ortho_zoom = 32;
     memset(g->typing_buffer, 0, sizeof(char) * MAX_TEXT_LENGTH);
     g->typing = 0;
+    g->just_clicked = 0;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);
     g->message_index = 0;
     g->day_length = DAY_LENGTH;
     glfwSetTime(g->day_length / 3.0);
     g->time_changed = 1;
+    g->show_info_text = SHOW_INFO_TEXT;
+    g->show_ui = 1;
 }
 
 void one_iter();
@@ -3194,16 +3220,16 @@ void one_iter() {
             render_signs(&text_attrib, player);
             render_sign(&text_attrib, player);
             render_players(&block_attrib, player);
-            if (SHOW_WIREFRAME) {
+            if (SHOW_WIREFRAME && g->show_ui) {
                 render_wireframe(&line_attrib, player);
             }
 
             // RENDER HUD //
             glClear(GL_DEPTH_BUFFER_BIT);
-            if (SHOW_CROSSHAIRS) {
+            if (SHOW_CROSSHAIRS && g->show_ui) {
                 render_crosshairs(&line_attrib);
             }
-            if (SHOW_ITEM) {
+            if (SHOW_ITEM && g->show_ui) {
                 render_item(&block_attrib);
             }
 
@@ -3212,7 +3238,7 @@ void one_iter() {
             float ts = 12 * g->scale;
             float tx = ts / 2;
             float ty = g->height - ts;
-            if (SHOW_INFO_TEXT) {
+            if (g->show_info_text && g->show_ui) {
                 int hour = time_of_day() * 24;
                 char am_pm = hour < 12 ? 'a' : 'p';
                 hour = hour % 12;
@@ -3226,7 +3252,7 @@ void one_iter() {
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
                 ty -= ts * 2;
             }
-            if (SHOW_CHAT_TEXT) {
+            if (SHOW_CHAT_TEXT && g->show_ui) {
                 for (int i = 0; i < MAX_MESSAGES; i++) {
                     int index = (g->message_index + i) % MAX_MESSAGES;
                     if (strlen(g->messages[index])) {
@@ -3241,7 +3267,7 @@ void one_iter() {
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
                 ty -= ts * 2;
             }
-            if (SHOW_PLAYER_NAMES) {
+            if (SHOW_PLAYER_NAMES && g->show_ui) {
                 if (player != me) {
                     render_text(&text_attrib, ALIGN_CENTER,
                         g->width / 2, ts, ts, player->name);

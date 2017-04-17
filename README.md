@@ -7,6 +7,8 @@ or through [WebSandboxMC](https://github.com/satoshinm/WebSandboxMC/).
 
 **Live demo: https://satoshinm.github.io/NetCraft/**
 
+[![CircleCI](https://circleci.com/gh/satoshinm/NetCraft.svg?style=svg)](https://circleci.com/gh/satoshinm/NetCraft)
+
 Based on Michael Fogleman's [Craft](https://github.com/fogleman/Craft):
 
 http://www.michaelfogleman.com/craft/
@@ -191,6 +193,9 @@ URLs can be given in place of the hostname to connect at other paths, or to use 
 - Backquote (`) to write text on any block (signs).
 - Arrow keys emulate mouse movement.
 - Enter emulates mouse click.
+- F11 to toggle fullscreen/windowed mode.
+- F3 to toggle debug info text.
+- F1 to toggle all user interface elements.
 
 ### Chat Commands
 
