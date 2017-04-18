@@ -2441,7 +2441,103 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
+static int touch_forward = 0;
+static int touch_jump = 0;
 #ifdef __EMSCRIPTEN__
+static long touch_active = 0;
+static double touch_activated_at = 0;
+static int touch_just_activated = 0;
+static long touch_clientX = 0;
+static long touch_clientY = 0;
+
+void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
+    if (touch_active) {
+        *xp = touch_clientX;
+        *yp = touch_clientY;
+        return;
+    }
+
+    glfwGetCursorPos(window, xp, yp);
+}
+
+EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touch_active) {
+        // Another finger was touched when one was already touching.
+        if (touchEvent->numTouches == 2) {
+            // 2-finger = move forward
+            touch_forward = 1;
+            touch_jump = 0;
+        } else if (touchEvent->numTouches == 3) {
+            // 3-finger = jump
+            touch_jump = 1;
+        }
+        // TODO: support other interesting gestures, tap to on_left_click()/on_right_click()?
+        return EM_TRUE;
+    }
+
+    touch_active = touchEvent->touches[0].identifier;
+    touch_activated_at = glfwGetTime();
+    touch_just_activated = 1;
+    glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touch_just_activated) {
+        g->just_clicked = 1; // ignore next movement, since two datapoints are needed to move
+        touch_just_activated = 0;
+    }
+    touch_clientX = touchEvent->touches[0].clientX;
+    touch_clientY = touchEvent->touches[0].clientY;
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touchEvent->numTouches <= 2) {
+        touch_forward = 0;
+    }
+
+    if (touchEvent->numTouches <= 3) {
+        touch_jump = 0;
+    }
+
+    for (int i = 0; i < touchEvent->numTouches; ++i) {
+        EmscriptenTouchPoint touch = touchEvent->touches[i];
+        if (touch.isChanged && touch.identifier == touch_active) {
+            // Was the first touch released? If so, exit touch.
+            glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            touch_active = 0;
+
+            double duration = glfwGetTime() - touch_activated_at;
+            if (duration < 0.07) {
+                // Short duration = tap = left-click = break blocks
+                // TODO: only tap if touchstart position =~ touchend position?
+
+                int width = 0, height = 0;
+                glfwGetWindowSize(g->window, &width, &height);
+
+                //printf("tap at (%ld,%ld) within (%d,%d)\n", touch.clientX, touch.clientY, width, height);
+
+                if (touch.clientX < 80) { // TODO: && touch.clientY < height - 80? (bottom left center vs corner)
+                    // Tapping near the item icon = place
+                    on_right_click();
+                } else {
+                    // Tapping elswhere = break
+                    on_left_click();
+                }
+            }
+        }
+    }
+
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    touch_active = 0;
+    return EM_TRUE;
+}
+
+
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
     int w = 0;
@@ -2566,6 +2662,10 @@ void fullscreen_toggle() {
         glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
     }
 }
+
+void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
+    glfwGetCursorPos(window, xp, yp);
+}
 #endif
 
 void init_fullscreen_monitor_dimensions() {
@@ -2606,7 +2706,7 @@ void handle_mouse_input() {
     State *s = &g->players->state;
     if (exclusive && (px || py)) {
         double mx, my;
-        glfwGetCursorPos(g->window, &mx, &my);
+        craftGetCursorPos(g->window, &mx, &my);
         if (g->just_clicked) {
             // If the user had pressed or released a mouse button immediately before, ignore
             // the first mouse movement -- workaround bug(?) in Firefox, where clicking caused
@@ -2636,7 +2736,7 @@ void handle_mouse_input() {
         py = my;
     }
     else {
-        glfwGetCursorPos(g->window, &px, &py);
+        craftGetCursorPos(g->window, &px, &py);
     }
 }
 
@@ -2648,6 +2748,13 @@ static int blurred = 0;
 int craftGetKey(GLFWwindow *window, int key) {
     if (blurred) {
         return GLFW_RELEASE;
+    }
+
+    if (touch_forward && key == CRAFT_KEY_FORWARD) {
+        return GLFW_PRESS;
+    }
+    if (touch_jump && key == CRAFT_KEY_JUMP) {
+        return GLFW_PRESS;
     }
 
     return glfwGetKey(window, key);
@@ -2912,6 +3019,12 @@ int main(int argc, char **argv) {
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
     glfwSetScrollCallback(g->window, on_scroll);
+#ifdef __EMSCRIPTEN__
+    emscripten_set_touchstart_callback(NULL, NULL, EM_FALSE, on_touchstart);
+    emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
+    emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
+    emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
+#endif
 
     if (glewInit() != GLEW_OK) {
         return -1;
