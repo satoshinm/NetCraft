@@ -2445,6 +2445,7 @@ static int touch_forward = 0;
 static int touch_jump = 0;
 #ifdef __EMSCRIPTEN__
 static long touch_active = 0;
+static double touch_activated_at = 0;
 static int touch_just_activated = 0;
 static long touch_clientX = 0;
 static long touch_clientY = 0;
@@ -2475,6 +2476,7 @@ EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, voi
     }
 
     touch_active = touchEvent->touches[0].identifier;
+    touch_activated_at = glfwGetTime();
     touch_just_activated = 1;
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     return EM_TRUE;
@@ -2505,6 +2507,13 @@ EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void 
             // Was the first touch released? If so, exit touch.
             glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             touch_active = 0;
+
+            double duration = glfwGetTime() - touch_activated_at;
+            if (duration < 0.07) {
+                // Short duration = tap = left-click = break blocks
+                // TODO: only tap if touchstart position = touchend position?
+                on_left_click();
+            }
         }
     }
 
