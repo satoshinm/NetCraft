@@ -2442,6 +2442,72 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 }
 
 #ifdef __EMSCRIPTEN__
+static long touch_active = 0;
+static int touch_just_activated = 0;
+static long touch_clientX = 0;
+static long touch_clientY = 0;
+
+void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
+    if (touch_active) {
+        *xp = touch_clientX;
+        *yp = touch_clientY;
+        return;
+    }
+
+    glfwGetCursorPos(window, xp, yp);
+}
+
+EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touch_active) {
+        // Another finger was touched when one was already touching.
+        if (touchEvent->numTouches == 2) {
+            // 2-finger = left-click (break)
+            // TODO: why not just 1-finger tap?
+            on_left_click();
+        } else if (touchEvent->numTouches == 3) {
+            // 3-finger = right-click (place)
+            on_right_click();
+        }
+        // TODO: support multiple fingers for other interesting gestures
+        // TODO: and how about walking forward? what is a reasonable interface?
+        return EM_TRUE;
+    }
+
+    touch_active = touchEvent->touches[0].identifier;
+    touch_just_activated = 1;
+    glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touch_just_activated) {
+        g->just_clicked = 1; // ignore next movement, since two datapoints are needed to move
+        touch_just_activated = 0;
+    }
+    touch_clientX = touchEvent->touches[0].clientX;
+    touch_clientY = touchEvent->touches[0].clientY;
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    for (int i = 0; i < touchEvent->numTouches; ++i) {
+        EmscriptenTouchPoint touch = touchEvent->touches[i];
+        if (touch.isChanged && touch.identifier == touch_active) {
+            // Was the first touch released? If so, exit touch.
+            glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            touch_active = 0;
+        }
+    }
+
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    touch_active = 0;
+    return EM_TRUE;
+}
+
+
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
     int w = 0;
@@ -2566,6 +2632,10 @@ void fullscreen_toggle() {
         glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
     }
 }
+
+void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
+    glfwGetCursorPos(window, xp, yp);
+}
 #endif
 
 void init_fullscreen_monitor_dimensions() {
@@ -2606,7 +2676,7 @@ void handle_mouse_input() {
     State *s = &g->players->state;
     if (exclusive && (px || py)) {
         double mx, my;
-        glfwGetCursorPos(g->window, &mx, &my);
+        craftGetCursorPos(g->window, &mx, &my);
         if (g->just_clicked) {
             // If the user had pressed or released a mouse button immediately before, ignore
             // the first mouse movement -- workaround bug(?) in Firefox, where clicking caused
@@ -2636,7 +2706,7 @@ void handle_mouse_input() {
         py = my;
     }
     else {
-        glfwGetCursorPos(g->window, &px, &py);
+        craftGetCursorPos(g->window, &px, &py);
     }
 }
 
@@ -2912,6 +2982,12 @@ int main(int argc, char **argv) {
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
     glfwSetScrollCallback(g->window, on_scroll);
+#ifdef __EMSCRIPTEN__
+    emscripten_set_touchstart_callback(NULL, NULL, EM_FALSE, on_touchstart);
+    emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
+    emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
+    emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
+#endif
 
     if (glewInit() != GLEW_OK) {
         return -1;
