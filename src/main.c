@@ -2441,6 +2441,8 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
+static int touch_forward = 0;
+static int touch_jump = 0;
 #ifdef __EMSCRIPTEN__
 static long touch_active = 0;
 static int touch_just_activated = 0;
@@ -2461,15 +2463,14 @@ EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, voi
     if (touch_active) {
         // Another finger was touched when one was already touching.
         if (touchEvent->numTouches == 2) {
-            // 2-finger = left-click (break)
-            // TODO: why not just 1-finger tap?
-            on_left_click();
+            // 2-finger = move forward
+            touch_forward = 1;
+            touch_jump = 0;
         } else if (touchEvent->numTouches == 3) {
-            // 3-finger = right-click (place)
-            on_right_click();
+            // 3-finger = jump
+            touch_jump = 1;
         }
-        // TODO: support multiple fingers for other interesting gestures
-        // TODO: and how about walking forward? what is a reasonable interface?
+        // TODO: support other interesting gestures, tap to on_left_click()/on_right_click()?
         return EM_TRUE;
     }
 
@@ -2490,6 +2491,14 @@ EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEvent, void
 }
 
 EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touchEvent->numTouches <= 2) {
+        touch_forward = 0;
+    }
+
+    if (touchEvent->numTouches <= 3) {
+        touch_jump = 0;
+    }
+
     for (int i = 0; i < touchEvent->numTouches; ++i) {
         EmscriptenTouchPoint touch = touchEvent->touches[i];
         if (touch.isChanged && touch.identifier == touch_active) {
@@ -2718,6 +2727,13 @@ static int blurred = 0;
 int craftGetKey(GLFWwindow *window, int key) {
     if (blurred) {
         return GLFW_RELEASE;
+    }
+
+    if (touch_forward && key == CRAFT_KEY_FORWARD) {
+        return GLFW_PRESS;
+    }
+    if (touch_jump && key == CRAFT_KEY_JUMP) {
+        return GLFW_PRESS;
     }
 
     return glfwGetKey(window, key);
