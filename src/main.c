@@ -2511,8 +2511,20 @@ EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void 
             double duration = glfwGetTime() - touch_activated_at;
             if (duration < 0.07) {
                 // Short duration = tap = left-click = break blocks
-                // TODO: only tap if touchstart position = touchend position?
-                on_left_click();
+                // TODO: only tap if touchstart position =~ touchend position?
+
+                int width = 0, height = 0;
+                glfwGetWindowSize(g->window, &width, &height);
+
+                //printf("tap at (%ld,%ld) within (%d,%d)\n", touch.clientX, touch.clientY, width, height);
+
+                if (touch.clientX < 80) { // TODO: && touch.clientY < height - 80? (bottom left center vs corner)
+                    // Tapping near the item icon = place
+                    on_right_click();
+                } else {
+                    // Tapping elswhere = break
+                    on_left_click();
+                }
             }
         }
     }
