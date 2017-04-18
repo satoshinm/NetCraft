@@ -175,6 +175,7 @@ URLs can be given in place of the hostname to connect at other paths, or to use 
 
 - Left Click to destroy a block.
 - Right Click or Ctrl + Left Click to create a block.
+- Touch: swipe to free look, 2-finger to walk forward, 3-finger to jump, tap to destroy, tap left edge to create.
 - Ctrl + Right Click to toggle a block as a light source.
 - Middle Click to change the current block selection to the targeted block
 - WASD to move forward, left, backward, right.
