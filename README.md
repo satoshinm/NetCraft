@@ -143,9 +143,6 @@ Or, with the "/online" command in the game itself.
     /online craft.michaelfogleman.com
 
 In the web-based version, you can pass command-line arguments after `#` in the URL.
-This URL will connect to a WebSocket server running locally if you have one:
-
-    https://satoshinm.github.io/NetCraft/#localhost
 
 
 #### Server
@@ -169,7 +166,8 @@ Or for an alternative Java-based Bukkit plugin WebSocket server, check out:
 
 The web-based client will connect to WebSockets at the path `/craftws` by default. Full
 URLs can be given in place of the hostname to connect at other paths, or to use SSL (wss://).
-`/online localhost` is equivalent to `/online ws://localhost:4081/craftws`.
+`/online localhost` is equivalent to `/online ws://localhost:4081/craftws`. The special
+hostname "-" can be used to connect to the same server the page is served from.
 
 ### Controls
 
