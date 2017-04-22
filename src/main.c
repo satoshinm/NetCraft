@@ -2678,12 +2678,23 @@ void handle_gamepad_input() {
 
     emscripten_get_gamepad_status(0, &g->gamepad_state);
 
+    // Bumpers scroll
     if (g->gamepad_state.digitalButton[4] && !last_gamepad_state.digitalButton[4]) { // L1 left bumper pressed
         on_scroll(g->window, 0, SCROLL_THRESHOLD + 1);
     }
     if (g->gamepad_state.digitalButton[5] && !last_gamepad_state.digitalButton[5]) { // R1 right bumper pressed
         on_scroll(g->window, 0, -SCROLL_THRESHOLD - 1);
     }
+
+    // Triggers click
+    // TODO: holding to mine/place: https://github.com/satoshinm/NetCraft/issues/8
+    if (g->gamepad_state.digitalButton[6] && !last_gamepad_state.digitalButton[6]) { // L2 left trigger
+        on_right_click();
+    }
+    if (g->gamepad_state.digitalButton[7] && !last_gamepad_state.digitalButton[7]) { // R2 right trigger
+        on_left_click();
+    }
+
 
 
     memcpy(&last_gamepad_state, &g->gamepad_state, sizeof(EmscriptenGamepadEvent));
