@@ -2674,7 +2674,19 @@ void fullscreen_toggle() {
 }
 
 void handle_gamepad_input() {
+    static EmscriptenGamepadEvent last_gamepad_state;
+
     emscripten_get_gamepad_status(0, &g->gamepad_state);
+
+    if (g->gamepad_state.digitalButton[4] && !last_gamepad_state.digitalButton[4]) { // L1 left bumper pressed
+        on_scroll(g->window, 0, SCROLL_THRESHOLD + 1);
+    }
+    if (g->gamepad_state.digitalButton[5] && !last_gamepad_state.digitalButton[5]) { // R1 right bumper pressed
+        on_scroll(g->window, 0, -SCROLL_THRESHOLD - 1);
+    }
+
+
+    memcpy(&last_gamepad_state, &g->gamepad_state, sizeof(EmscriptenGamepadEvent));
 }
 
 #else // !__EMSCRIPTEN__
