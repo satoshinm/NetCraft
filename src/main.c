@@ -2826,9 +2826,8 @@ int craftGetKey(GLFWwindow *window, int key) {
         if (g->gamepad_state.digitalButton[0] && key == CRAFT_KEY_JUMP) { // A
             return GLFW_PRESS;
         }
-        if (g->gamepad_state.digitalButton[11]) { // D-pad up
-            if (key == CRAFT_KEY_JUMP && g->flying) return GLFW_PRESS;
-            if (key == CRAFT_KEY_FORWARD && !g->flying) return GLFW_PRESS;
+        if (g->gamepad_state.digitalButton[11] && key == CRAFT_KEY_JUMP) { // D-pad up
+            return GLFW_PRESS;
         }
         if (g->gamepad_state.digitalButton[10] && key == CRAFT_KEY_RIGHT) { // D-pad right
             return GLFW_PRESS;
