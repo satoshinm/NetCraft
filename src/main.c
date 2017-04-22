@@ -2542,6 +2542,21 @@ EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, vo
     return EM_TRUE;
 }
 
+static int have_gamepad = 0;
+EM_BOOL on_gamepadconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
+    have_gamepad = 1;
+    printf("gamepad connected\n");
+
+    return EM_TRUE;
+}
+
+EM_BOOL on_gamepaddisconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
+    have_gamepad = 0;
+    printf("gamepad disconnected\n");
+
+    return EM_TRUE;
+}
+
 
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
@@ -3029,6 +3044,8 @@ int main(int argc, char **argv) {
     emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
     emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
     emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
+    emscripten_set_gamepadconnected_callback(NULL, EM_FALSE, on_gamepadconnected);
+    emscripten_set_gamepaddisconnected_callback(NULL, EM_FALSE, on_gamepaddisconnected);
 #endif
 
     if (glewInit() != GLEW_OK) {
