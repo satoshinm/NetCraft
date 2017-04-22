@@ -168,6 +168,10 @@ typedef struct {
     Block copy1;
     int show_info_text;
     int show_ui;
+    int gamepad_connected;
+#ifdef __EMSCRIPTEN__
+    EmscriptenGamepadEvent gamepad_state;
+#endif
 } Model;
 
 static Model model;
@@ -2542,16 +2546,15 @@ EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, vo
     return EM_TRUE;
 }
 
-static int have_gamepad = 0;
 EM_BOOL on_gamepadconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
-    have_gamepad = 1;
+    g->gamepad_connected = 1;
     printf("gamepad connected\n");
 
     return EM_TRUE;
 }
 
 EM_BOOL on_gamepaddisconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
-    have_gamepad = 0;
+    g->gamepad_connected = 0;
     printf("gamepad disconnected\n");
 
     return EM_TRUE;
@@ -2670,8 +2673,13 @@ void fullscreen_toggle() {
     }
 }
 
+void handle_gamepad_input() {
+    emscripten_get_gamepad_status(0, &g->gamepad_state);
+}
+
 #else // !__EMSCRIPTEN__
 void on_window_size(GLFWwindow* window, int width, int height) {}
+void handle_gamepad_input() {} // TODO: support native gamepads
 
 void fullscreen_toggle() {
     if (glfwGetWindowMonitor(g->window)) {
@@ -2778,27 +2786,23 @@ int craftGetKey(GLFWwindow *window, int key) {
     }
 
 #ifdef __EMSCRIPTEN__
-    if (have_gamepad) {
-        EmscriptenGamepadEvent gamepadState;
-
-        emscripten_get_gamepad_status(0, &gamepadState);
-
+    if (g->gamepad_connected) {
         // See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
         // and test site http://html5gamepad.com
-        if (gamepadState.digitalButton[0] && key == CRAFT_KEY_JUMP) { // A
+        if (g->gamepad_state.digitalButton[0] && key == CRAFT_KEY_JUMP) { // A
             return GLFW_PRESS;
         }
-        if (gamepadState.digitalButton[11]) { // D-pad up
+        if (g->gamepad_state.digitalButton[11]) { // D-pad up
             if (key == CRAFT_KEY_JUMP && g->flying) return GLFW_PRESS;
             if (key == CRAFT_KEY_FORWARD && !g->flying) return GLFW_PRESS;
         }
-        if (gamepadState.digitalButton[10] && key == CRAFT_KEY_RIGHT) { // D-pad right
+        if (g->gamepad_state.digitalButton[10] && key == CRAFT_KEY_RIGHT) { // D-pad right
             return GLFW_PRESS;
         }
-        if (gamepadState.digitalButton[9] && key == CRAFT_KEY_CROUCH) { // D-pad down
+        if (g->gamepad_state.digitalButton[9] && key == CRAFT_KEY_CROUCH) { // D-pad down
             return GLFW_PRESS;
         }
-        if (gamepadState.digitalButton[8] && key == CRAFT_KEY_LEFT) { // D-pad left
+        if (g->gamepad_state.digitalButton[8] && key == CRAFT_KEY_LEFT) { // D-pad left
             return GLFW_PRESS;
         }
         // TODO: axes, more
@@ -3007,6 +3011,7 @@ void reset_model() {
     g->time_changed = 1;
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
+    g->gamepad_connected = 0;
 }
 
 void one_iter();
@@ -3338,6 +3343,8 @@ void one_iter() {
 
             // HANDLE MOUSE INPUT //
             handle_mouse_input();
+
+            handle_gamepad_input();
 
             // HANDLE MOVEMENT //
             handle_movement(dt);
