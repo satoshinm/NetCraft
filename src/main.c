@@ -2777,6 +2777,34 @@ int craftGetKey(GLFWwindow *window, int key) {
         return GLFW_PRESS;
     }
 
+#ifdef __EMSCRIPTEN__
+    if (have_gamepad) {
+        EmscriptenGamepadEvent gamepadState;
+
+        emscripten_get_gamepad_status(0, &gamepadState);
+
+        // See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
+        // and test site http://html5gamepad.com
+        if (gamepadState.digitalButton[0] && key == CRAFT_KEY_JUMP) { // A
+            return GLFW_PRESS;
+        }
+        if (gamepadState.digitalButton[11]) { // D-pad up
+            if (key == CRAFT_KEY_JUMP && g->flying) return GLFW_PRESS;
+            if (key == CRAFT_KEY_FORWARD && !g->flying) return GLFW_PRESS;
+        }
+        if (gamepadState.digitalButton[10] && key == CRAFT_KEY_RIGHT) { // D-pad right
+            return GLFW_PRESS;
+        }
+        if (gamepadState.digitalButton[9] && key == CRAFT_KEY_CROUCH) { // D-pad down
+            return GLFW_PRESS;
+        }
+        if (gamepadState.digitalButton[8] && key == CRAFT_KEY_LEFT) { // D-pad left
+            return GLFW_PRESS;
+        }
+        // TODO: axes, more
+    }
+#endif
+
     return glfwGetKey(window, key);
 }
 #ifdef __EMSCRIPTEN__
@@ -2826,6 +2854,9 @@ void handle_movement(double dt) {
             if (g->flying) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
+                // TODO: If gamepad is used to crouch (D-pad down), then it'll be ignored unless
+                // pointer lock is acquired too, due to this check - even the other other D-pad
+                // controls work. Weird inconsistency, should we require pointer lock for gamepad?
                 if (exclusive) {
                     vy = -1;
                 }
