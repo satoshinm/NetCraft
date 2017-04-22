@@ -2466,6 +2466,17 @@ void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
         return;
     }
 
+    if (g->gamepad_connected) {
+        *xp = g->gamepad_state.axis[2]; // right joystick (look), horizontal
+        *yp = g->gamepad_state.axis[3]; // right joystick (look), vertical
+
+        // Scale [-1,1] to window
+        *xp = (*xp * g->width / 2) + g->width / 2;
+        *yp = (*yp * g->height / 2) + g->height/ 2;
+        // TODO: is this (right joystick) supposed to rotate, not merely free look? (convention)
+        return;
+    }
+
     glfwGetCursorPos(window, xp, yp);
 }
 
