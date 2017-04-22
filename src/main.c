@@ -2854,10 +2854,7 @@ void handle_movement(double dt) {
             if (g->flying) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
-                // TODO: If gamepad is used to crouch (D-pad down), then it'll be ignored unless
-                // pointer lock is acquired too, due to this check - even the other other D-pad
-                // controls work. Weird inconsistency, should we require pointer lock for gamepad?
-                if (exclusive) {
+                if (exclusive || !glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
                     vy = -1;
                 }
             }
