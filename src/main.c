@@ -2838,7 +2838,19 @@ int craftGetKey(GLFWwindow *window, int key) {
         if (g->gamepad_state.digitalButton[8] && key == CRAFT_KEY_LEFT) { // D-pad left
             return GLFW_PRESS;
         }
-        // TODO: axes, more
+
+        if (g->gamepad_state.axis[0] < 0 && key == CRAFT_KEY_LEFT) { // left stick, left
+            return GLFW_PRESS;
+        }
+        if (g->gamepad_state.axis[0] > 0 && key == CRAFT_KEY_RIGHT) { // left stick, right
+            return GLFW_PRESS;
+        }
+        if (g->gamepad_state.axis[1] < 0 && key == CRAFT_KEY_BACKWARD) { // left stick, down
+            return GLFW_PRESS;
+        }
+        if (g->gamepad_state.axis[1] > 0 && key == CRAFT_KEY_FORWARD) { // left stick, up
+            return GLFW_PRESS;
+        }
     }
 #endif
 
