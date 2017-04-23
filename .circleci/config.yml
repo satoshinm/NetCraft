@@ -11,13 +11,13 @@ jobs:
             - run: 
                 name: Setup dependencies
                 command: |
-                  apt-get update
-                  apt-get install -y cmake libglew-dev xorg-dev libcurl4-openssl-dev
-                  apt-get install -y libglfw-dev
+                  apt update
+                  apt install -y cmake libglew-dev xorg-dev libcurl4-openssl-dev
+                  apt install -y libglfw-dev
                   mkdir native-build
                   (cd native-build && cmake ..)
                   
-                  apt-get install -y emscripten
+                  apt install -y emscripten
                   mkdir release-build-js
                   (cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
             - run:
