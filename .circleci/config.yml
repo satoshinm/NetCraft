@@ -1,0 +1,17 @@
+version: 2
+jobs:
+    build:
+        docker:
+            - image: buildpack-deps:trusty
+        environment:
+            EMSCRIPTEN: /usr/share/emscripten
+        working_directory: ~/NetCraft
+        steps:
+            - checkout
+            - run: sudo apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
+            - run: sudo apt-get install libglfw-dev
+            - run: mkdir native-build
+            - run: cd native-build && cmake ..
+            - run: cd native-build && make
+
+
