@@ -179,6 +179,7 @@ hostname "-" can be used to connect to the same server the page is served from.
 - WASD to move forward, left, backward, right.
 - Space to jump.
 - Space double-tap to toggle between walking and flying (when flying, space to ascend, shift to descend).
+- Tab to sprint, while holding another directional key (increases movement speed).
 - 1-9 to select the block type to create.
 - E, or the scrollwheel to cycle through the block types.
 - ZXCVBN to move in exact directions along the XYZ axes.

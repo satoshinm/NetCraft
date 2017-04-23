@@ -2818,6 +2818,7 @@ void handle_movement(double dt) {
         }
     }
     float speed = g->flying ? 20 : 5;
+    if (craftGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
     int estimate = roundf(sqrtf(
         powf(vx * speed, 2) +
         powf(vy * speed + ABS(dy) * 2, 2) +
