@@ -8,6 +8,7 @@ jobs:
         working_directory: ~/NetCraft
         steps:
             - checkout
+            - run: apt-get update
             - run: apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
             - run: apt-get install libglfw-dev
             - run: mkdir native-build
