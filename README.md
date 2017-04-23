@@ -178,9 +178,9 @@ hostname "-" can be used to connect to the same server the page is served from.
 - Middle Click to change the current block selection to the targeted block
 - WASD to move forward, left, backward, right.
 - Space to jump.
+- Space double-tap to toggle between walking and flying (when flying, space to ascend, shift to descend).
 - 1-9 to select the block type to create.
 - E, or the scrollwheel to cycle through the block types.
-- Tab to toggle between walking and flying (when flying, space to ascend, shift to descend).
 - ZXCVBN to move in exact directions along the XYZ axes.
 - Z to zoom.
 - F to show the scene in orthographic mode.

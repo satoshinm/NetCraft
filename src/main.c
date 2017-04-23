@@ -2241,6 +2241,14 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) {
         return;
     }
+    if (key == CRAFT_KEY_JUMP) {
+        static double last_jumped = 0;
+        if (glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
+            g->flying = !g->flying;
+            printf("fly mode toggled: %d\n", g->flying);
+        }
+        last_jumped = glfwGetTime();
+    }
     if (key == GLFW_KEY_ESCAPE) {
         if (g->typing) {
             g->typing = 0;
@@ -2302,9 +2310,6 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
         }
     }
     if (!g->typing) {
-        if (key == CRAFT_KEY_FLY) {
-            g->flying = !g->flying;
-        }
         if (key >= '1' && key <= '9') {
             g->item_index = key - '1';
         }
