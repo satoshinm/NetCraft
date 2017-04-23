@@ -5,9 +5,13 @@ dependencies:
         - mkdir native-build
         - cd native-build && cmake ..
         - sudo apt-get install emscripten
+        - mkdir release-build-js
+        - echo EMSCRIPTEN = $EMSCRIPTEN
+        - cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..
 test:
     override:
         - cd native-build && make
+        - cd release-build-js && make
 general:
     artifacts:
         - "native-build/craft"
