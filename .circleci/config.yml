@@ -2,7 +2,7 @@ version: 2
 jobs:
     build:
         docker:
-            - image: buildpack-deps:trusty
+            - image: buildpack-deps:zesty
         environment:
             EMSCRIPTEN: /usr/share/emscripten
         working_directory: ~/NetCraft
