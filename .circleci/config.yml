@@ -9,15 +9,22 @@ jobs:
         steps:
             - checkout
             - run: 
-                name: Setup
+                name: Setup dependencies
                 command: |
                   apt-get update
                   apt-get install -y cmake libglew-dev xorg-dev libcurl4-openssl-dev
                   apt-get install -y libglfw-dev
                   mkdir native-build
-                  cd native-build && cmake ..
+                  (cd native-build && cmake ..)
+                  
+                  apt-get install -y emscripten
+                  mkdir release-build-js
+                  (cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
             - run:
-                name: Native Build
+                name: native-build
                 command: cd native-build && make
+            - run:
+                name: release-build-js
+                command: cd release-build-js && make
 
 
