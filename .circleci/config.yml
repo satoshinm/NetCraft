@@ -13,7 +13,7 @@ jobs:
                 command: |
                   apt update
                   apt install -y cmake libglew-dev xorg-dev libcurl4-openssl-dev
-                  apt install -y libglfw-dev
+                  apt install -y libglfw3-dev
                   mkdir native-build
                   (cd native-build && cmake ..)
                   
