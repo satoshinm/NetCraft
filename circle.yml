@@ -6,10 +6,8 @@ dependencies:
     pre:
         - sudo apt-get install emscripten
         - emcc
-        - ls -lR /usr/share/emscripten/
-        - ls -lR /usr/share/emscripten/cmake
         - mkdir release-build-js
-        - cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..
+        - cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Platform/Emscripten.cmake ..
         - sudo apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
         - sudo apt-get install libglfw-dev
         - mkdir native-build
