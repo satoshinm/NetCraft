@@ -18,13 +18,13 @@ jobs:
                   (cd native-build && cmake ..)
                   
                   apt install -y emscripten
-                  mkdir release-build-js
-                  (cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
+                  mkdir build
+                  (cd build && cmake -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
             - run:
                 name: native-build
                 command: cd native-build && make
             - run:
-                name: release-build-js
-                command: cd release-build-js && make
+                name: build (web)
+                command: cd build && make
 
 
