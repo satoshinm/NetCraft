@@ -4,6 +4,7 @@ dependencies:
         - sudo apt-get install libglfw-dev
         - mkdir native-build
         - cd native-build && cmake ..
+        - sudo apt-get install emscripten
 test:
     override:
         - cd native-build && make
