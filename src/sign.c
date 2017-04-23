@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "sign.h"
 
 void sign_list_alloc(SignList *list, int capacity) {
+    assert(capacity != 0);
     list->capacity = capacity;
     list->size = 0;
     list->data = (Sign *)calloc(capacity, sizeof(Sign));
