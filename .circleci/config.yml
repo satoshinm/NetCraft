@@ -8,11 +8,16 @@ jobs:
         working_directory: ~/NetCraft
         steps:
             - checkout
-            - run: apt-get update
-            - run: apt-get install -y cmake libglew-dev xorg-dev libcurl4-openssl-dev
-            - run: apt-get install -y libglfw-dev
-            - run: mkdir native-build
-            - run: cd native-build && cmake ..
-            - run: cd native-build && make
+            - run: 
+                name: Setup
+                command: |
+                  apt-get update
+                  apt-get install -y cmake libglew-dev xorg-dev libcurl4-openssl-dev
+                  apt-get install -y libglfw-dev
+                  mkdir native-build
+                  cd native-build && cmake ..
+            - run:
+                name: Native Build
+                command: cd native-build && make
 
 
