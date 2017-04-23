@@ -1749,7 +1749,7 @@ void render_wireframe(Attrib *attrib, Player *player) {
     set_matrix_3d(
         matrix, g->width, g->height,
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
-    int hx, hy, hz;
+    int hx = -1, hy = -1, hz = -1;
     int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
     if (is_obstacle(hw)) {
         glUseProgram(attrib->program);
@@ -3378,7 +3378,7 @@ void one_iter() {
             if (g->typing) {
                 snprintf(text_buffer, 1024, "> %s", g->typing_buffer);
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
-                ty -= ts * 2;
+                //ty -= ts * 2; // unused
             }
             if (SHOW_PLAYER_NAMES && g->show_ui) {
                 if (player != me) {
