@@ -3378,7 +3378,7 @@ void one_iter() {
             if (g->typing) {
                 snprintf(text_buffer, 1024, "> %s", g->typing_buffer);
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
-                ty -= ts * 2;
+                //ty -= ts * 2; // unused
             }
             if (SHOW_PLAYER_NAMES && g->show_ui) {
                 if (player != me) {
