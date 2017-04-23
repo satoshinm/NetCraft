@@ -2243,7 +2243,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     }
     if (key == CRAFT_KEY_JUMP) {
         static double last_jumped = 0;
-        if (glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
+        if (last_jumped != 0 && glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
             g->flying = !g->flying;
             printf("fly mode toggled: %d\n", g->flying);
         }
