@@ -102,10 +102,10 @@ the installation:
 
     brew install cmake
 
-#### Linux (Ubuntu)
+#### Linux (Ubuntu 16.04.2 LTS)
 
-    sudo apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
-    sudo apt-get build-dep glfw
+    sudo apt install cmake libglew-dev xorg-dev libcurl4-openssl-dev
+    sudo apt install libglfw3-dev
 
 #### Windows
 

@@ -69,21 +69,20 @@ else ()
     set(CURL_LIBRARIES "")
 endif ()
 
-find_package(OpenGL REQUIRED)
-
 if(APPLE OR EMSCRIPTEN)
     target_link_libraries(craft glfw
-        ${OPENGL_gl_LIBRARY}
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
 endif()
 
 if(UNIX AND NOT EMSCRIPTEN)
+    find_package(OpenGL REQUIRED)
     target_link_libraries(craft dl glfw
         ${OPENGL_gl_LIBRARY}
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
 endif()
 
 if(MINGW OR MSVC)
+    find_package(OpenGL REQUIRED)
     target_link_libraries(craft ws2_32.lib glfw
         ${OPENGL_gl_LIBRARY}
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
