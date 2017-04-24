@@ -3036,8 +3036,8 @@ int main(int argc, char **argv) {
         "shaders/block_vertex.glsl", "shaders/block_fragment.glsl");
     block_attrib.program = program;
     block_attrib.position = glGetAttribLocation(program, "position");
-    block_attrib.normal = glGetAttribLocation(program, "normal");
     block_attrib.uv = glGetAttribLocation(program, "uv");
+    block_attrib.normal = glGetAttribLocation(program, "normal");
     block_attrib.matrix = glGetUniformLocation(program, "matrix");
     block_attrib.sampler = glGetUniformLocation(program, "sampler");
     block_attrib.extra1 = glGetUniformLocation(program, "sky_sampler");
@@ -3066,8 +3066,8 @@ int main(int argc, char **argv) {
         "shaders/sky_vertex.glsl", "shaders/sky_fragment.glsl");
     sky_attrib.program = program;
     sky_attrib.position = glGetAttribLocation(program, "position");
-    sky_attrib.normal = -1; // unused
     sky_attrib.uv = glGetAttribLocation(program, "uv");
+    sky_attrib.normal = -1; // unused
     sky_attrib.matrix = glGetUniformLocation(program, "matrix");
     sky_attrib.sampler = glGetUniformLocation(program, "sampler");
     sky_attrib.timer = glGetUniformLocation(program, "timer");
