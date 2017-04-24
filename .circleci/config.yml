@@ -19,9 +19,7 @@ jobs:
                   apt install -y nodejs
                   apt install -y default-jre
                   wget https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz
-                  ls -l emsdk-portable.tar.gz
-                  ls
-                  tar xf emsdk-portable.tar.gz
+                  tar xf emsdk-portable.tar.gz -C ~
                   ~/emsdk-portable/emsdk update
                   ~/emsdk-portable/emsdk install latest
                   ~/emsdk-portable/emsdk activate latest
