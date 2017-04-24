@@ -195,7 +195,7 @@ int wrap(const char *input, int max_width, char *output, int max_length) {
     strcpy(text, input);
     int space_width = char_width(' ');
     int line_number = 0;
-    char *key1, *key2;
+    char *key1 = NULL, *key2 = NULL;
     char *line = tokenize(text, "\r\n", &key1);
     while (line) {
         int line_width = 0;

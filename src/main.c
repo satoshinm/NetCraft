@@ -205,7 +205,7 @@ int get_scale_factor(GLFWwindow *window) {
     int buffer_width, buffer_height;
     glfwGetWindowSize(window, &window_width, &window_height);
     if (window_width <= 0 || window_height <= 0) {
-        return 0;
+        return 1;
     }
     glfwGetFramebufferSize(window, &buffer_width, &buffer_height);
     int result = buffer_width / window_width;
@@ -1749,7 +1749,7 @@ void render_wireframe(Attrib *attrib, Player *player) {
     set_matrix_3d(
         matrix, g->width, g->height,
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
-    int hx, hy, hz;
+    int hx = -1, hy = -1, hz = -1;
     int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
     if (is_obstacle(hw)) {
         glUseProgram(attrib->program);
@@ -2241,6 +2241,14 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) {
         return;
     }
+    if (key == CRAFT_KEY_JUMP) {
+        static double last_jumped = 0;
+        if (last_jumped != 0 && glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
+            g->flying = !g->flying;
+            printf("fly mode toggled: %d\n", g->flying);
+        }
+        last_jumped = glfwGetTime();
+    }
     if (key == GLFW_KEY_ESCAPE) {
         if (g->typing) {
             g->typing = 0;
@@ -2302,9 +2310,6 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
         }
     }
     if (!g->typing) {
-        if (key == CRAFT_KEY_FLY) {
-            g->flying = !g->flying;
-        }
         if (key >= '1' && key <= '9') {
             g->item_index = key - '1';
         }
@@ -2791,12 +2796,12 @@ void handle_movement(double dt) {
         if (craftGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
         if (craftGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
     }
-    float vx, vy, vz;
+    float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
         if (craftGetKey(g->window, CRAFT_KEY_JUMP)) {
             if (g->flying) {
-                vy = 1;
+                vy++;
             }
             else if (dy == 0) {
                 dy = 8;
@@ -2807,12 +2812,14 @@ void handle_movement(double dt) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
                 if (exclusive) {
-                    vy = -1;
+                    vy--;
                 }
             }
         }
     }
     float speed = g->flying ? 20 : 5;
+    if (craftGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
+    if (craftGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
     int estimate = roundf(sqrtf(
         powf(vx * speed, 2) +
         powf(vy * speed + ABS(dy) * 2, 2) +
@@ -3378,7 +3385,7 @@ void one_iter() {
             if (g->typing) {
                 snprintf(text_buffer, 1024, "> %s", g->typing_buffer);
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
-                ty -= ts * 2;
+                //ty -= ts * 2; // unused
             }
             if (SHOW_PLAYER_NAMES && g->show_ui) {
                 if (player != me) {
