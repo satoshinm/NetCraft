@@ -2796,12 +2796,12 @@ void handle_movement(double dt) {
         if (craftGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
         if (craftGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
     }
-    float vx, vy, vz;
+    float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
         if (craftGetKey(g->window, CRAFT_KEY_JUMP)) {
             if (g->flying) {
-                vy = 1;
+                vy++;
             }
             else if (dy == 0) {
                 dy = 8;
@@ -2812,7 +2812,7 @@ void handle_movement(double dt) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
                 if (exclusive) {
-                    vy = -1;
+                    vy--;
                 }
             }
         }
