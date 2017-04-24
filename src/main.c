@@ -2987,16 +2987,6 @@ static int g_running;
 static int g_inner_break;
 
 
-#ifdef __EMSCRIPTEN__
-EM_BOOL on_pointerlockchange(int eventType, const EmscriptenPointerlockChangeEvent *pointerlockChangeEvent, void *userData) {
-    if (!pointerlockChangeEvent->isActive) {
-        printf("pointerlockchange deactivated, so enabling cursor\n");
-        glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-    return 0;
-}
-#endif
-
 int main(int argc, char **argv) {
     // INITIALIZATION //
 #ifndef __EMSCRIPTEN__
@@ -3016,11 +3006,7 @@ int main(int argc, char **argv) {
     }
 
     glfwMakeContextCurrent(g->window);
-#ifdef __EMSCRIPTEN__
-    emscripten_set_pointerlockchange_callback(NULL, NULL, 0, on_pointerlockchange);
-#else // web pointer lock requires user action to activate, start off disabled
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-#endif
     glfwSetWindowSizeCallback(g->window, on_window_size);
     glfwSetKeyCallback(g->window, on_key);
     glfwSetCharCallback(g->window, on_char);
