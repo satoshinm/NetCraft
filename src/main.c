@@ -2217,6 +2217,8 @@ void change_ortho_zoom(double ydelta) {
 }
 
 void fullscreen_toggle();
+static int touch_forward = 0;
+static int touch_jump = 0;
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
@@ -2239,7 +2241,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) {
         return;
     }
-    if (key == CRAFT_KEY_JUMP) {
+    if (key == CRAFT_KEY_JUMP || touch_jump) {
         static double last_jumped = 0;
         if (last_jumped != 0 && glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
             g->flying = !g->flying;
@@ -2439,8 +2441,6 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
-static int touch_forward = 0;
-static int touch_jump = 0;
 #ifdef __EMSCRIPTEN__
 static long touch_active = 0;
 static double touch_activated_at = 0;
@@ -2738,39 +2738,6 @@ void handle_mouse_input() {
     }
 }
 
-// Partial workaround stuck keys in web, TODO: fix upstream in https://github.com/kripken/emscripten/issues/5122 and delete all this
-// When blurred, treat all keys as released. However, once the player refocuses
-// the game, then the keys will be stuck, again. Emscripten fix may be only possibility.
-// This is only for character keys, TODO: also for modifier keys like Command
-static int blurred = 0;
-int craftGetKey(GLFWwindow *window, int key) {
-    if (blurred) {
-        return GLFW_RELEASE;
-    }
-
-    if (touch_forward && key == CRAFT_KEY_FORWARD) {
-        return GLFW_PRESS;
-    }
-    if (touch_jump && key == CRAFT_KEY_JUMP) {
-        return GLFW_PRESS;
-    }
-
-    return glfwGetKey(window, key);
-}
-#ifdef __EMSCRIPTEN__
-EM_BOOL on_focus(int eventType, const EmscriptenFocusEvent *focusEvent, void *userData) {
-   switch(eventType) {
-       case EMSCRIPTEN_EVENT_BLUR:
-           blurred = 1;
-           break;
-       case EMSCRIPTEN_EVENT_FOCUS:
-           blurred = 0;
-           break;
-   }
-   return EM_FALSE;
-}
-#endif
-
 void handle_movement(double dt) {
     static float dy = 0;
     State *s = &g->players->state;
@@ -2778,21 +2745,21 @@ void handle_movement(double dt) {
     int sx = 0;
     if (!g->typing) {
         float m = dt * 1.0;
-        g->ortho = craftGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
-        g->fov = craftGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
-        if (craftGetKey(g->window, CRAFT_KEY_FORWARD)) sz--;
-        if (craftGetKey(g->window, CRAFT_KEY_BACKWARD)) sz++;
-        if (craftGetKey(g->window, CRAFT_KEY_LEFT)) sx--;
-        if (craftGetKey(g->window, CRAFT_KEY_RIGHT)) sx++;
-        if (craftGetKey(g->window, GLFW_KEY_LEFT)) s->rx -= m;
-        if (craftGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
-        if (craftGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
-        if (craftGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
+        g->ortho = glfwGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
+        g->fov = glfwGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
+        if (glfwGetKey(g->window, CRAFT_KEY_FORWARD) || touch_forward) sz--;
+        if (glfwGetKey(g->window, CRAFT_KEY_BACKWARD)) sz++;
+        if (glfwGetKey(g->window, CRAFT_KEY_LEFT)) sx--;
+        if (glfwGetKey(g->window, CRAFT_KEY_RIGHT)) sx++;
+        if (glfwGetKey(g->window, GLFW_KEY_LEFT)) s->rx -= m;
+        if (glfwGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
+        if (glfwGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
+        if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
     }
     float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
-        if (craftGetKey(g->window, CRAFT_KEY_JUMP)) {
+        if (glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump) {
             if (g->flying) {
                 vy++;
             }
@@ -2800,7 +2767,7 @@ void handle_movement(double dt) {
                 dy = 8;
             }
         }
-        if (craftGetKey(g->window, CRAFT_KEY_CROUCH)) {
+        if (glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
             if (g->flying) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
@@ -2811,8 +2778,8 @@ void handle_movement(double dt) {
         }
     }
     float speed = g->flying ? 20 : 5;
-    if (craftGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
-    if (craftGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
+    if (glfwGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
+    if (glfwGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
     int estimate = roundf(sqrtf(
         powf(vx * speed, 2) +
         powf(vy * speed + ABS(dy) * 2, 2) +
@@ -3135,8 +3102,6 @@ int main(int argc, char **argv) {
     // OUTER LOOP //
     g_running = 1;
 #ifdef __EMSCRIPTEN__
-    emscripten_set_blur_callback(NULL, NULL, EM_TRUE, on_focus);
-    emscripten_set_focus_callback(NULL, NULL, EM_TRUE, on_focus);
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
     //main_shutdown(); // called in one_iter() if g_inner_break
