@@ -26,11 +26,14 @@ jobs:
                   source ~/emsdk-portable/emsdk_env.sh
                   mkdir release-build-js
                   (cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
+                  mkdir wasm-build
+                  (cd wasm-build && cmake -DWASM=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
             - run:
                 name: native-build
                 command: cd native-build && make
             - run:
                 name: release-build-js
                 command: cd release-build-js && source ~/emsdk-portable/emsdk_env.sh && make
-
-
+            - run:
+                name: wasm-build
+                command: cd wasm-build && source ~/emsdk-portable/emsdk_env.sh && make
