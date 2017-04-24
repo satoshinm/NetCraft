@@ -314,6 +314,7 @@ GLuint gen_text_buffer(float x, float y, float n, char *text) {
 }
 
 void draw_triangles_3d_ao(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -328,6 +329,7 @@ void draw_triangles_3d_ao(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_3d_text(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -342,6 +344,7 @@ void draw_triangles_3d_text(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_3d_sky(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -356,6 +359,7 @@ void draw_triangles_3d_sky(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_2d(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -370,6 +374,7 @@ void draw_triangles_2d(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_lines(Attrib *attrib, GLuint buffer, int components, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glVertexAttribPointer(
