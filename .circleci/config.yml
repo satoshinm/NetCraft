@@ -3,8 +3,6 @@ jobs:
     build:
         docker:
             - image: buildpack-deps:xenial
-        environment:
-            EMSCRIPTEN: /usr/share/emscripten
         working_directory: ~/NetCraft
         steps:
             - checkout
@@ -16,8 +14,16 @@ jobs:
                   apt install -y libglfw3-dev
                   mkdir native-build
                   (cd native-build && cmake ..)
-                  
-                  apt install -y emscripten
+                  # http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html#platform-notes-installation-instructions-portable-sdk
+                  apt install -y python2.7
+                  apt install -y nodejs
+                  apt install -y default-jre
+                  wget https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz
+                  tar xf emsdk-portable.tar.gz
+                  ~/emsdk-portable/emsdk update
+                  ~/emsdk-portable/emsdk install latest
+                  ~/emsdk-portable/emsdk activate latest
+                  source ~/emsdk-portable/emsdk_env.sh
                   mkdir build
                   (cd build && cmake -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
             - run:
@@ -25,6 +31,6 @@ jobs:
                 command: cd native-build && make
             - run:
                 name: build (web)
-                command: cd build && make
+                command: cd build && source ~/emsdk-portable/emsdk_env.sh && make
 
 
