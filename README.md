@@ -102,10 +102,10 @@ the installation:
 
     brew install cmake
 
-#### Linux (Ubuntu)
+#### Linux (Ubuntu 16.04.2 LTS)
 
-    sudo apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
-    sudo apt-get build-dep glfw
+    sudo apt install cmake libglew-dev xorg-dev libcurl4-openssl-dev
+    sudo apt install libglfw3-dev
 
 #### Windows
 
@@ -179,6 +179,8 @@ hostname "-" can be used to connect to the same server the page is served from.
 - WASD to move forward, left, backward, right.
 - Space to jump.
 - Space double-tap to toggle between walking and flying (when flying, space to ascend, shift to descend).
+- Shift to crouch, walk slower.
+- Tab to sprint, while holding another directional key (increases movement speed).
 - 1-9 to select the block type to create.
 - E, or the scrollwheel to cycle through the block types.
 - ZXCVBN to move in exact directions along the XYZ axes.

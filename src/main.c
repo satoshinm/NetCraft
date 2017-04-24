@@ -2247,7 +2247,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     }
     if (key == CRAFT_KEY_JUMP) {
         static double last_jumped = 0;
-        if (glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
+        if (last_jumped != 0 && glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
             g->flying = !g->flying;
             printf("fly mode toggled: %d\n", g->flying);
         }
@@ -2888,12 +2888,12 @@ void handle_movement(double dt) {
         if (craftGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
         if (craftGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
     }
-    float vx, vy, vz;
+    float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
         if (craftGetKey(g->window, CRAFT_KEY_JUMP)) {
             if (g->flying) {
-                vy = 1;
+                vy++;
             }
             else if (dy == 0) {
                 dy = 8;
@@ -2904,12 +2904,14 @@ void handle_movement(double dt) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
                 if (exclusive || !glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
-                    vy = -1;
+                    vy--;
                 }
             }
         }
     }
     float speed = g->flying ? 20 : 5;
+    if (craftGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
+    if (craftGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
     int estimate = roundf(sqrtf(
         powf(vx * speed, 2) +
         powf(vy * speed + ABS(dy) * 2, 2) +
