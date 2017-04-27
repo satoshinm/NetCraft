@@ -37,7 +37,14 @@ See below to run from source.
 
 ### Web builds
 
-To build for the web, compiling to JavaScript, install [Emscripten](http://emscripten.org) and run:
+To build for the web, compiling to JavaScript, first install [Emscripten](http://emscripten.org).
+The EM SDK is the easiest to install, but to get my patch fixes you can either build from source
+using this branch: https://github.com/satoshinm/emscripten/commits/netcraft, or alternatively
+install 1.37.9 from the SDK and apply a patch:
+
+    patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.9+netcraftfixes.patch
+
+Once your Emscripten environment is setup, then run:
 
     git clone https://github.com/satoshinm/NetCraft.git
     cd NetCraft

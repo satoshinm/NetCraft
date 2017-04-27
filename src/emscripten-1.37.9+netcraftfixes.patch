@@ -1,0 +1,107 @@
+diff -ur 1.37.9/src/library_glfw.js 1.37.9+fixes/src/library_glfw.js
+--- 1.37.9/src/library_glfw.js	2017-04-24 00:07:55.000000000 -0700
++++ 1.37.9+fixes/src/library_glfw.js	2017-04-24 00:08:48.000000000 -0700
+@@ -57,6 +57,7 @@
+       };
+       this.buttons = 0;
+       this.keys = new Array();
++      this.domKeys = new Array();
+       this.shouldClose = 0;
+       this.title = null;
+       this.windowPosFunc = null; // GLFWwindowposfun
+@@ -343,6 +344,7 @@
+ 
+     onKeyPress: function(event) {
+       if (!GLFW.active || !GLFW.active.charFunc) return;
++      if (event.ctrlKey || event.metaKey) return;
+ 
+       // correct unicode charCode is only available with onKeyPress event
+       var charCode = event.charCode;
+@@ -357,16 +359,17 @@
+ #endif
+     },
+ 
+-    onKeyChanged: function(event, status) {
++    onKeyChanged: function(keyCode, status) {
+       if (!GLFW.active) return;
+ 
+-      var key = GLFW.DOMToGLFWKeyCode(event.keyCode);
++      var key = GLFW.DOMToGLFWKeyCode(keyCode);
+       if (key == -1) return;
+ 
+ #if USE_GLFW == 3
+       var repeat = status && GLFW.active.keys[key];
+ #endif
+       GLFW.active.keys[key] = status;
++      GLFW.active.domKeys[keyCode] = status;
+       if (!GLFW.active.keyFunc) return;
+ 
+ #if USE_GLFW == 2
+@@ -375,12 +378,12 @@
+ 
+ #if USE_GLFW == 3
+       if (repeat) status = 2; // GLFW_REPEAT
+-      Module['dynCall_viiiii'](GLFW.active.keyFunc, GLFW.active.id, key, event.keyCode, status, GLFW.getModBits(GLFW.active));
++      Module['dynCall_viiiii'](GLFW.active.keyFunc, GLFW.active.id, key, keyCode, status, GLFW.getModBits(GLFW.active));
+ #endif
+     },
+ 
+     onKeydown: function(event) {
+-      GLFW.onKeyChanged(event, 1); // GLFW_PRESS or GLFW_REPEAT
++      GLFW.onKeyChanged(event.keyCode, 1); // GLFW_PRESS or GLFW_REPEAT
+ 
+       // This logic comes directly from the sdl implementation. We cannot
+       // call preventDefault on all keydown events otherwise onKeyPress will
+@@ -391,7 +394,17 @@
+     },
+ 
+     onKeyup: function(event) {
+-      GLFW.onKeyChanged(event, 0); // GLFW_RELEASE
++      GLFW.onKeyChanged(event.keyCode, 0); // GLFW_RELEASE
++    },
++
++    onBlur: function(event) {
++      if (!GLFW.active) return;
++
++      for (var i = 0; i < GLFW.active.domKeys.length; ++i) {
++        if (GLFW.active.domKeys[i]) {
++          GLFW.onKeyChanged(i, 0); // GLFW_RELEASE
++        }
++      }
+     },
+ 
+     onMousemove: function(event) {
+@@ -944,6 +957,7 @@
+     window.addEventListener("keydown", GLFW.onKeydown, true);
+     window.addEventListener("keypress", GLFW.onKeyPress, true);
+     window.addEventListener("keyup", GLFW.onKeyup, true);
++    window.addEventListener("blur", GLFW.onBlur, true);
+     Module["canvas"].addEventListener("mousemove", GLFW.onMousemove, true);
+     Module["canvas"].addEventListener("mousedown", GLFW.onMouseButtonDown, true);
+     Module["canvas"].addEventListener("mouseup", GLFW.onMouseButtonUp, true);
+@@ -962,6 +976,7 @@
+     window.removeEventListener("keydown", GLFW.onKeydown, true);
+     window.removeEventListener("keypress", GLFW.onKeyPress, true);
+     window.removeEventListener("keyup", GLFW.onKeyup, true);
++    window.removeEventListener("blur", GLFW.onBlur, true);
+     Module["canvas"].removeEventListener("mousemove", GLFW.onMousemove, true);
+     Module["canvas"].removeEventListener("mousedown", GLFW.onMouseButtonDown, true);
+     Module["canvas"].removeEventListener("mouseup", GLFW.onMouseButtonUp, true);
+@@ -1230,6 +1245,17 @@
+   glfwGetInputMode: function(winid, mode) {
+     var win = GLFW.WindowFromId(winid);
+     if (!win) return;
++
++    switch (mode) {
++      case 0x00033001: { // GLFW_CURSOR
++        if (Browser.pointerLock) {
++          win.inputModes[mode] = 0x00034003; // GLFW_CURSOR_DISABLED
++        } else {
++          win.inputModes[mode] = 0x00034001; // GLFW_CURSOR_NORMAL
++        }
++      }
++    }
++
+     return win.inputModes[mode];
+   },
+ 
