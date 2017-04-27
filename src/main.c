@@ -2457,26 +2457,7 @@ static int touch_just_activated = 0;
 static long touch_clientX = 0;
 static long touch_clientY = 0;
 
-void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
-    if (touch_active) {
-        *xp = touch_clientX;
-        *yp = touch_clientY;
-        return;
-    }
 
-    if (g->gamepad_connected) {
-        *xp = g->gamepad_state.axis[2]; // right joystick (look), horizontal
-        *yp = g->gamepad_state.axis[3]; // right joystick (look), vertical
-
-        // Scale [-1,1] to window
-        *xp = (*xp * g->width / 2) + g->width / 2;
-        *yp = (*yp * g->height / 2) + g->height/ 2;
-        // TODO: is this (right joystick) supposed to rotate, not merely free look? (convention)
-        return;
-    }
-
-    glfwGetCursorPos(window, xp, yp);
-}
 
 EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     if (touch_active) {
@@ -2723,9 +2704,6 @@ void fullscreen_toggle() {
     }
 }
 
-void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
-    glfwGetCursorPos(window, xp, yp);
-}
 #endif
 
 void init_fullscreen_monitor_dimensions() {
@@ -2758,6 +2736,20 @@ void create_window() {
     }
 }
 
+// See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
+// and test site http://html5gamepad.com
+#define GAMEPAD_A 0
+#define GAMEPAD_DPAD_LEFT 8
+#define GAMEPAD_DPAD_DOWN 9
+#define GAMEPAD_DPAD_RIGHT 10
+#define GAMEPAD_DPAD_UP 11
+
+#define GAMEPAD_LEFT_STICK_HORIZONTAL 0
+#define GAMEPAD_LEFT_STICK_VERTICAL 1
+#define GAMEPAD_RIGHT_STICK_HORIZONTAL 2
+#define GAMEPAD_RIGHT_STICK_VERTICAL 3
+
+
 void handle_mouse_input() {
     int exclusive =
         glfwGetInputMode(g->window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
@@ -2766,7 +2758,16 @@ void handle_mouse_input() {
     State *s = &g->players->state;
     if (exclusive && (px || py)) {
         double mx, my;
-        craftGetCursorPos(g->window, &mx, &my);
+        if (touch_active) {
+            mx = touch_clientX;
+            my = touch_clientY;
+        } else if (g->gamepad_connected) {
+            mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * GAMEPAD_LOOK_SENSITIVITY;
+            my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * GAMEPAD_LOOK_SENSITIVITY;
+        } else {
+            glfwGetCursorPos(g->window, &mx, &my);
+        }
+
         if (g->just_clicked) {
             // If the user had pressed or released a mouse button immediately before, ignore
             // the first mouse movement -- workaround bug(?) in Firefox, where clicking caused
@@ -2796,20 +2797,14 @@ void handle_mouse_input() {
         py = my;
     }
     else {
-        craftGetCursorPos(g->window, &px, &py);
+        if (touch_active) {
+            px = touch_clientX;
+            py = touch_clientY;
+        } else {
+            glfwGetCursorPos(g->window, &px, &py);
+        }
     }
 }
-
-// See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
-// and test site http://html5gamepad.com
-#define GAMEPAD_A 0
-#define GAMEPAD_DPAD_LEFT 8
-#define GAMEPAD_DPAD_DOWN 9
-#define GAMEPAD_DPAD_RIGHT 10
-#define GAMEPAD_DPAD_UP 11
-
-#define GAMEPAD_LEFT_STICK_HORIZONTAL 0
-#define GAMEPAD_LEFT_STICK_VERTICAL 1
 
 void handle_movement(double dt) {
     static float dy = 0;
@@ -2835,8 +2830,8 @@ void handle_movement(double dt) {
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
             if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] < 0) sx--;
             if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] > 0) sx++;
-            if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] > 0) sz++;
-            if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] < 0) sz--;
+            if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] < 0) sz++;
+            if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] > 0) sz--;
         }
     }
     float vx, vy = 0, vz;
