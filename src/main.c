@@ -168,6 +168,10 @@ typedef struct {
     Block copy1;
     int show_info_text;
     int show_ui;
+    int gamepad_connected;
+#ifdef __EMSCRIPTEN__
+    EmscriptenGamepadEvent gamepad_state;
+#endif
 } Model;
 
 static Model model;
@@ -221,7 +225,7 @@ void get_sight_vector(float rx, float ry, float *vx, float *vy, float *vz) {
     *vz = sinf(rx - RADIANS(90)) * m;
 }
 
-void get_motion_vector(int flying, int sz, int sx, float rx, float ry,
+void get_motion_vector(int flying, double sz, double sx, double rx, float ry,
     float *vx, float *vy, float *vz) {
     *vx = 0; *vy = 0; *vz = 0;
     if (!sz && !sx) {
@@ -2446,22 +2450,13 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
-#ifdef __EMSCRIPTEN__
 static long touch_active = 0;
-static double touch_activated_at = 0;
-static int touch_just_activated = 0;
 static long touch_clientX = 0;
 static long touch_clientY = 0;
 
-void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
-    if (touch_active) {
-        *xp = touch_clientX;
-        *yp = touch_clientY;
-        return;
-    }
-
-    glfwGetCursorPos(window, xp, yp);
-}
+#ifdef __EMSCRIPTEN__
+static double touch_activated_at = 0;
+static int touch_just_activated = 0;
 
 EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     if (touch_active) {
@@ -2537,6 +2532,20 @@ EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void 
 
 EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     touch_active = 0;
+    return EM_TRUE;
+}
+
+EM_BOOL on_gamepadconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
+    g->gamepad_connected = 1;
+    printf("gamepad connected\n");
+
+    return EM_TRUE;
+}
+
+EM_BOOL on_gamepaddisconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
+    g->gamepad_connected = 0;
+    printf("gamepad disconnected\n");
+
     return EM_TRUE;
 }
 
@@ -2653,8 +2662,57 @@ void fullscreen_toggle() {
     }
 }
 
+// See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
+// and test site http://html5gamepad.com
+#define GAMEPAD_A 0
+#define GAMEPAD_L1_BUMPER 4
+#define GAMEPAD_R1_BUMPER 5
+#define GAMEPAD_L2_TRIGGER 6
+#define GAMEPAD_R2_TRIGGER 7
+#define GAMEPAD_DPAD_LEFT 8
+#define GAMEPAD_DPAD_DOWN 9
+#define GAMEPAD_DPAD_RIGHT 10
+#define GAMEPAD_DPAD_UP 11
+
+#define GAMEPAD_LEFT_STICK_HORIZONTAL 0
+#define GAMEPAD_LEFT_STICK_VERTICAL 1
+#define GAMEPAD_RIGHT_STICK_HORIZONTAL 2
+#define GAMEPAD_RIGHT_STICK_VERTICAL 3
+
+
+void handle_gamepad_input() {
+    static EmscriptenGamepadEvent last_gamepad_state;
+
+    emscripten_get_gamepad_status(0, &g->gamepad_state);
+
+    // Bumpers scroll
+    if (g->gamepad_state.digitalButton[GAMEPAD_L1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_L1_BUMPER]) {
+        on_scroll(g->window, 0, SCROLL_THRESHOLD + 1);
+    }
+    if (g->gamepad_state.digitalButton[GAMEPAD_R1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_R1_BUMPER]) {
+        on_scroll(g->window, 0, -SCROLL_THRESHOLD - 1);
+    }
+
+    // Triggers click
+    // TODO: holding to mine/place: https://github.com/satoshinm/NetCraft/issues/8
+    if (g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
+        on_right_click();
+    }
+    if (g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
+        on_left_click();
+    }
+
+    // Jump key needs events to detect double-tap for toggling fly
+    if (g->gamepad_state.digitalButton[GAMEPAD_A] && !last_gamepad_state.digitalButton[GAMEPAD_A]) {
+        on_key(g->window, CRAFT_KEY_JUMP, 0, GLFW_PRESS, 0);
+    }
+
+    memcpy(&last_gamepad_state, &g->gamepad_state, sizeof(EmscriptenGamepadEvent));
+}
+
 #else // !__EMSCRIPTEN__
 void on_window_size(GLFWwindow* window, int width, int height) {}
+void handle_gamepad_input() {} // TODO: support native gamepads
 
 void fullscreen_toggle() {
     if (glfwGetWindowMonitor(g->window)) {
@@ -2666,9 +2724,6 @@ void fullscreen_toggle() {
     }
 }
 
-void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
-    glfwGetCursorPos(window, xp, yp);
-}
 #endif
 
 void init_fullscreen_monitor_dimensions() {
@@ -2703,6 +2758,7 @@ void create_window() {
 
 void handle_mouse_input() {
     int exclusive =
+        g->gamepad_connected ||
 #ifdef __EMSCRIPTEN__
         touch_active ||
 #endif
@@ -2712,7 +2768,18 @@ void handle_mouse_input() {
     State *s = &g->players->state;
     if (exclusive && (px || py)) {
         double mx, my;
-        craftGetCursorPos(g->window, &mx, &my);
+        if (touch_active) {
+            mx = touch_clientX;
+            my = touch_clientY;
+        } else if (g->gamepad_connected) {
+#ifdef __EMSCRIPTEN__
+            mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * GAMEPAD_LOOK_SENSITIVITY;
+            my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * GAMEPAD_LOOK_SENSITIVITY;
+#endif
+        } else {
+            glfwGetCursorPos(g->window, &mx, &my);
+        }
+
         if (g->just_clicked) {
             // If the user had pressed or released a mouse button immediately before, ignore
             // the first mouse movement -- workaround bug(?) in Firefox, where clicking caused
@@ -2742,17 +2809,23 @@ void handle_mouse_input() {
         py = my;
     }
     else {
-        craftGetCursorPos(g->window, &px, &py);
+        if (touch_active) {
+            px = touch_clientX;
+            py = touch_clientY;
+        } else {
+            glfwGetCursorPos(g->window, &px, &py);
+        }
     }
 }
 
 void handle_movement(double dt) {
     static float dy = 0;
     State *s = &g->players->state;
-    int sz = 0;
-    int sx = 0;
+    double sz = 0;
+    double sx = 0;
     if (!g->typing) {
         float m = dt * 1.0;
+
         g->ortho = glfwGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
         g->fov = glfwGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
         if (glfwGetKey(g->window, CRAFT_KEY_FORWARD) || touch_forward) sz--;
@@ -2763,11 +2836,32 @@ void handle_movement(double dt) {
         if (glfwGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
         if (glfwGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
         if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
+
+        if (g->gamepad_connected) {
+#ifdef __EMSCRIPTEN__
+            if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_LEFT]) sx--;
+            if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
+
+            sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL];
+            sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL];
+#endif
+        }
     }
     float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
-        if (glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump) {
+        int jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump;
+        int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
+
+        if (g->gamepad_connected) {
+#ifdef __EMSCRIPTEN__
+            if (g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
+            if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) jumping = 1;
+            if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) crouching = 1;
+#endif
+        }
+
+        if (jumping) {
             if (g->flying) {
                 vy++;
             }
@@ -2775,11 +2869,11 @@ void handle_movement(double dt) {
                 dy = 8;
             }
         }
-        if (glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
+        if (crouching) {
             if (g->flying) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
-                if (exclusive) {
+                if (exclusive || !glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
                     vy--;
                 }
             }
@@ -2934,6 +3028,7 @@ void reset_model() {
     g->time_changed = 1;
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
+    g->gamepad_connected = 0;
 }
 
 void one_iter();
@@ -2985,6 +3080,8 @@ int main(int argc, char **argv) {
     emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
     emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
     emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
+    emscripten_set_gamepadconnected_callback(NULL, EM_FALSE, on_gamepadconnected);
+    emscripten_set_gamepaddisconnected_callback(NULL, EM_FALSE, on_gamepaddisconnected);
 #endif
 
     if (glewInit() != GLEW_OK) {
@@ -3247,6 +3344,8 @@ void one_iter() {
 
             // HANDLE MOUSE INPUT //
             handle_mouse_input();
+
+            handle_gamepad_input();
 
             // HANDLE MOVEMENT //
             handle_movement(dt);
