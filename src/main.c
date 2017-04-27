@@ -2702,6 +2702,11 @@ void handle_gamepad_input() {
         on_left_click();
     }
 
+    // Jump key needs events to detect double-tap for toggling fly
+    if (g->gamepad_state.digitalButton[GAMEPAD_A] && !last_gamepad_state.digitalButton[GAMEPAD_A]) {
+        on_key(g->window, CRAFT_KEY_JUMP, 0, GLFW_PRESS, 0);
+    }
+
     memcpy(&last_gamepad_state, &g->gamepad_state, sizeof(EmscriptenGamepadEvent));
 }
 
