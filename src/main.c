@@ -2754,6 +2754,7 @@ void create_window() {
 
 void handle_mouse_input() {
     int exclusive =
+        g->gamepad_connected ||
         glfwGetInputMode(g->window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     static double px = 0;
     static double py = 0;
