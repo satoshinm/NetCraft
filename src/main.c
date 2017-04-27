@@ -2450,14 +2450,13 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
-#ifdef __EMSCRIPTEN__
 static long touch_active = 0;
-static double touch_activated_at = 0;
-static int touch_just_activated = 0;
 static long touch_clientX = 0;
 static long touch_clientY = 0;
 
-
+#ifdef __EMSCRIPTEN__
+static double touch_activated_at = 0;
+static int touch_just_activated = 0;
 
 EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     if (touch_active) {
@@ -2762,8 +2761,10 @@ void handle_mouse_input() {
             mx = touch_clientX;
             my = touch_clientY;
         } else if (g->gamepad_connected) {
+#ifdef __EMSCRIPTEN__
             mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * GAMEPAD_LOOK_SENSITIVITY;
             my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * GAMEPAD_LOOK_SENSITIVITY;
+#endif
         } else {
             glfwGetCursorPos(g->window, &mx, &my);
         }
@@ -2826,12 +2827,14 @@ void handle_movement(double dt) {
         if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
 
         if (g->gamepad_connected) {
+#ifdef __EMSCRIPTEN__
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_LEFT]) sx--;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
             if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] < 0) sx--;
             if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] > 0) sx++;
             if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] < 0) sz++;
             if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] > 0) sz--;
+#endif
         }
     }
     float vx, vy = 0, vz;
@@ -2841,9 +2844,11 @@ void handle_movement(double dt) {
         int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
 
         if (g->gamepad_connected) {
+#ifdef __EMSCRIPTEN__
             if (g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) jumping = 1;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) crouching = 1;
+#endif
         }
 
         if (jumping) {
