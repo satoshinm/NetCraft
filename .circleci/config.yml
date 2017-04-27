@@ -12,6 +12,7 @@ jobs:
                   apt update
                   apt install -y cmake libglew-dev xorg-dev libcurl4-openssl-dev
                   apt install -y libglfw3-dev
+                  rm -rf native-build release-build-js wasm-build
                   mkdir native-build
                   (cd native-build && cmake ..)
                   # http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html#platform-notes-installation-instructions-portable-sdk
@@ -29,10 +30,15 @@ jobs:
                   (cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
                   mkdir wasm-build
                   (cd wasm-build && cmake -DWASM=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
-                  mkdir -p /tmp/artifacts/{release-build-js,wasm-build}
+                  mkdir -p /tmp/artifacts/{native-build,release-build-js,wasm-build}
             - run:
                 name: native-build
-                command: cd native-build && make
+                command: |
+                    cd native-build
+                    make
+                    cp -r craft shaders/ textures/ /tmp/artifacts/native-build
+            - store_artifacts:
+                path: /tmp/artifacts/native-build
             - run:
                 name: release-build-js
                 command: |
