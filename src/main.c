@@ -225,7 +225,7 @@ void get_sight_vector(float rx, float ry, float *vx, float *vy, float *vz) {
     *vz = sinf(rx - RADIANS(90)) * m;
 }
 
-void get_motion_vector(int flying, int sz, int sx, float rx, float ry,
+void get_motion_vector(int flying, double sz, double sx, double rx, float ry,
     float *vx, float *vy, float *vz) {
     *vx = 0; *vy = 0; *vz = 0;
     if (!sz && !sx) {
@@ -2814,8 +2814,8 @@ void handle_mouse_input() {
 void handle_movement(double dt) {
     static float dy = 0;
     State *s = &g->players->state;
-    int sz = 0;
-    int sx = 0;
+    double sz = 0;
+    double sx = 0;
     if (!g->typing) {
         float m = dt * 1.0;
 
@@ -2834,10 +2834,9 @@ void handle_movement(double dt) {
 #ifdef __EMSCRIPTEN__
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_LEFT]) sx--;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
-            if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] < 0) sx--;
-            if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] > 0) sx++;
-            if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] < 0) sz++;
-            if (g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] > 0) sz--;
+
+            sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL];
+            sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL];
 #endif
         }
     }
