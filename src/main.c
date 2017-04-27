@@ -2662,29 +2662,45 @@ void fullscreen_toggle() {
     }
 }
 
+// See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
+// and test site http://html5gamepad.com
+#define GAMEPAD_A 0
+#define GAMEPAD_L1_BUMPER 4
+#define GAMEPAD_R1_BUMPER 5
+#define GAMEPAD_L2_TRIGGER 6
+#define GAMEPAD_R2_TRIGGER 7
+#define GAMEPAD_DPAD_LEFT 8
+#define GAMEPAD_DPAD_DOWN 9
+#define GAMEPAD_DPAD_RIGHT 10
+#define GAMEPAD_DPAD_UP 11
+
+#define GAMEPAD_LEFT_STICK_HORIZONTAL 0
+#define GAMEPAD_LEFT_STICK_VERTICAL 1
+#define GAMEPAD_RIGHT_STICK_HORIZONTAL 2
+#define GAMEPAD_RIGHT_STICK_VERTICAL 3
+
+
 void handle_gamepad_input() {
     static EmscriptenGamepadEvent last_gamepad_state;
 
     emscripten_get_gamepad_status(0, &g->gamepad_state);
 
     // Bumpers scroll
-    if (g->gamepad_state.digitalButton[4] && !last_gamepad_state.digitalButton[4]) { // L1 left bumper pressed
+    if (g->gamepad_state.digitalButton[GAMEPAD_L1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_L1_BUMPER]) {
         on_scroll(g->window, 0, SCROLL_THRESHOLD + 1);
     }
-    if (g->gamepad_state.digitalButton[5] && !last_gamepad_state.digitalButton[5]) { // R1 right bumper pressed
+    if (g->gamepad_state.digitalButton[GAMEPAD_R1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_R1_BUMPER]) {
         on_scroll(g->window, 0, -SCROLL_THRESHOLD - 1);
     }
 
     // Triggers click
     // TODO: holding to mine/place: https://github.com/satoshinm/NetCraft/issues/8
-    if (g->gamepad_state.digitalButton[6] && !last_gamepad_state.digitalButton[6]) { // L2 left trigger
+    if (g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
         on_right_click();
     }
-    if (g->gamepad_state.digitalButton[7] && !last_gamepad_state.digitalButton[7]) { // R2 right trigger
+    if (g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
         on_left_click();
     }
-
-
 
     memcpy(&last_gamepad_state, &g->gamepad_state, sizeof(EmscriptenGamepadEvent));
 }
@@ -2734,19 +2750,6 @@ void create_window() {
         fullscreen_toggle();
     }
 }
-
-// See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
-// and test site http://html5gamepad.com
-#define GAMEPAD_A 0
-#define GAMEPAD_DPAD_LEFT 8
-#define GAMEPAD_DPAD_DOWN 9
-#define GAMEPAD_DPAD_RIGHT 10
-#define GAMEPAD_DPAD_UP 11
-
-#define GAMEPAD_LEFT_STICK_HORIZONTAL 0
-#define GAMEPAD_LEFT_STICK_VERTICAL 1
-#define GAMEPAD_RIGHT_STICK_HORIZONTAL 2
-#define GAMEPAD_RIGHT_STICK_VERTICAL 3
 
 
 void handle_mouse_input() {
