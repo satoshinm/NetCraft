@@ -36,7 +36,7 @@ jobs:
                 command: |
                     cd native-build
                     make
-                    zip -r /tmp/artifacts/native-build/NetCraft-Linux.zip craft shaders/ textures/
+                    tar cf /tmp/artifacts/native-build/NetCraft-Linux.tar.gz craft shaders/ textures/
             - store_artifacts:
                 path: /tmp/artifacts/native-build
             - run:
