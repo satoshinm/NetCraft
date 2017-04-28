@@ -171,6 +171,8 @@ typedef struct {
 #ifdef __EMSCRIPTEN__
     int gamepad_connected;
     EmscriptenGamepadEvent gamepad_state;
+#else
+    int joystick_connected;
 #endif
 } Model;
 
@@ -2724,6 +2726,16 @@ void fullscreen_toggle() {
     }
 }
 
+void on_joystick_connection(int joy, int event) {
+    const char* name = glfwGetJoystickName(joy);
+
+    if (event == GLFW_CONNECTED) {
+        g->joystick_connected = joy;
+        printf("Joystick connected: %d %s\n", joy, name);
+    } else if (event == GLFW_DISCONNECTED) {
+        printf("Joystick disconnected: %d %s\n", joy, name);
+    }
+}
 #endif
 
 void init_fullscreen_monitor_dimensions() {
@@ -3084,6 +3096,12 @@ int main(int argc, char **argv) {
     emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
     emscripten_set_gamepadconnected_callback(NULL, EM_FALSE, on_gamepadconnected);
     emscripten_set_gamepaddisconnected_callback(NULL, EM_FALSE, on_gamepaddisconnected);
+#else
+    if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+        printf("Found joystick connected: %s\n", glfwGetJoystickName(GLFW_JOYSTICK_1));
+        g->joystick_connected = GLFW_JOYSTICK_1;
+    }
+    glfwSetJoystickCallback(on_joystick_connection);
 #endif
 
     if (glewInit() != GLEW_OK) {
