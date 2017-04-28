@@ -171,6 +171,13 @@ typedef struct {
     int gamepad_connected;
 #ifdef __EMSCRIPTEN__
     EmscriptenGamepadEvent gamepad_state;
+#else
+    struct {
+        int axis_count;
+        const float *axis;
+        int digitalButton_count;
+        const unsigned char *digitalButton;
+    } gamepad_state;
 #endif
 } Model;
 
@@ -2537,13 +2544,14 @@ EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, vo
 
 EM_BOOL on_gamepadconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
     g->gamepad_connected = 1;
+    // TODO: track individual gamepad identifiers?
     printf("gamepad connected\n");
 
     return EM_TRUE;
 }
 
 EM_BOOL on_gamepaddisconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
-    g->gamepad_connected = 0;
+    g->gamepad_connected = -1;
     printf("gamepad disconnected\n");
 
     return EM_TRUE;
@@ -2662,25 +2670,9 @@ void fullscreen_toggle() {
     }
 }
 
-// See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
-// and test site http://html5gamepad.com
-#define GAMEPAD_A 0
-#define GAMEPAD_L1_BUMPER 4
-#define GAMEPAD_R1_BUMPER 5
-#define GAMEPAD_L2_TRIGGER 6
-#define GAMEPAD_R2_TRIGGER 7
-#define GAMEPAD_DPAD_LEFT 8
-#define GAMEPAD_DPAD_DOWN 9
-#define GAMEPAD_DPAD_RIGHT 10
-#define GAMEPAD_DPAD_UP 11
-
-#define GAMEPAD_LEFT_STICK_HORIZONTAL 0
-#define GAMEPAD_LEFT_STICK_VERTICAL 1
-#define GAMEPAD_RIGHT_STICK_HORIZONTAL 2
-#define GAMEPAD_RIGHT_STICK_VERTICAL 3
-
-
 void handle_gamepad_input() {
+    if (g->gamepad_connected == -1) return;
+
     static EmscriptenGamepadEvent last_gamepad_state;
 
     emscripten_get_gamepad_status(0, &g->gamepad_state);
@@ -2712,7 +2704,54 @@ void handle_gamepad_input() {
 
 #else // !__EMSCRIPTEN__
 void on_window_size(GLFWwindow* window, int width, int height) {}
-void handle_gamepad_input() {} // TODO: support native gamepads
+
+void handle_gamepad_input() {
+    if (g->gamepad_connected == -1) return;
+
+    static struct {
+        int axis_count;
+        float axis[16];
+        int digitalButton_count;
+        unsigned char digitalButton[16];
+    } last_gamepad_state = {0};
+
+    g->gamepad_state.axis = glfwGetJoystickAxes(g->gamepad_connected, &g->gamepad_state.axis_count);
+    g->gamepad_state.digitalButton = glfwGetJoystickButtons(g->gamepad_connected, &g->gamepad_state.digitalButton_count);
+
+    // TODO: refactor with above
+    // Bumpers scroll
+    if (g->gamepad_state.digitalButton[GAMEPAD_L1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_L1_BUMPER]) {
+        on_scroll(g->window, 0, SCROLL_THRESHOLD + 1);
+    }
+    if (g->gamepad_state.digitalButton[GAMEPAD_R1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_R1_BUMPER]) {
+        on_scroll(g->window, 0, -SCROLL_THRESHOLD - 1);
+    }
+
+    // Triggers click
+    // TODO: holding to mine/place: https://github.com/satoshinm/NetCraft/issues/8
+    if (g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
+        on_right_click();
+    }
+    if (g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
+        on_left_click();
+    }
+
+    // Jump key needs events to detect double-tap for toggling fly
+    if (g->gamepad_state.digitalButton[GAMEPAD_A] && !last_gamepad_state.digitalButton[GAMEPAD_A]) {
+        on_key(g->window, CRAFT_KEY_JUMP, 0, GLFW_PRESS, 0);
+    }
+
+
+    last_gamepad_state.axis_count =  g->gamepad_state.axis_count;
+    for (int i = 0; i < g->gamepad_state.axis_count; ++i) {
+        last_gamepad_state.axis[i] = g->gamepad_state.axis[i];
+    }
+
+    last_gamepad_state.digitalButton_count =  g->gamepad_state.digitalButton_count;
+    for (int i = 0; i < g->gamepad_state.digitalButton_count; ++i) {
+        last_gamepad_state.digitalButton[i] = g->gamepad_state.digitalButton[i];
+    }
+}
 
 void fullscreen_toggle() {
     if (glfwGetWindowMonitor(g->window)) {
@@ -2724,6 +2763,17 @@ void fullscreen_toggle() {
     }
 }
 
+void on_joystick_connection(int joy, int event) {
+    const char* name = glfwGetJoystickName(joy);
+
+    if (event == GLFW_CONNECTED) {
+        g->gamepad_connected = joy;
+        printf("Joystick connected: %d %s\n", joy, name);
+    } else if (event == GLFW_DISCONNECTED) {
+        printf("Joystick disconnected: %d %s\n", joy, name);
+        g->gamepad_connected = -1;
+    }
+}
 #endif
 
 void init_fullscreen_monitor_dimensions() {
@@ -2758,7 +2808,7 @@ void create_window() {
 
 void handle_mouse_input() {
     int exclusive =
-        g->gamepad_connected ||
+        g->gamepad_connected != -1 ||
 #ifdef __EMSCRIPTEN__
         touch_active ||
 #endif
@@ -2771,11 +2821,9 @@ void handle_mouse_input() {
         if (touch_active) {
             mx = touch_clientX;
             my = touch_clientY;
-        } else if (g->gamepad_connected) {
-#ifdef __EMSCRIPTEN__
+        } else if (g->gamepad_connected != -1) {
             mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * GAMEPAD_LOOK_SENSITIVITY;
             my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * GAMEPAD_LOOK_SENSITIVITY;
-#endif
         } else {
             glfwGetCursorPos(g->window, &mx, &my);
         }
@@ -2837,14 +2885,12 @@ void handle_movement(double dt) {
         if (glfwGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
         if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
 
-        if (g->gamepad_connected) {
-#ifdef __EMSCRIPTEN__
+        if (g->gamepad_connected != -1) {
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_LEFT]) sx--;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
 
             sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL];
             sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL];
-#endif
         }
     }
     float vx, vy = 0, vz;
@@ -2853,12 +2899,10 @@ void handle_movement(double dt) {
         int jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump;
         int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
 
-        if (g->gamepad_connected) {
-#ifdef __EMSCRIPTEN__
+        if (g->gamepad_connected != -1) {
             if (g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) jumping = 1;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) crouching = 1;
-#endif
         }
 
         if (jumping) {
@@ -3028,7 +3072,13 @@ void reset_model() {
     g->time_changed = 1;
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
-    g->gamepad_connected = 0;
+    g->gamepad_connected = -1;
+#ifndef __EMSCRIPTEN__
+    if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+        printf("Found joystick %d connected: %s\n", GLFW_JOYSTICK_1, glfwGetJoystickName(GLFW_JOYSTICK_1));
+        g->gamepad_connected = GLFW_JOYSTICK_1;
+    }
+#endif
 }
 
 void one_iter();
@@ -3082,6 +3132,8 @@ int main(int argc, char **argv) {
     emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
     emscripten_set_gamepadconnected_callback(NULL, EM_FALSE, on_gamepadconnected);
     emscripten_set_gamepaddisconnected_callback(NULL, EM_FALSE, on_gamepaddisconnected);
+#else
+    glfwSetJoystickCallback(on_joystick_connection);
 #endif
 
     if (glewInit() != GLEW_OK) {
