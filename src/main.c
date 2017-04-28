@@ -168,8 +168,8 @@ typedef struct {
     Block copy1;
     int show_info_text;
     int show_ui;
-    int gamepad_connected;
 #ifdef __EMSCRIPTEN__
+    int gamepad_connected;
     EmscriptenGamepadEvent gamepad_state;
 #endif
 } Model;
@@ -2758,8 +2758,8 @@ void create_window() {
 
 void handle_mouse_input() {
     int exclusive =
-        g->gamepad_connected ||
 #ifdef __EMSCRIPTEN__
+        g->gamepad_connected ||
         touch_active ||
 #endif
         glfwGetInputMode(g->window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
@@ -2771,8 +2771,8 @@ void handle_mouse_input() {
         if (touch_active) {
             mx = touch_clientX;
             my = touch_clientY;
-        } else if (g->gamepad_connected) {
 #ifdef __EMSCRIPTEN__
+        } else if (g->gamepad_connected) {
             mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * GAMEPAD_LOOK_SENSITIVITY;
             my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * GAMEPAD_LOOK_SENSITIVITY;
 #endif
@@ -2837,15 +2837,15 @@ void handle_movement(double dt) {
         if (glfwGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
         if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
 
-        if (g->gamepad_connected) {
 #ifdef __EMSCRIPTEN__
+        if (g->gamepad_connected) {
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_LEFT]) sx--;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
 
             sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL];
             sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL];
-#endif
         }
+#endif
     }
     float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
@@ -2853,13 +2853,13 @@ void handle_movement(double dt) {
         int jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump;
         int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
 
-        if (g->gamepad_connected) {
 #ifdef __EMSCRIPTEN__
+        if (g->gamepad_connected) {
             if (g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) jumping = 1;
             if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) crouching = 1;
-#endif
         }
+#endif
 
         if (jumping) {
             if (g->flying) {
@@ -3028,7 +3028,9 @@ void reset_model() {
     g->time_changed = 1;
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
+#ifdef __EMSCRIPTEN__
     g->gamepad_connected = 0;
+#endif
 }
 
 void one_iter();
