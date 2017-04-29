@@ -2580,7 +2580,7 @@ EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userDat
     // size, which is in pixels, for pixel-based calls."
     int w_w, w_h;
     glfwGetWindowSize(g->window, &w_w, &w_h);
-    printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
+    //printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
 
 
     return EM_FALSE;
