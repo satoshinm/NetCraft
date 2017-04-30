@@ -10,14 +10,6 @@ build_script:
     dir C:\Tools\curl\lib
     dir C:\Tools\curl\include
 
-    curl -o curl.zip https://curl.haxx.se/download/curl-7.49.1.zip
-
-    choco install unzip
-
-    unzip curl.zip -d "C:\Program Files"
-
-    rename "C:\Program Files\curl-7.49.1" CURL
-
-    cmake -G "MinGW Makefiles"
+    cmake -G "MinGW Makefiles" -DCURL_LIBRARY="C:/Tools/curl/lib/libcurl.a" -DCURL_INCLUDE="C:/Tools/curl/include"
 
     mingw32-make
