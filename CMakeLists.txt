@@ -85,6 +85,7 @@ endif()
 
 if(MINGW OR MSVC)
     find_package(OpenGL REQUIRED)
+    add_definition(-DCURL_STATICLIB)
     target_link_libraries(craft ws2_32.lib glfw
         ${OPENGL_gl_LIBRARY}
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})

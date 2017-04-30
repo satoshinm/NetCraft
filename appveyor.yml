@@ -5,11 +5,6 @@ build_script:
 
     set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 
-    dir C:\Tools\curl
-    dir C:\Tools\curl\bin
-    dir C:\Tools\curl\lib
-    dir C:\Tools\curl\include
-
     cmake -G "MinGW Makefiles"
 
     mingw32-make
