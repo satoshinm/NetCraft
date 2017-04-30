@@ -9,6 +9,8 @@ or through [WebSandboxMC](https://github.com/satoshinm/WebSandboxMC/).
 
 [![CircleCI](https://circleci.com/gh/satoshinm/NetCraft.svg?style=svg)](https://circleci.com/gh/satoshinm/NetCraft)
 
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/asql58oxt14pfva4?svg=true)](https://ci.appveyor.com/project/satoshinm/netcraft)
+
 Based on Michael Fogleman's [Craft](https://github.com/fogleman/Craft):
 
 http://www.michaelfogleman.com/craft/
