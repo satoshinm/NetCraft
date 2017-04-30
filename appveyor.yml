@@ -5,6 +5,11 @@ build_script:
 
     set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 
+    dir C:\Tools\curl
+    dir C:\Tools\curl\bin
+    dir C:\Tools\curl\lib
+    dir C:\Tools\curl\include
+
     curl -o curl.zip https://curl.haxx.se/download/curl-7.49.1.zip
 
     choco install unzip
