@@ -2664,18 +2664,6 @@ void fullscreen_toggle() {
 }
 #endif
 
-void on_joystick_connection(int joy, int event) {
-    const char* name = glfwGetJoystickName(joy);
-
-    if (event == GLFW_CONNECTED) {
-        g->gamepad_connected = joy;
-        printf("Joystick connected: %d %s\n", joy, name);
-    } else if (event == GLFW_DISCONNECTED) {
-        printf("Joystick disconnected: %d %s\n", joy, name);
-        g->gamepad_connected = -1;
-    }
-}
-
 void handle_gamepad_input() {
     if (g->gamepad_connected == -1) return;
 
@@ -2723,6 +2711,23 @@ void handle_gamepad_input() {
         last_gamepad_state.digitalButton[i] = g->gamepad_state.digitalButton[i];
     }
 }
+
+void init_joystick(int joy) {
+    printf("Joystick %d connected: %s\n", joy, glfwGetJoystickName(joy));
+    g->gamepad_connected = joy;
+    handle_gamepad_input();
+    printf("Joystick axes: %d, buttons: %d\n", g->gamepad_state.axis_count, g->gamepad_state.digitalButton_count);
+}
+
+void on_joystick_connection(int joy, int event) {
+    if (event == GLFW_CONNECTED) {
+        init_joystick(joy);
+    } else if (event == GLFW_DISCONNECTED) {
+        printf("Joystick disconnected: %d\n", joy);
+        g->gamepad_connected = -1;
+    }
+}
+
 
 void init_fullscreen_monitor_dimensions() {
 #ifndef __EMSCRIPTEN__
@@ -3022,8 +3027,7 @@ void reset_model() {
     g->show_ui = 1;
     g->gamepad_connected = -1;
     if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
-        printf("Found joystick %d connected: %s\n", GLFW_JOYSTICK_1, glfwGetJoystickName(GLFW_JOYSTICK_1));
-        g->gamepad_connected = GLFW_JOYSTICK_1;
+        init_joystick(GLFW_JOYSTICK_1);
     }
 }
 
