@@ -57,10 +57,8 @@ include_directories(deps/tinycthread)
 
 if(MINGW OR MSVC)
     set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
-        "C:/Tools/curl/lib"
         "C:/Program Files/CURL/lib" "C:/Program Files (x86)/CURL/lib")
     set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH}
-        "C:/Tools/curl/include"
         "C:/Program Files/CURL/include" "C:/Program Files (x86)/CURL/include")
 endif()
 

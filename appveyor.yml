@@ -21,6 +21,12 @@ build_script:
 
     mingw32-make
 
+    mkdir "C:\Program Files\CURL"
+
+    xcopy curl-7.54.0\lib "C:\Program Files\CURL\lib"
+
+    xcopy curl-7.54.0\include "C:\Program Files\CURL\include"
+
     cd ..
 
     cmake -G "MinGW Makefiles"
