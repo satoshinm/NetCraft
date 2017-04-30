@@ -265,9 +265,17 @@ void client_connect(char *hostname, int port) {
             console.log('websocket inputs, host='+host+', port='+port);
             const ws = 'ws:' + String.fromCharCode(47) + String.fromCharCode(47); // to avoid //
             const wss = 'wss:' + String.fromCharCode(47) + String.fromCharCode(47);
-            if (host.startsWith(ws) || host.startsWith(wss)) {
+            if (host === '-') {
+                // Special case '-' connects back to ourselves
+                var protocol = document.location.protocol === 'https:' ? wss : ws;
+                var path = '/craftws';
+                // Note, document.location.host contains both hostname AND port, if any
+                Module['websocket']['url'] = protocol + document.location.host + path;
+            } else if (host.startsWith(ws) || host.startsWith(wss)) {
+                // full URL
                 Module['websocket']['url'] = host;
             } else {
+                // hostname
                 Module['websocket']['url'] = ws + host + ':' + port + '/craftws';
             }
             console.log('websocket url:', Module['websocket']['url']);

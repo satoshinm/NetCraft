@@ -1,0 +1,60 @@
+version: 2
+jobs:
+    build:
+        docker:
+            - image: buildpack-deps:xenial
+        working_directory: ~/NetCraft
+        steps:
+            - checkout
+            - run: 
+                name: Setup dependencies
+                command: |
+                  apt update
+                  apt install -y cmake libglew-dev xorg-dev libcurl4-openssl-dev
+                  apt install -y libglfw3-dev
+                  rm -rf native-build release-build-js wasm-build
+                  mkdir native-build
+                  (cd native-build && cmake ..)
+                  # http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html#platform-notes-installation-instructions-portable-sdk
+                  apt install -y python2.7
+                  apt install -y nodejs
+                  apt install -y default-jre
+                  wget https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz
+                  tar xf emsdk-portable.tar.gz -C ~
+                  ~/emsdk-portable/emsdk update
+                  ~/emsdk-portable/emsdk install latest
+                  ~/emsdk-portable/emsdk activate latest
+                  source ~/emsdk-portable/emsdk_env.sh
+                  patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.9+netcraftfixes.patch
+                  cp deps/glfw/include/GLFW/glfw3.h $EMSCRIPTEN/system/include/GLFW/glfw3.h
+                  mkdir release-build-js
+                  (cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
+                  mkdir wasm-build
+                  (cd wasm-build && cmake -DWASM=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
+                  mkdir -p /tmp/artifacts/{native-build,release-build-js,wasm-build}
+            - run:
+                name: native-build
+                command: |
+                    cd native-build
+                    make
+                    tar cf /tmp/artifacts/native-build/NetCraft-Linux.tar.gz craft shaders/ textures/
+            - store_artifacts:
+                path: /tmp/artifacts/native-build
+            - run:
+                name: release-build-js
+                command: |
+                    cd release-build-js
+                    source ~/emsdk-portable/emsdk_env.sh
+                    make
+                    cp craft.* /tmp/artifacts/release-build-js
+            - store_artifacts:
+                path: /tmp/artifacts/release-build-js
+            - run:
+                name: wasm-build
+                command: |
+                    cd wasm-build
+                    source ~/emsdk-portable/emsdk_env.sh
+                    make
+                    cp craft.* /tmp/artifacts/wasm-build
+            - store_artifacts:
+                path: /tmp/artifacts/wasm-build

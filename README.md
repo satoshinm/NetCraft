@@ -9,6 +9,8 @@ or through [WebSandboxMC](https://github.com/satoshinm/WebSandboxMC/).
 
 [![CircleCI](https://circleci.com/gh/satoshinm/NetCraft.svg?style=svg)](https://circleci.com/gh/satoshinm/NetCraft)
 
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/asql58oxt14pfva4?svg=true)](https://ci.appveyor.com/project/satoshinm/netcraft)
+
 Based on Michael Fogleman's [Craft](https://github.com/fogleman/Craft):
 
 http://www.michaelfogleman.com/craft/
@@ -33,11 +35,22 @@ and also natively, as with the original Craft:
 
 ### Download
 
+JavaScript, WebAssembly, and Linux builds are available from CircleCI: https://circleci.com/gh/satoshinm/NetCraft
+
+Windows builds are available from AppVeyor: https://ci.appveyor.com/project/satoshinm/netcraft
+
 See below to run from source.
 
 ### Web builds
 
-To build for the web, compiling to JavaScript, install [Emscripten](http://emscripten.org) and run:
+To build for the web, compiling to JavaScript, first install [Emscripten](http://emscripten.org).
+The EM SDK is the easiest to install, but to get my patch fixes you can either build from source
+using this branch: https://github.com/satoshinm/emscripten/commits/netcraft, or alternatively
+install 1.37.9 from the SDK and apply a patch:
+
+    patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.9+netcraftfixes.patch
+
+Once your Emscripten environment is setup, then run:
 
     git clone https://github.com/satoshinm/NetCraft.git
     cd NetCraft
@@ -102,10 +115,10 @@ the installation:
 
     brew install cmake
 
-#### Linux (Ubuntu)
+#### Linux (Ubuntu 16.04.2 LTS)
 
-    sudo apt-get install cmake libglew-dev xorg-dev libcurl4-openssl-dev
-    sudo apt-get build-dep glfw
+    sudo apt install cmake libglew-dev xorg-dev libcurl4-openssl-dev
+    sudo apt install libglfw3-dev
 
 #### Windows
 
@@ -143,9 +156,6 @@ Or, with the "/online" command in the game itself.
     /online craft.michaelfogleman.com
 
 In the web-based version, you can pass command-line arguments after `#` in the URL.
-This URL will connect to a WebSocket server running locally if you have one:
-
-    https://satoshinm.github.io/NetCraft/#localhost
 
 
 #### Server
@@ -169,19 +179,23 @@ Or for an alternative Java-based Bukkit plugin WebSocket server, check out:
 
 The web-based client will connect to WebSockets at the path `/craftws` by default. Full
 URLs can be given in place of the hostname to connect at other paths, or to use SSL (wss://).
-`/online localhost` is equivalent to `/online ws://localhost:4081/craftws`.
+`/online localhost` is equivalent to `/online ws://localhost:4081/craftws`. The special
+hostname "-" can be used to connect to the same server the page is served from.
 
 ### Controls
 
 - Left Click to destroy a block.
 - Right Click or Ctrl + Left Click to create a block.
+- Touch: swipe to free look, 2-finger to walk forward, 3-finger to jump, tap to destroy, tap left edge to create.
 - Ctrl + Right Click to toggle a block as a light source.
 - Middle Click to change the current block selection to the targeted block
 - WASD to move forward, left, backward, right.
 - Space to jump.
+- Space double-tap to toggle between walking and flying (when flying, space to ascend, shift to descend).
+- Shift to crouch, walk slower.
+- Tab to sprint, while holding another directional key (increases movement speed).
 - 1-9 to select the block type to create.
 - E, or the scrollwheel to cycle through the block types.
-- Tab to toggle between walking and flying (when flying, space to ascend, shift to descend).
 - ZXCVBN to move in exact directions along the XYZ axes.
 - Z to zoom.
 - F to show the scene in orthographic mode.

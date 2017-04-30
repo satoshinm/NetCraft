@@ -133,6 +133,7 @@ typedef struct {
     Player players[MAX_PLAYERS];
     int player_count;
     int typing;
+    int just_clicked;
     char typing_buffer[MAX_TEXT_LENGTH];
     int message_index;
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
@@ -168,6 +169,13 @@ typedef struct {
     int show_info_text;
     int show_ui;
     int show_vr;
+    int gamepad_connected;
+    struct {
+        int axis_count;
+        const float *axis;
+        int digitalButton_count;
+        const unsigned char *digitalButton;
+    } gamepad_state;
 } Model;
 
 static Model model;
@@ -205,7 +213,7 @@ int get_scale_factor(GLFWwindow *window) {
     int buffer_width, buffer_height;
     glfwGetWindowSize(window, &window_width, &window_height);
     if (window_width <= 0 || window_height <= 0) {
-        return 0;
+        return 1;
     }
     glfwGetFramebufferSize(window, &buffer_width, &buffer_height);
     int result = buffer_width / window_width;
@@ -221,7 +229,7 @@ void get_sight_vector(float rx, float ry, float *vx, float *vy, float *vz) {
     *vz = sinf(rx - RADIANS(90)) * m;
 }
 
-void get_motion_vector(int flying, int sz, int sx, float rx, float ry,
+void get_motion_vector(int flying, double sz, double sx, double rx, float ry,
     float *vx, float *vy, float *vz) {
     *vx = 0; *vy = 0; *vz = 0;
     if (!sz && !sx) {
@@ -314,6 +322,7 @@ GLuint gen_text_buffer(float x, float y, float n, char *text) {
 }
 
 void draw_triangles_3d_ao(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -328,6 +337,7 @@ void draw_triangles_3d_ao(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_3d_text(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -342,6 +352,7 @@ void draw_triangles_3d_text(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_3d_sky(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -356,6 +367,7 @@ void draw_triangles_3d_sky(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_2d(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -370,6 +382,7 @@ void draw_triangles_2d(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_lines(Attrib *attrib, GLuint buffer, int components, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glVertexAttribPointer(
@@ -1749,7 +1762,7 @@ void render_wireframe(Attrib *attrib, Player *player) {
     set_matrix_3d(
         matrix, g->width, g->height,
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
-    int hx, hy, hz;
+    int hx = -1, hy = -1, hz = -1;
     int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
     if (is_obstacle(hw)) {
         glUseProgram(attrib->program);
@@ -2217,10 +2230,10 @@ void change_ortho_zoom(double ydelta) {
 }
 
 void fullscreen_toggle();
-static int super_down = 0;
+static int touch_forward = 0;
+static int touch_jump = 0;
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int control = mods & GLFW_MOD_CONTROL;
-    super_down = mods & GLFW_MOD_SUPER;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
@@ -2240,6 +2253,14 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
 
     if (action != GLFW_PRESS) {
         return;
+    }
+    if (key == CRAFT_KEY_JUMP || touch_jump) {
+        static double last_jumped = 0;
+        if (last_jumped != 0 && glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
+            g->flying = !g->flying;
+            printf("fly mode toggled: %d\n", g->flying);
+        }
+        last_jumped = glfwGetTime();
     }
     if (key == GLFW_KEY_ESCAPE) {
         if (g->typing) {
@@ -2305,9 +2326,6 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
         }
     }
     if (!g->typing) {
-        if (key == CRAFT_KEY_FLY) {
-            g->flying = !g->flying;
-        }
         if (key >= '1' && key <= '9') {
             g->item_index = key - '1';
         }
@@ -2342,11 +2360,6 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
 }
 
 void on_char(GLFWwindow *window, unsigned int u) {
-    if (super_down) {
-        // TODO: why does emscripten call on_char if control is down? Cmd-` -> `
-        printf("on_char ignoring u=%d since control_down\n", u);
-        return;
-    }
     if (g->suppress_char) {
         g->suppress_char = 0;
         return;
@@ -2407,6 +2420,7 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
 
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
+    g->just_clicked = 1;
     int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
@@ -2443,7 +2457,91 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
+static long touch_active = 0;
+static long touch_clientX = 0;
+static long touch_clientY = 0;
+
 #ifdef __EMSCRIPTEN__
+static double touch_activated_at = 0;
+static int touch_just_activated = 0;
+
+EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touch_active) {
+        // Another finger was touched when one was already touching.
+        if (touchEvent->numTouches == 2) {
+            // 2-finger = move forward
+            touch_forward = 1;
+            touch_jump = 0;
+        } else if (touchEvent->numTouches == 3) {
+            // 3-finger = jump
+            touch_jump = 1;
+        }
+        // TODO: support other interesting gestures, tap to on_left_click()/on_right_click()?
+        return EM_TRUE;
+    }
+
+    touch_active = touchEvent->touches[0].identifier;
+    touch_activated_at = glfwGetTime();
+    touch_just_activated = 1;
+    glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touch_just_activated) {
+        g->just_clicked = 1; // ignore next movement, since two datapoints are needed to move
+        touch_just_activated = 0;
+    }
+    touch_clientX = touchEvent->touches[0].clientX;
+    touch_clientY = touchEvent->touches[0].clientY;
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touchEvent->numTouches <= 2) {
+        touch_forward = 0;
+    }
+
+    if (touchEvent->numTouches <= 3) {
+        touch_jump = 0;
+    }
+
+    for (int i = 0; i < touchEvent->numTouches; ++i) {
+        EmscriptenTouchPoint touch = touchEvent->touches[i];
+        if (touch.isChanged && touch.identifier == touch_active) {
+            // Was the first touch released? If so, exit touch.
+            glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            touch_active = 0;
+
+            double duration = glfwGetTime() - touch_activated_at;
+            if (duration < 0.07) {
+                // Short duration = tap = left-click = break blocks
+                // TODO: only tap if touchstart position =~ touchend position?
+
+                int width = 0, height = 0;
+                glfwGetWindowSize(g->window, &width, &height);
+
+                //printf("tap at (%ld,%ld) within (%d,%d)\n", touch.clientX, touch.clientY, width, height);
+
+                if (touch.clientX < 80) { // TODO: && touch.clientY < height - 80? (bottom left center vs corner)
+                    // Tapping near the item icon = place
+                    on_right_click();
+                } else {
+                    // Tapping elswhere = break
+                    on_left_click();
+                }
+            }
+        }
+    }
+
+    return EM_TRUE;
+}
+
+EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    touch_active = 0;
+    return EM_TRUE;
+}
+
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
     int w = 0;
@@ -2466,7 +2564,7 @@ EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userDat
     // size, which is in pixels, for pixel-based calls."
     int w_w, w_h;
     glfwGetWindowSize(g->window, &w_w, &w_h);
-    printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
+    //printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
 
 
     return EM_FALSE;
@@ -2570,6 +2668,66 @@ void fullscreen_toggle() {
 }
 #endif
 
+void on_joystick_connection(int joy, int event) {
+    const char* name = glfwGetJoystickName(joy);
+
+    if (event == GLFW_CONNECTED) {
+        g->gamepad_connected = joy;
+        printf("Joystick connected: %d %s\n", joy, name);
+    } else if (event == GLFW_DISCONNECTED) {
+        printf("Joystick disconnected: %d %s\n", joy, name);
+        g->gamepad_connected = -1;
+    }
+}
+
+void handle_gamepad_input() {
+    if (g->gamepad_connected == -1) return;
+
+    static struct {
+        int axis_count;
+        float axis[16];
+        int digitalButton_count;
+        unsigned char digitalButton[16];
+    } last_gamepad_state = {0};
+
+    g->gamepad_state.axis = glfwGetJoystickAxes(g->gamepad_connected, &g->gamepad_state.axis_count);
+    g->gamepad_state.digitalButton = glfwGetJoystickButtons(g->gamepad_connected, &g->gamepad_state.digitalButton_count);
+
+    // TODO: refactor with above
+    // Bumpers scroll
+    if (g->gamepad_state.digitalButton[GAMEPAD_L1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_L1_BUMPER]) {
+        on_scroll(g->window, 0, SCROLL_THRESHOLD + 1);
+    }
+    if (g->gamepad_state.digitalButton[GAMEPAD_R1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_R1_BUMPER]) {
+        on_scroll(g->window, 0, -SCROLL_THRESHOLD - 1);
+    }
+
+    // Triggers click
+    // TODO: holding to mine/place: https://github.com/satoshinm/NetCraft/issues/8
+    if (g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
+        on_right_click();
+    }
+    if (g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
+        on_left_click();
+    }
+
+    // Jump key needs events to detect double-tap for toggling fly
+    if (g->gamepad_state.digitalButton[GAMEPAD_A] && !last_gamepad_state.digitalButton[GAMEPAD_A]) {
+        on_key(g->window, CRAFT_KEY_JUMP, 0, GLFW_PRESS, 0);
+    }
+
+
+    last_gamepad_state.axis_count =  g->gamepad_state.axis_count;
+    for (int i = 0; i < g->gamepad_state.axis_count; ++i) {
+        last_gamepad_state.axis[i] = g->gamepad_state.axis[i];
+    }
+
+    last_gamepad_state.digitalButton_count =  g->gamepad_state.digitalButton_count;
+    for (int i = 0; i < g->gamepad_state.digitalButton_count; ++i) {
+        last_gamepad_state.digitalButton[i] = g->gamepad_state.digitalButton[i];
+    }
+}
+
 void init_fullscreen_monitor_dimensions() {
 #ifndef __EMSCRIPTEN__
     int mode_count;
@@ -2602,13 +2760,35 @@ void create_window() {
 
 void handle_mouse_input() {
     int exclusive =
+        g->gamepad_connected != -1 ||
+#ifdef __EMSCRIPTEN__
+        touch_active ||
+#endif
         glfwGetInputMode(g->window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     static double px = 0;
     static double py = 0;
     State *s = &g->players->state;
     if (exclusive && (px || py)) {
         double mx, my;
-        glfwGetCursorPos(g->window, &mx, &my);
+        if (touch_active) {
+            mx = touch_clientX;
+            my = touch_clientY;
+        } else if (g->gamepad_connected != -1) {
+            mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * GAMEPAD_LOOK_SENSITIVITY;
+            my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * GAMEPAD_LOOK_SENSITIVITY;
+        } else {
+            glfwGetCursorPos(g->window, &mx, &my);
+        }
+
+        if (g->just_clicked) {
+            // If the user had pressed or released a mouse button immediately before, ignore
+            // the first mouse movement -- workaround bug(?) in Firefox, where clicking caused
+            // player to look down and rotate. TODO: investigate further, is it Firefox's issue?
+            px = mx;
+            py = my;
+            g->just_clicked = 0;
+            return;
+        }
         float m = 0.0025;
         s->rx += (mx - px) * m;
         if (INVERT_MOUSE) {
@@ -2629,76 +2809,75 @@ void handle_mouse_input() {
         py = my;
     }
     else {
-        glfwGetCursorPos(g->window, &px, &py);
+        if (touch_active) {
+            px = touch_clientX;
+            py = touch_clientY;
+        } else {
+            glfwGetCursorPos(g->window, &px, &py);
+        }
     }
 }
-
-// Partial workaround stuck keys in web, TODO: fix upstream in https://github.com/kripken/emscripten/issues/5122 and delete all this
-// When blurred, treat all keys as released. However, once the player refocuses
-// the game, then the keys will be stuck, again. Emscripten fix may be only possibility.
-// This is only for character keys, TODO: also for modifier keys like Command
-static int blurred = 0;
-int craftGetKey(GLFWwindow *window, int key) {
-    if (blurred) {
-        return GLFW_RELEASE;
-    }
-
-    return glfwGetKey(window, key);
-}
-#ifdef __EMSCRIPTEN__
-EM_BOOL on_focus(int eventType, const EmscriptenFocusEvent *focusEvent, void *userData) {
-   switch(eventType) {
-       case EMSCRIPTEN_EVENT_BLUR:
-           blurred = 1;
-           break;
-       case EMSCRIPTEN_EVENT_FOCUS:
-           blurred = 0;
-           break;
-   }
-   return EM_FALSE;
-}
-#endif
 
 void handle_movement(double dt) {
     static float dy = 0;
     State *s = &g->players->state;
-    int sz = 0;
-    int sx = 0;
+    double sz = 0;
+    double sx = 0;
     if (!g->typing) {
         float m = dt * 1.0;
-        g->ortho = craftGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
-        g->fov = craftGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
-        if (craftGetKey(g->window, CRAFT_KEY_FORWARD)) sz--;
-        if (craftGetKey(g->window, CRAFT_KEY_BACKWARD)) sz++;
-        if (craftGetKey(g->window, CRAFT_KEY_LEFT)) sx--;
-        if (craftGetKey(g->window, CRAFT_KEY_RIGHT)) sx++;
-        if (craftGetKey(g->window, GLFW_KEY_LEFT)) s->rx -= m;
-        if (craftGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
-        if (craftGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
-        if (craftGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
+
+        g->ortho = glfwGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
+        g->fov = glfwGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
+        if (glfwGetKey(g->window, CRAFT_KEY_FORWARD) || touch_forward) sz--;
+        if (glfwGetKey(g->window, CRAFT_KEY_BACKWARD)) sz++;
+        if (glfwGetKey(g->window, CRAFT_KEY_LEFT)) sx--;
+        if (glfwGetKey(g->window, CRAFT_KEY_RIGHT)) sx++;
+        if (glfwGetKey(g->window, GLFW_KEY_LEFT)) s->rx -= m;
+        if (glfwGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
+        if (glfwGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
+        if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
+
+        if (g->gamepad_connected != -1) {
+            if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_LEFT]) sx--;
+            if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
+
+            sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL];
+            sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL];
+        }
     }
-    float vx, vy, vz;
+    float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
-        if (craftGetKey(g->window, CRAFT_KEY_JUMP)) {
+        int jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump;
+        int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
+
+        if (g->gamepad_connected != -1) {
+            if (g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
+            if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) jumping = 1;
+            if (g->gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) crouching = 1;
+        }
+
+        if (jumping) {
             if (g->flying) {
-                vy = 1;
+                vy++;
             }
             else if (dy == 0) {
                 dy = 8;
             }
         }
-        if (craftGetKey(g->window, CRAFT_KEY_CROUCH)) {
+        if (crouching) {
             if (g->flying) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
-                if (exclusive) {
-                    vy = -1;
+                if (exclusive || !glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
+                    vy--;
                 }
             }
         }
     }
     float speed = g->flying ? 20 : 5;
+    if (glfwGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
+    if (glfwGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
     int estimate = roundf(sqrtf(
         powf(vx * speed, 2) +
         powf(vy * speed + ABS(dy) * 2, 2) +
@@ -2837,6 +3016,7 @@ void reset_model() {
     g->ortho_zoom = 32;
     memset(g->typing_buffer, 0, sizeof(char) * MAX_TEXT_LENGTH);
     g->typing = 0;
+    g->just_clicked = 0;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);
     g->message_index = 0;
     g->day_length = DAY_LENGTH;
@@ -2845,6 +3025,11 @@ void reset_model() {
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
     g->show_vr = 0;
+    g->gamepad_connected = -1;
+    if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
+        printf("Found joystick %d connected: %s\n", GLFW_JOYSTICK_1, glfwGetJoystickName(GLFW_JOYSTICK_1));
+        g->gamepad_connected = GLFW_JOYSTICK_1;
+    }
 }
 
 void one_iter();
@@ -2866,19 +3051,9 @@ static int g_running;
 static int g_inner_break;
 
 
-#ifdef __EMSCRIPTEN__
-EM_BOOL on_pointerlockchange(int eventType, const EmscriptenPointerlockChangeEvent *pointerlockChangeEvent, void *userData) {
-    if (!pointerlockChangeEvent->isActive) {
-        printf("pointerlockchange deactivated, so enabling cursor\n");
-        glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-    return 0;
-}
-#endif
-
 int main(int argc, char **argv) {
     // INITIALIZATION //
-#ifndef __EMSCRIPTEN__
+#ifndef NO_CRAFT_AUTH
     curl_global_init(CURL_GLOBAL_DEFAULT);
 #endif
     srand(time(NULL));
@@ -2895,16 +3070,19 @@ int main(int argc, char **argv) {
     }
 
     glfwMakeContextCurrent(g->window);
-#ifdef __EMSCRIPTEN__
-    emscripten_set_pointerlockchange_callback(NULL, NULL, 0, on_pointerlockchange);
-#else // web pointer lock requires user action to activate, start off disabled
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-#endif
     glfwSetWindowSizeCallback(g->window, on_window_size);
     glfwSetKeyCallback(g->window, on_key);
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
     glfwSetScrollCallback(g->window, on_scroll);
+    glfwSetJoystickCallback(on_joystick_connection);
+#ifdef __EMSCRIPTEN__
+    emscripten_set_touchstart_callback(NULL, NULL, EM_FALSE, on_touchstart);
+    emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
+    emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
+    emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
+#endif
 
     if (glewInit() != GLEW_OK) {
         return -1;
@@ -2963,8 +3141,8 @@ int main(int argc, char **argv) {
         "shaders/block_vertex.glsl", "shaders/block_fragment.glsl");
     block_attrib.program = program;
     block_attrib.position = glGetAttribLocation(program, "position");
-    block_attrib.normal = glGetAttribLocation(program, "normal");
     block_attrib.uv = glGetAttribLocation(program, "uv");
+    block_attrib.normal = glGetAttribLocation(program, "normal");
     block_attrib.matrix = glGetUniformLocation(program, "matrix");
     block_attrib.sampler = glGetUniformLocation(program, "sampler");
     block_attrib.extra1 = glGetUniformLocation(program, "sky_sampler");
@@ -2993,8 +3171,8 @@ int main(int argc, char **argv) {
         "shaders/sky_vertex.glsl", "shaders/sky_fragment.glsl");
     sky_attrib.program = program;
     sky_attrib.position = glGetAttribLocation(program, "position");
-    sky_attrib.normal = -1; // unused
     sky_attrib.uv = glGetAttribLocation(program, "uv");
+    sky_attrib.normal = -1; // unused
     sky_attrib.matrix = glGetUniformLocation(program, "matrix");
     sky_attrib.sampler = glGetUniformLocation(program, "sampler");
     sky_attrib.timer = glGetUniformLocation(program, "timer");
@@ -3029,8 +3207,6 @@ int main(int argc, char **argv) {
     // OUTER LOOP //
     g_running = 1;
 #ifdef __EMSCRIPTEN__
-    emscripten_set_blur_callback(NULL, NULL, EM_TRUE, on_focus);
-    emscripten_set_focus_callback(NULL, NULL, EM_TRUE, on_focus);
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
     //main_shutdown(); // called in one_iter() if g_inner_break
@@ -3047,7 +3223,7 @@ int main(int argc, char **argv) {
 #endif
 
     glfwTerminate();
-#ifndef __EMSCRIPTEN__
+#ifndef NO_CRAFT_AUTH
     curl_global_cleanup();
 #endif
     return 0;
@@ -3164,6 +3340,8 @@ void one_iter() {
 
             // HANDLE MOUSE INPUT //
             handle_mouse_input();
+
+            handle_gamepad_input();
 
             // HANDLE MOVEMENT //
             handle_movement(dt);
@@ -3300,7 +3478,7 @@ void render_scene() {
             if (g->typing) {
                 snprintf(text_buffer, 1024, "> %s", g->typing_buffer);
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
-                ty -= ts * 2;
+                //ty -= ts * 2; // unused
             }
             if (SHOW_PLAYER_NAMES && g->show_ui) {
                 if (player != me) {

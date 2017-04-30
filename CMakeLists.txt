@@ -31,6 +31,8 @@ endif ()
 add_definitions(-std=c99 -O3)
 
 if (EMSCRIPTEN)
+    add_definitions(-DNO_CRAFT_AUTH)
+
     # Emscripten default is GLFW 2.x but we use GLFW 3.x, also include data files
     set_target_properties(craft PROPERTIES LINK_FLAGS "-s USE_GLFW=3 --pre-js ../src/pre.js --shell-file ../src/shell.html --embed-file ../shaders/ -s TOTAL_MEMORY=33554432 --embed-file ../textures/")
 
@@ -41,6 +43,10 @@ if (EMSCRIPTEN)
     if (WASM)
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -s WASM=1")
     endif ()
+endif ()
+
+if (NO_CRAFT_AUTH)
+    add_definitions(-DNO_CRAFT_AUTH)
 endif ()
 
 if (NOT EMSCRIPTEN)
@@ -69,21 +75,20 @@ else ()
     set(CURL_LIBRARIES "")
 endif ()
 
-find_package(OpenGL REQUIRED)
-
 if(APPLE OR EMSCRIPTEN)
     target_link_libraries(craft glfw
-        ${OPENGL_gl_LIBRARY}
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
 endif()
 
 if(UNIX AND NOT EMSCRIPTEN)
+    find_package(OpenGL REQUIRED)
     target_link_libraries(craft dl glfw
         ${OPENGL_gl_LIBRARY}
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
 endif()
 
 if(MINGW OR MSVC)
+    find_package(OpenGL REQUIRED)
     target_link_libraries(craft ws2_32.lib glfw
         ${OPENGL_gl_LIBRARY}
         ${GLFW_LIBRARIES} ${CURL_LIBRARIES})
