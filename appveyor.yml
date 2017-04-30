@@ -23,11 +23,11 @@ build_script:
 
     mkdir "C:\Program Files\CURL"
 
+    cd ..
+
     xcopy curl-7.54.0\lib "C:\Program Files\CURL\lib"
 
     xcopy curl-7.54.0\include "C:\Program Files\CURL\include"
-
-    cd ..
 
     cmake -G "MinGW Makefiles"
 
