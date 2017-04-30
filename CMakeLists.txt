@@ -29,6 +29,9 @@ else ()
 endif ()
 
 add_definitions(-std=c99 -O3)
+unset(GLFW_BUILD_EXAMPLES)
+unset(GLFW_BUILD_TESTS)
+unset(GLFW_BUILD_DOCS)
 
 if (EMSCRIPTEN)
     add_definitions(-DNO_CRAFT_AUTH)
