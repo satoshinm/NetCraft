@@ -9,3 +9,19 @@ build_script:
 
     mingw32-make
 
+    mkdir native-build
+
+    copy craft.exe native-build
+
+    mkdir native-build\shaders
+
+    copy shaders native-build\shaders
+
+    mkdir native-build\textures
+
+    copy textures native-build\textures
+
+artifacts:
+    - path: native-build
+      name: NetCraft-Win32
+      type: zip
