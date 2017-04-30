@@ -35,6 +35,10 @@ and also natively, as with the original Craft:
 
 ### Download
 
+JavaScript, WebAssembly, and Linux builds are available from CircleCI: https://circleci.com/gh/satoshinm/NetCraft
+
+Windows builds are available from AppVeyor: https://ci.appveyor.com/project/satoshinm/netcraft
+
 See below to run from source.
 
 ### Web builds
