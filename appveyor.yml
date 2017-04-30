@@ -7,13 +7,13 @@ build_script:
 
     choco install curl
 
-    curl -o curl.zip https://curl.haxx.se/download/curl-7.49.1.zip
+    curl -o curl.zip https://curl.haxx.se/download/curl-7.54.0.zip
 
     choco install unzip
 
     unzip curl.zip -d "C:\Program Files"
 
-    rename "C:\Program Files\curl-7.49.1" CURL
+    rename "C:\Program Files\curl-7.54.0" CURL
 
     cmake -G "MinGW Makefiles"
 
