@@ -1,4 +1,4 @@
-#ifndef __EMSCRIPTEN__
+#ifndef NO_CRAFT_AUTH
 #include <curl/curl.h>
 #endif
 #include <stdio.h>
@@ -23,7 +23,7 @@ size_t write_function(char *data, size_t size, size_t count, void *arg) {
 int get_access_token(
     char *result, int length, char *username, char *identity_token)
 {
-#ifdef __EMSCRIPTEN__
+#ifdef NO_CRAFT_AUTH
     return 0;
 #else
     static char url[] = "https://craft.michaelfogleman.com/api/1/identity";
