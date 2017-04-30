@@ -5,7 +5,7 @@ build_script:
 
     set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 
-    cmake -G "MinGW Makefiles" -DNO_CRAFT_AUTH=1
+    cmake -G "MinGW Makefiles" -DNO_CRAFT_AUTH=1 -DGLFW_BUILD_EXAMPLES=0 -DGLFW_BUILD_TESTS=0 -DGLFW_BUILD_DOCS=0
 
     mingw32-make
 
