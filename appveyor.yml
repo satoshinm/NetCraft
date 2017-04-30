@@ -1,39 +1,11 @@
 version: 1.0.{build}
 build_script:
 - cmd: >-
-    set PATH=C:\MinGW\bin;C:\Tools\curl\bin;%PATH%
+    set PATH=C:\MinGW\bin;%PATH%
 
     set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 
-    rem set PATH=C:\MinGW\bin;C:\Tools\curl\bin;C:\Program Files (x86)\CMake\bin
-
-    echo %PATH%
-
-    curl -o curl.zip https://curl.haxx.se/download/curl-7.54.0.zip
-
-    choco install unzip
-
-    unzip curl.zip
-
-    cd curl-7.54.0
-
-    cmake -G "MinGW Makefiles"
-
-    mingw32-make
-
-    mkdir "C:\Program Files\CURL"
-
-    mkdir "C:\Program Files\CURL\lib"
-
-    mkdir "C:\Program Files\CURL\lib\include"
-
-    cd ..
-
-    xcopy curl-7.54.0\lib "C:\Program Files\CURL\lib"
-
-    xcopy curl-7.54.0\include "C:\Program Files\CURL\include"
-
-    cmake -G "MinGW Makefiles"
+    cmake -G "MinGW Makefiles" -DNO_CRAFT_AUTH=1
 
     mingw32-make
 

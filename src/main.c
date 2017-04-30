@@ -2957,7 +2957,7 @@ static int g_inner_break;
 
 int main(int argc, char **argv) {
     // INITIALIZATION //
-#ifndef __EMSCRIPTEN__
+#ifndef NO_CRAFT_AUTH
     curl_global_init(CURL_GLOBAL_DEFAULT);
 #endif
     srand(time(NULL));
@@ -3126,7 +3126,7 @@ int main(int argc, char **argv) {
 #endif
 
     glfwTerminate();
-#ifndef __EMSCRIPTEN__
+#ifndef NO_CRAFT_AUTH
     curl_global_cleanup();
 #endif
     return 0;
