@@ -10,6 +10,6 @@ build_script:
     dir C:\Tools\curl\lib
     dir C:\Tools\curl\include
 
-    cmake -G "MinGW Makefiles" -DCURL_LIBRARY="C:/Tools/curl/lib/libcurl.a" -DCURL_INCLUDE="C:/Tools/curl/include"
+    cmake -G "MinGW Makefiles" -DCURL_LIBRARY="C:/Tools/curl/lib/libcurl.a" -DCURL_INCLUDE_DIR="C:/Tools/curl/include"
 
     mingw32-make
