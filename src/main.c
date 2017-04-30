@@ -3389,7 +3389,7 @@ void one_iter() {
                 // TODO: are the aspect ratios correct? seems to be squished!
                 // TODO: lens distortion for native, and/or on web build, WebVR: https://github.com/w3c/webvr
                 // left eye
-                glViewport(0, 0, g->width/2, g->height);
+                glViewport(0, 0, g->width, g->height);
                 render_scene();
 
                 // right eye
