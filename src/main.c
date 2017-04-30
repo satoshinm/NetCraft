@@ -1875,16 +1875,31 @@ void render_item(Attrib *attrib) {
     glUniform3f(attrib->camera, 0, 0, 5);
     glUniform1i(attrib->sampler, 0);
     glUniform1f(attrib->timer, time_of_day());
-    int w = hotbar_items[g->item_index];
-    if (is_plant(w)) {
-        GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
-        draw_plant(attrib, buffer);
-        del_buffer(buffer);
-    }
-    else {
-        GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
-        draw_cube(attrib, buffer);
-        del_buffer(buffer);
+
+    for (int i = 0; i <= 6; ++i) {
+        if (g->item_index + i >= hotbar_item_count) {
+            break;
+        }
+
+        glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
+
+        int w = hotbar_items[g->item_index + i];
+        if (is_plant(w)) {
+            GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
+            draw_plant(attrib, buffer);
+            del_buffer(buffer);
+        } else {
+            GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
+            draw_cube(attrib, buffer);
+            del_buffer(buffer);
+        }
+
+        if (!i) {
+            set_matrix_item(matrix, g->width, g->height, g->scale);
+            matrix[13] += 0.1f;
+        }
+
+        matrix[13] += 0.25f;
     }
 }
 
