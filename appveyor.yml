@@ -5,10 +5,25 @@ build_script:
 
     set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 
-    set PATH=C:\MinGW\bin;C:\Tools\curl\bin;C:\Program Files (x86)\CMake\bin
+    rem set PATH=C:\MinGW\bin;C:\Tools\curl\bin;C:\Program Files (x86)\CMake\bin
 
     echo %PATH%
+
+    curl -o curl.zip https://curl.haxx.se/download/curl-7.54.0.zip
+
+    choco install unzip
+
+    unzip curl.zip
+
+    cd curl-7.54.0
 
     cmake -G "MinGW Makefiles"
 
     mingw32-make
+
+    cd ..
+
+    cmake -G "MinGW Makefiles"
+
+    mingw32-make
+
