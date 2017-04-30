@@ -5,6 +5,8 @@ build_script:
 
     set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 
+    echo %PATH%
+
     cmake -G "MinGW Makefiles"
 
     mingw32-make
