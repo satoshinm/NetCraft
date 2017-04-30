@@ -23,6 +23,10 @@ build_script:
 
     mkdir "C:\Program Files\CURL"
 
+    mkdir "C:\Program Files\CURL\lib"
+
+    mkdir "C:\Program Files\CURL\lib\include"
+
     cd ..
 
     xcopy curl-7.54.0\lib "C:\Program Files\CURL\lib"
