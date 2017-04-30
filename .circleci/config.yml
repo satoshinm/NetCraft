@@ -26,6 +26,7 @@ jobs:
                   ~/emsdk-portable/emsdk activate latest
                   source ~/emsdk-portable/emsdk_env.sh
                   patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.9+netcraftfixes.patch
+                  cp deps/glfw/include/GLFW/glfw3.h $EMSCRIPTEN/system/include/GLFW/glfw3.h
                   mkdir release-build-js
                   (cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
                   mkdir wasm-build
