@@ -1,19 +1,17 @@
 version: 1.0.{build}
 build_script:
 - cmd: >-
-    set PATH=C:\MinGW\bin;%PATH%
+    set PATH=C:\MinGW\bin;C:\Tools\curl\bin;%PATH%
 
     set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
 
-    choco install curl
-
-    curl -o curl.zip https://curl.haxx.se/download/curl-7.54.0.zip
+    curl -o curl.zip https://curl.haxx.se/download/curl-7.49.1.zip
 
     choco install unzip
 
     unzip curl.zip -d "C:\Program Files"
 
-    rename "C:\Program Files\curl-7.54.0" CURL
+    rename "C:\Program Files\curl-7.49.1" CURL
 
     cmake -G "MinGW Makefiles"
 
