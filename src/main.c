@@ -1896,6 +1896,7 @@ void render_item(Attrib *attrib) {
 
         if (!i) {
             set_matrix_item(matrix, g->width, g->height, g->scale);
+            matrix[12] += 0.08f;
             matrix[13] += 0.1f;
         }
 
@@ -1917,6 +1918,28 @@ void render_text(
     GLuint buffer = gen_text_buffer(x, y, n, text);
     draw_text(attrib, buffer, length);
     del_buffer(buffer);
+}
+
+void render_item_count(Attrib *attrib, float ts) {
+    const int buf_len = 4;
+
+    float pos = 15.0f;
+    for (int i = 0; i <= 6; ++i) {
+        if (g->item_index + i >= hotbar_item_count) {
+            break;
+        }
+
+        char buf[buf_len];
+        snprintf(buf, buf_len, "%d\n", 16);
+        render_text(attrib, ALIGN_CENTER, g->width - 20.0f, pos, ts, buf);
+
+        float ratio_to_hardcoded = (g->height / 768.0f);
+        if (i) {
+            pos += 96.0f * ratio_to_hardcoded;
+        } else {
+            pos += 140.0f * ratio_to_hardcoded;
+        }
+    }
 }
 
 void add_message(const char *text) {
@@ -3412,6 +3435,7 @@ void render_scene() {
     // RENDER 3-D SCENE //
     render_sky(&sky_attrib, player, sky_buffer);
     int face_count;
+    float ts = 12 * g->scale;
     if (g->initialized) {
         glClear(GL_DEPTH_BUFFER_BIT);
         face_count = render_chunks(&block_attrib, player);
@@ -3433,6 +3457,7 @@ void render_scene() {
         }
         if (SHOW_ITEM && g->show_ui) {
             render_item(&block_attrib);
+            render_item_count(&text_attrib, ts);
         }
     } else {
         face_count = 0;
@@ -3440,7 +3465,6 @@ void render_scene() {
 
     // RENDER TEXT //
     char text_buffer[1024];
-    float ts = 12 * g->scale;
     float tx = ts / 2;
     float ty = g->height - ts;
     if (g->show_info_text && g->show_ui && g->initialized) {
