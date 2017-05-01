@@ -1,5 +1,5 @@
 diff --git a/src/library_glfw.js b/src/library_glfw.js
-index dfa4896c4..ed2441afb 100644
+index dfa4896c4..503ac68a8 100644
 --- a/src/library_glfw.js
 +++ b/src/library_glfw.js
 @@ -13,7 +13,6 @@
@@ -123,7 +123,7 @@ index dfa4896c4..ed2441afb 100644
      },
  
      onMousemove: function(event) {
-@@ -628,6 +676,30 @@ var LibraryGLFW = {
+@@ -628,6 +676,31 @@ var LibraryGLFW = {
        }
      },
  
@@ -136,6 +136,7 @@ index dfa4896c4..ed2441afb 100644
 +    refreshJoystick: function(joy) {
 +      // TODO: refresh all joysticks, and call from render loop?
 +      var j = GLFW.active.joys[joy];
++      if (!j) return;
 +
 +      var gamepad = navigator.getGamepads()[j.index];
 +      if (!gamepad) return;
@@ -154,7 +155,7 @@ index dfa4896c4..ed2441afb 100644
      setKeyCallback: function(winid, cbfun) {
        var win = GLFW.WindowFromId(winid);
        if (!win) return;
-@@ -941,9 +1013,12 @@ var LibraryGLFW = {
+@@ -941,9 +1014,12 @@ var LibraryGLFW = {
      GLFW.windows = new Array()
      GLFW.active = null;
  
@@ -167,7 +168,7 @@ index dfa4896c4..ed2441afb 100644
      Module["canvas"].addEventListener("mousemove", GLFW.onMousemove, true);
      Module["canvas"].addEventListener("mousedown", GLFW.onMouseButtonDown, true);
      Module["canvas"].addEventListener("mouseup", GLFW.onMouseButtonUp, true);
-@@ -959,9 +1034,12 @@ var LibraryGLFW = {
+@@ -959,9 +1035,12 @@ var LibraryGLFW = {
    },
  
    glfwTerminate: function() {
@@ -180,7 +181,7 @@ index dfa4896c4..ed2441afb 100644
      Module["canvas"].removeEventListener("mousemove", GLFW.onMousemove, true);
      Module["canvas"].removeEventListener("mousedown", GLFW.onMouseButtonDown, true);
      Module["canvas"].removeEventListener("mouseup", GLFW.onMouseButtonUp, true);
-@@ -1230,6 +1308,17 @@ var LibraryGLFW = {
+@@ -1230,6 +1309,17 @@ var LibraryGLFW = {
    glfwGetInputMode: function(winid, mode) {
      var win = GLFW.WindowFromId(winid);
      if (!win) return;
@@ -198,7 +199,7 @@ index dfa4896c4..ed2441afb 100644
      return win.inputModes[mode];
    },
  
-@@ -1280,13 +1369,43 @@ var LibraryGLFW = {
+@@ -1280,13 +1370,43 @@ var LibraryGLFW = {
      GLFW.setScrollCallback(winid, cbfun);
    },
  
