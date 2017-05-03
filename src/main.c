@@ -3101,6 +3101,67 @@ void reset_model() {
     g->vr.worldFactor = 1;
 }
 
+void init_vr() {
+    // Compute aspect ratio and FOV
+    float aspect = g->vr.hResolution / (2*g->vr.vResolution);
+
+    // Fov is normally computed with:
+    //   ( 2*atan2(g->vr.vScreenSize,2*g->vr.eyeToScreenDistance) );
+    // But with lens distortion it is increased (see Oculus SDK Documentation)
+    float r = -1.0 - (4 * (g->vr.hScreenSize/4 - g->vr.lensSeparationDistance/2) / g->vr.hScreenSize);
+    float distScale = (g->vr.distortionK[0] + g->vr.distortionK[1] * powf(r,2) + g->vr.distortionK[2] * powf(r,4) + g->vr.distortionK[3] * powf(r,6));
+    float fov = 2*atan2f(g->vr.vScreenSize*distScale, 2*g->vr.eyeToScreenDistance);
+
+    // Compute camera projection matrices
+    float proj[16] = {0};
+    mat_perspective(proj, fov, aspect, 0.3, 10000);
+
+    double h = 4 * (g->vr.hScreenSize/4 - g->vr.interpupillaryDistance/2) / g->vr.hScreenSize;
+
+    struct {
+        float proj[16];
+        float transform[16];
+        float viewport[4];
+        float lensCenter[2];
+    } left = {0}, right = {0};
+
+    mat_translate(left.proj, h, 0.0, 0.0);
+    mat_translate(right.proj, -h, 0.0, 0.0);
+
+    mat_multiply(left.proj, left.proj, proj);
+    mat_multiply(right.proj, right.proj, proj);
+
+    // Compute camera transformation matrices
+    mat_translate(left.transform, -g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
+    mat_translate(right.transform, g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
+
+    // Compute Viewport
+    left.viewport[0] = 0;
+    left.viewport[1] = 0;
+    left.viewport[2] = g->vr.hResolution/2;
+    left.viewport[3] = g->vr.vResolution;
+
+    right.viewport[0] = g->vr.hResolution/2;
+    right.viewport[1] = 0;
+    right.viewport[2] = g->vr.hResolution/2;
+    right.viewport[3] = g->vr.vResolution;
+
+    // Distortion shader parameters
+    float lensShift = 4 * (g->vr.hScreenSize/4 - g->vr.lensSeparationDistance/2) / g->vr.hScreenSize;
+    left.lensCenter[0] = lensShift;
+    left.lensCenter[1] = 0.0;
+
+    right.lensCenter[0] = -lensShift;
+    right.lensCenter[1] = 0.0;
+
+    /* TODO
+    RTMaterial.uniforms['hmdWarpParam'].value = new THREE.Vector4(g->vr.distortionK[0], g->vr.distortionK[1], g->vr.distortionK[2], g->vr.distortionK[3]);
+    RTMaterial.uniforms['chromAbParam'].value = new THREE.Vector4(g->vr.chromaAbParameter[0], g->vr.chromaAbParameter[1], g->vr.chromaAbParameter[2], g->vr.chromaAbParameter[3]);
+    RTMaterial.uniforms['scaleIn'].value = new THREE.Vector2(1.0,1.0/aspect);
+    RTMaterial.uniforms['scale'].value = new THREE.Vector2(1.0/distScale, 1.0*aspect/distScale);
+    */
+}
+
 void one_iter();
 void main_init(void *);
 void main_shutdown();
@@ -3369,6 +3430,7 @@ void main_init(void *unused) {
 void main_inited() {
         // LOCAL VARIABLES //
         reset_model();
+        init_vr();
         //FPS fps = {0, 0, 0};
         last_commit = glfwGetTime();
         last_update = glfwGetTime();
