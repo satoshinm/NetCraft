@@ -3565,18 +3565,21 @@ void one_iter() {
                 // TODO: change aspect ratio, half actual width, so isn't squished (g->width/2)
                 // left eye
                 glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
-                /* TODO: render to texture
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
                 glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, g->width/2, g->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
                 glBindRenderbuffer(GL_RENDERBUFFER, g->vr.depthbuffer); // TODO: depth buffer not needed?
                 glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, g->vr.depthbuffer);
-                // TODO
-                glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g->vr.texture, 0);
+                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g->vr.texture, 0, 0);
                 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
                     printf("error setting up framebuffer l\n");
                 }
-                */
                 render_scene();
 
                 // right eye
