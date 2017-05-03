@@ -2772,9 +2772,9 @@ void init_fullscreen_monitor_dimensions() {
 #ifndef __EMSCRIPTEN__
     int mode_count;
     g->fullscreen_monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
-    g->fullscreen_width = modes[mode_count - 1].width;
-    g->fullscreen_height= modes[mode_count - 1].height;
+    const GLFWvidmode *mode = glfwGetVideoMode(g->fullscreen_monitor);
+    g->fullscreen_width = mode->width;
+    g->fullscreen_height= mode->height;
 
     GLFWwindow *test_window = glfwCreateWindow(
         g->fullscreen_width, g->fullscreen_height, "Craft", NULL, NULL);
