@@ -119,6 +119,7 @@ typedef struct {
     GLuint extra2;
     GLuint extra3;
     GLuint extra4;
+    GLuint extra5;
 } Attrib;
 
 typedef struct {
@@ -3114,6 +3115,7 @@ static Attrib block_attrib = {0};
 static Attrib line_attrib = {0};
 static Attrib text_attrib = {0};
 static Attrib sky_attrib = {0};
+static Attrib vr_attrib = {0};
 static GLuint sky_buffer;
 static int g_running;
 static int g_inner_break;
@@ -3244,6 +3246,20 @@ int main(int argc, char **argv) {
     sky_attrib.matrix = glGetUniformLocation(program, "matrix");
     sky_attrib.sampler = glGetUniformLocation(program, "sampler");
     sky_attrib.timer = glGetUniformLocation(program, "timer");
+
+    program = load_program(
+        "shaders/vr_vertex.glsl", "shaders/vr_fragment.glsl");
+    vr_attrib.program = program;
+    vr_attrib.position = glGetAttribLocation(program, "position");;
+    vr_attrib.uv = glGetAttribLocation(program, "uv");
+    vr_attrib.normal = glGetAttribLocation(program, "normal");
+    vr_attrib.matrix = glGetUniformLocation(program, "matrix");
+    vr_attrib.sampler = glGetUniformLocation(program, "texid");
+    vr_attrib.extra1 = glGetUniformLocation(program, "scale");
+    vr_attrib.extra2 = glGetUniformLocation(program, "scaleIn");
+    vr_attrib.extra3 = glGetUniformLocation(program, "lensCenter");
+    vr_attrib.extra4 = glGetUniformLocation(program, "hmdWarpParam");
+    vr_attrib.extra5 = glGetUniformLocation(program, "chromAbParam");
 
     // CHECK COMMAND LINE ARGUMENTS //
     if (argc == 2 || argc == 3) {
