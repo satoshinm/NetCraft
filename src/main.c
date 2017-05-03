@@ -196,6 +196,10 @@ typedef struct {
             float viewport[4];
             float lensCenter[2];
         } left, right;
+
+        GLuint framebuffer;
+        GLuint texture;
+        GLuint depthbuffer;
     } vr;
 } Model;
 
@@ -3171,6 +3175,10 @@ void init_vr() {
     RTMaterial.uniforms['scaleIn'].value = new THREE.Vector2(1.0,1.0/aspect);
     RTMaterial.uniforms['scale'].value = new THREE.Vector2(1.0/distScale, 1.0*aspect/distScale);
     */
+
+    glGenFramebuffers(1, &g->vr.framebuffer);
+    glGenTextures(1, &g->vr.texture);
+    glGenRenderbuffers(1, &g->vr.depthbuffer);
 }
 
 void one_iter();
@@ -3547,11 +3555,36 @@ void one_iter() {
                 // TODO: change aspect ratio, half actual width, so isn't squished (g->width/2)
                 // left eye
                 glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
+                /* TODO: render to texture
+                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
+                glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+                glBindRenderbuffer(GL_RENDERBUFFER, g->vr.depthbuffer); // TODO: depth buffer not needed?
+                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, g->vr.depthbuffer);
+                // TODO
+                glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g->vr.texture, 0);
+                if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+                    printf("error setting up framebuffer l\n");
+                }
+                */
                 render_scene();
 
                 // right eye
                 glViewport(g->vr.right.viewport[0], g->vr.right.viewport[1], g->vr.right.viewport[2], g->vr.right.viewport[3]);
+                /* TODO
+                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
+                glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+                glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA4, 1024, 768);
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, g->vr.framebuffer);
+                glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g->vr.texture, 0);
+                if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+                    printf("error setting up framebuffer r\n");
+                }
+                */
                 render_scene();
+
+                // TODO: now render to screen
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
             } else {
                 glViewport(0, 0, g->width, g->height);
                 render_scene();
