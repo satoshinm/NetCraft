@@ -3535,11 +3535,11 @@ void one_iter() {
                 // TODO: lens distortion for native, and/or on web build, WebVR: https://github.com/w3c/webvr
                 // TODO: change aspect ratio, half actual width, so isn't squished (g->width/2)
                 // left eye
-                glViewport(0, 0, g->width/2, g->height);
+                glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
                 render_scene();
 
                 // right eye
-                glViewport(g->width/2, 0, g->width/2, g->height);
+                glViewport(g->vr.right.viewport[0], g->vr.right.viewport[1], g->vr.right.viewport[2], g->vr.right.viewport[3]);
                 render_scene();
             } else {
                 glViewport(0, 0, g->width, g->height);
