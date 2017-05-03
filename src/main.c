@@ -3577,8 +3577,10 @@ void one_iter() {
                 glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, g->vr.depthbuffer);
                 glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g->vr.texture, 0, 0);
+                GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
+                glDrawBuffers(1, drawBuffers);
                 if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                    printf("error setting up framebuffer l\n");
+                    printf("error setting up framebuffer l: %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
                 }
                 render_scene();
 
