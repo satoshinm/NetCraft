@@ -176,6 +176,19 @@ typedef struct {
         int digitalButton_count;
         const unsigned char *digitalButton;
     } gamepad_state;
+    struct {
+        int hResolution;
+        int vResolution;
+        GLfloat hScreenSize;
+        GLfloat vScreenSize;
+        GLfloat interpupillaryDistance;
+        GLfloat lensSeparationDistance;
+        GLfloat eyeToScreenDistance;
+        GLfloat distortionK[4];
+        GLfloat chromaAbParameter[4];
+
+        int worldFactor;
+    } vr;
 } Model;
 
 static Model model;
@@ -3047,6 +3060,44 @@ void reset_model() {
     if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
         init_joystick(GLFW_JOYSTICK_1);
     }
+
+    // based on https://github.com/mrdoob/three.js/blob/36565aa86a44d02cdb9c8af4ba91816928180fab/examples/js/effects/OculusRiftEffect.js#L13
+    // DK1
+    /*
+    g->vr.hResolution = 1280;
+    g->vr.vResolution = 800;
+    g->vr.hScreenSize = 0.14976;
+    g->vr.vScreenSize = 0.0936;
+    g->vr.interpupillaryDistance = 0.064;
+    g->vr.lensSeparationDistance = 0.064;
+    g->vr.eyeToScreenDistance = 0.041;
+    g->vr.distortionK[0] = 1.0;
+    g->vr.distortionK[1] = 0.22;
+    g->vr.distortionK[2] = 1.24;
+    g->vr.distortionK[3] = 0.0;
+    g->vr.chromaAbParameter[0] = 0.996;
+    g->vr.chromaAbParameter[1] = -0.004;
+    g->vr.chromaAbParameter[2] = 1.014;
+    g->vr.chromaAbParameter[3] = 0.0;
+    */
+    // DK2
+    g->vr.hResolution = 1920;
+    g->vr.vResolution = 1080;
+    g->vr.hScreenSize = 0.12576;
+    g->vr.vScreenSize = 0.07074;
+    g->vr.interpupillaryDistance = 0.0635;
+    g->vr.lensSeparationDistance = 0.0635;
+    g->vr.eyeToScreenDistance = 0.041;
+    g->vr.distortionK[0] = 1.0;
+    g->vr.distortionK[1] = 0.22;
+    g->vr.distortionK[2] = 1.24;
+    g->vr.distortionK[3] = 0.0;
+    g->vr.chromaAbParameter[0] = 0.996;
+    g->vr.chromaAbParameter[1] = -0.004;
+    g->vr.chromaAbParameter[2] = 1.014;
+    g->vr.chromaAbParameter[3] = 0.0;
+
+    g->vr.worldFactor = 1;
 }
 
 void one_iter();
