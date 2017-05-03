@@ -49,6 +49,7 @@ using this branch: https://github.com/satoshinm/emscripten/commits/netcraft, or 
 install 1.37.9 from the SDK and apply a patch:
 
     patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.9+netcraftfixes.patch
+    cp deps/glfw/include/GLFW/glfw3.h $EMSCRIPTEN/system/include/GLFW/glfw3.h
 
 Once your Emscripten environment is setup, then run:
 
