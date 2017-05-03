@@ -2623,6 +2623,16 @@ void on_window_size(GLFWwindow* window, int width, int height) {
         wasFullscreen = isInFullscreen;
         maximize_canvas();
     }
+
+    g->vr.left.viewport[0] = width/2 - g->vr.hResolution/2;
+    g->vr.left.viewport[1] = height/2 - g->vr.vResolution/2;
+    g->vr.left.viewport[2] = g->vr.hResolution/2;
+    g->vr.left.viewport[3] = g->vr.vResolution;
+
+    g->vr.right.viewport[0] = width/2;
+    g->vr.right.viewport[1] = height/2 - g->vr.vResolution/2;
+    g->vr.right.viewport[2] = g->vr.hResolution/2;
+    g->vr.right.viewport[3] = g->vr.vResolution;
 }
 
 EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
