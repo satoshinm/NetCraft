@@ -189,6 +189,13 @@ typedef struct {
         GLfloat chromaAbParameter[4];
 
         int worldFactor;
+
+        struct {
+            float proj[16];
+            float transform[16];
+            float viewport[4];
+            float lensCenter[2];
+        } left, right;
     } vr;
 } Model;
 
@@ -3118,41 +3125,34 @@ void init_vr() {
 
     double h = 4 * (g->vr.hScreenSize/4 - g->vr.interpupillaryDistance/2) / g->vr.hScreenSize;
 
-    struct {
-        float proj[16];
-        float transform[16];
-        float viewport[4];
-        float lensCenter[2];
-    } left = {0}, right = {0};
+    mat_translate(g->vr.left.proj, h, 0.0, 0.0);
+    mat_translate(g->vr.right.proj, -h, 0.0, 0.0);
 
-    mat_translate(left.proj, h, 0.0, 0.0);
-    mat_translate(right.proj, -h, 0.0, 0.0);
-
-    mat_multiply(left.proj, left.proj, proj);
-    mat_multiply(right.proj, right.proj, proj);
+    mat_multiply(g->vr.left.proj, g->vr.left.proj, proj);
+    mat_multiply(g->vr.right.proj, g->vr.right.proj, proj);
 
     // Compute camera transformation matrices
-    mat_translate(left.transform, -g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
-    mat_translate(right.transform, g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
+    mat_translate(g->vr.left.transform, -g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
+    mat_translate(g->vr.right.transform, g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
 
     // Compute Viewport
-    left.viewport[0] = 0;
-    left.viewport[1] = 0;
-    left.viewport[2] = g->vr.hResolution/2;
-    left.viewport[3] = g->vr.vResolution;
+    g->vr.left.viewport[0] = 0;
+    g->vr.left.viewport[1] = 0;
+    g->vr.left.viewport[2] = g->vr.hResolution/2;
+    g->vr.left.viewport[3] = g->vr.vResolution;
 
-    right.viewport[0] = g->vr.hResolution/2;
-    right.viewport[1] = 0;
-    right.viewport[2] = g->vr.hResolution/2;
-    right.viewport[3] = g->vr.vResolution;
+    g->vr.right.viewport[0] = g->vr.hResolution/2;
+    g->vr.right.viewport[1] = 0;
+    g->vr.right.viewport[2] = g->vr.hResolution/2;
+    g->vr.right.viewport[3] = g->vr.vResolution;
 
     // Distortion shader parameters
     float lensShift = 4 * (g->vr.hScreenSize/4 - g->vr.lensSeparationDistance/2) / g->vr.hScreenSize;
-    left.lensCenter[0] = lensShift;
-    left.lensCenter[1] = 0.0;
+    g->vr.left.lensCenter[0] = lensShift;
+    g->vr.left.lensCenter[1] = 0.0;
 
-    right.lensCenter[0] = -lensShift;
-    right.lensCenter[1] = 0.0;
+    g->vr.right.lensCenter[0] = -lensShift;
+    g->vr.right.lensCenter[1] = 0.0;
 
     /* TODO
     RTMaterial.uniforms['hmdWarpParam'].value = new THREE.Vector4(g->vr.distortionK[0], g->vr.distortionK[1], g->vr.distortionK[2], g->vr.distortionK[3]);
