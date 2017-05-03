@@ -2777,8 +2777,18 @@ void init_fullscreen_monitor_dimensions() {
     int mode_count;
     g->fullscreen_monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode *mode = glfwGetVideoMode(g->fullscreen_monitor);
-    g->fullscreen_width = mode->width;
-    g->fullscreen_height= mode->height;
+    if (mode->width == 1920 && mode->height == 1080 && mode->refreshRate == 75) {
+        g->fullscreen_width = mode->width;
+        g->fullscreen_height= mode->height;
+        // This is the native mode for Oculus Rift DK2, even though it isn't the
+        // "highest" (last) resolution (which is 1600x2560), it is the native and
+        // what we want and need for correct 90 degree rotation.
+        printf("Using current video mode for fullscreen: %d x %d @ %d Hz\n", mode->width, mode->height, mode->refreshRate);
+    } else {
+        const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
+        g->fullscreen_width = modes[mode_count - 1].width;
+        g->fullscreen_height= modes[mode_count - 1].height;
+    }
 
     GLFWwindow *test_window = glfwCreateWindow(
         g->fullscreen_width, g->fullscreen_height, "Craft", NULL, NULL);
