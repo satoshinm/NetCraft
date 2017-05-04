@@ -3615,7 +3615,7 @@ void one_iter() {
                 glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
 
                 // Clear the screen
-                glClearColor(0.0f, 0.0f, 0.4f, 0.0f); // dark blue background
+                glClearColor(0.0f, 1.0f, 0.4f, 0.0f); // bright cyan background
                 glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 // Use our shader
