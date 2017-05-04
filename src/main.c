@@ -124,10 +124,10 @@ typedef struct {
 
 
 typedef struct {
-    float proj[16];
     float transform[16];
     float viewport[4];
     float lensCenter[2];
+    float h;
 } EyeParameters;
 
 typedef struct {
@@ -207,6 +207,8 @@ typedef struct {
         GLfloat scaleIn[2];
 
         GLuint quad_vertexbuffer;
+
+        float current_h;
     } vr;
 } Model;
 
@@ -3151,17 +3153,11 @@ void init_vr() {
     float distScale = (g->vr.distortionK[0] + g->vr.distortionK[1] * powf(r,2) + g->vr.distortionK[2] * powf(r,4) + g->vr.distortionK[3] * powf(r,6));
     float fov = 2*atan2f(g->vr.vScreenSize*distScale, 2*g->vr.eyeToScreenDistance);
 
-    // Compute camera projection matrices
-    float proj[16] = {0};
-    mat_perspective(proj, fov, aspect, 0.3, 10000);
-
+    // Compute x translation offset (h) for projection matrix
     double h = 4 * (g->vr.hScreenSize/4 - g->vr.interpupillaryDistance/2) / g->vr.hScreenSize;
 
-    mat_translate(g->vr.left.proj, h, 0.0, 0.0);
-    mat_translate(g->vr.right.proj, -h, 0.0, 0.0);
-
-    mat_multiply(g->vr.left.proj, g->vr.left.proj, proj);
-    mat_multiply(g->vr.right.proj, g->vr.right.proj, proj);
+    g->vr.left.h = h;
+    g->vr.right.h = -h;
 
     // Compute camera transformation matrices
     mat_translate(g->vr.left.transform, -g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
@@ -3607,13 +3603,17 @@ void one_iter() {
                 // left eye
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
                 glViewport(0, 0, g->width, g->height);
+                me->state.x += g->vr.left.h;
                 render_scene();
+                me->state.x -= g->vr.left.h;
                 render_vr_eye(&g->vr.left);
 
                 // right eye
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
                 glViewport(0, 0, g->width, g->height);
+                me->state.x += g->vr.right.h;
                 render_scene();
+                me->state.x -= g->vr.right.h;
                 render_vr_eye(&g->vr.right);
             } else {
                 glViewport(0, 0, g->width, g->height);
