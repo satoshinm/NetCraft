@@ -3607,12 +3607,12 @@ void one_iter() {
                 // left eye
                 // Render to our framebuffer
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-                glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
+                glViewport(0, 0, g->width/2, g->height);
                 render_scene();
 
                 // Render to the screen
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                glViewport(0, 0, g->width/2, g->height);
+                glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
 
                 // Clear the screen
                 glClearColor(0.0f, 0.0f, 0.4f, 0.0f); // dark blue background
@@ -3649,8 +3649,7 @@ void one_iter() {
                 glDisableVertexAttribArray(vr_attrib.position);
 
                 //TODO
-
-
+                /*
                 // right eye
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
                 glViewport(g->vr.right.viewport[0], g->vr.right.viewport[1], g->vr.right.viewport[2], g->vr.right.viewport[3]);
@@ -3658,6 +3657,7 @@ void one_iter() {
 
                 // TODO: now render to screen
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                */
             } else {
                 glViewport(0, 0, g->width, g->height);
                 render_scene();
