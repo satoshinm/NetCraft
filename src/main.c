@@ -2265,6 +2265,7 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
+void init_vr();
 void fullscreen_toggle();
 static int touch_forward = 0;
 static int touch_jump = 0;
@@ -2317,6 +2318,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             g->vr.skipBarrelDistortion = !g->vr.skipBarrelDistortion;
         } else {
             g->show_vr = !g->show_vr;
+            if (g->show_vr) init_vr();
         }
     }
     if (key == GLFW_KEY_ENTER) {
@@ -3150,6 +3152,11 @@ void reset_model() {
 }
 
 void init_vr() {
+    static int inited = 0;
+    if (inited) return;
+
+    inited = 1;
+
     // Compute aspect ratio and FOV
     float aspect = g->vr.hResolution / (2.0*g->vr.vResolution);
 
@@ -3510,7 +3517,6 @@ void main_init(void *unused) {
 void main_inited() {
         // LOCAL VARIABLES //
         reset_model();
-        init_vr();
         //FPS fps = {0, 0, 0};
         last_commit = glfwGetTime();
         last_update = glfwGetTime();
