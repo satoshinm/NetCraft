@@ -3139,7 +3139,7 @@ void reset_model() {
 
 void init_vr() {
     // Compute aspect ratio and FOV
-    float aspect = g->vr.hResolution / (2*g->vr.vResolution);
+    float aspect = g->vr.hResolution / (2.0*g->vr.vResolution);
 
     // Fov is normally computed with:
     //   ( 2*atan2(g->vr.vScreenSize,2*g->vr.eyeToScreenDistance) );
