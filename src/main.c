@@ -3621,9 +3621,9 @@ void one_iter() {
                 glUseProgram(vr_attrib.program);
 
                 // Bind our texture in Texture Unit
-                glActiveTexture(GL_TEXTURE0);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, g->vr.texture);
-                glUniform1i(vr_attrib.sampler, 0);
+                glUniform1i(vr_attrib.sampler, 4);
 
                 glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
                 glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
