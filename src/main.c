@@ -3615,6 +3615,7 @@ void one_iter() {
                 glViewport(0, 0, g->width/2, g->height);
 
                 // Clear the screen
+                glClearColor(0.0f, 0.0f, 0.4f, 0.0f); // dark blue background
                 glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
                 // Use our shader
