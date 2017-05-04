@@ -3645,7 +3645,7 @@ void one_iter() {
 
                 // Draw the triangles !
                 glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
-                glDisableVertexAttribArray(0);
+                glDisableVertexAttribArray(vr_attrib.position);
 
                 //TODO
 
