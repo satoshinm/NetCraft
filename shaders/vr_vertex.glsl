@@ -4,14 +4,12 @@ precision mediump int;
 #endif
 
 attribute vec3 position;
-attribute vec3 normal;
-attribute vec2 uv;
 
 uniform vec4 matrix;
 
 varying vec2 vUv;
 
 void main() {
-    vUv = uv;
+    vUv = (position.xy+vec2(1,1))/2.0;
     gl_Position = matrix * vec4( position, 1.0 );
 }

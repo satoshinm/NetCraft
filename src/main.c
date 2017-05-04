@@ -3381,8 +3381,8 @@ int main(int argc, char **argv) {
         "shaders/vr_vertex.glsl", "shaders/vr_fragment.glsl");
     vr_attrib.program = program;
     vr_attrib.position = glGetAttribLocation(program, "position");;
-    vr_attrib.uv = glGetAttribLocation(program, "uv");
-    vr_attrib.normal = glGetAttribLocation(program, "normal");
+    vr_attrib.uv = -1; // unused
+    vr_attrib.normal = -1; // unused
     vr_attrib.matrix = glGetUniformLocation(program, "matrix");
     vr_attrib.sampler = glGetUniformLocation(program, "texid");
     vr_attrib.extra1 = glGetUniformLocation(program, "scale");
