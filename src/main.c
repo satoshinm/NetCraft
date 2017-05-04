@@ -3190,6 +3190,7 @@ void init_vr() {
 
     glGenTextures(1, &g->vr.texture);
     glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+    glfwGetFramebufferSize(g->window, &g->width, &g->height);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, g->width/2, g->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
