@@ -209,7 +209,8 @@ hostname "-" can be used to connect to the same server the page is served from.
 - Arrow keys emulate mouse movement.
 - Enter emulates mouse click.
 - F11 to toggle fullscreen/windowed mode.
-- F4 to toggle side-by-side stereo rendering.
+- F4 to toggle VR side-by-side stereo rendering.
+- Shift-F4 to toggle barrel distortion effect.
 - F3 to toggle debug info text.
 - F1 to toggle all user interface elements.
 

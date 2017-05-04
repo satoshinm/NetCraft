@@ -9,11 +9,17 @@ uniform vec2 scaleIn;
 uniform vec2 lensCenter;
 uniform vec4 hmdWarpParam;
 uniform vec4 chromAbParam;
+uniform bool skipBarrelDistortion;
 
 varying vec2 vUv;
 
 void main()
 {
+    if (skipBarrelDistortion) {
+        gl_FragColor = texture2D(texid, vUv);
+        return;
+    }
+
     vec2 uv = (vUv*2.0)-1.0; // range from [0,1] to [-1,1]
     vec2 theta = (uv-lensCenter)*scaleIn;
     float rSq = theta.x*theta.x + theta.y*theta.y;

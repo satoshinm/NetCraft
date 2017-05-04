@@ -120,6 +120,7 @@ typedef struct {
     GLuint extra3;
     GLuint extra4;
     GLuint extra5;
+    GLuint extra6;
 } Attrib;
 
 
@@ -208,7 +209,7 @@ typedef struct {
 
         GLuint quad_vertexbuffer;
 
-        float current_h;
+        int skipBarrelDistortion;
     } vr;
 } Model;
 
@@ -2311,7 +2312,11 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
         g->show_ui = !g->show_ui;
     }
     if (key == CRAFT_KEY_VR) {
-        g->show_vr = !g->show_vr;
+        if (mods & GLFW_MOD_SHIFT) {
+            g->vr.skipBarrelDistortion = !g->vr.skipBarrelDistortion;
+        } else {
+            g->show_vr = !g->show_vr;
+        }
     }
     if (key == GLFW_KEY_ENTER) {
         if (g->typing) {
@@ -3140,6 +3145,7 @@ void reset_model() {
     g->vr.chromaAbParameter[3] = 0.0;
 
     g->vr.worldFactor = 1;
+    g->vr.skipBarrelDistortion = 0;
 }
 
 void init_vr() {
@@ -3389,6 +3395,7 @@ int main(int argc, char **argv) {
     vr_attrib.extra3 = glGetUniformLocation(program, "lensCenter");
     vr_attrib.extra4 = glGetUniformLocation(program, "hmdWarpParam");
     vr_attrib.extra5 = glGetUniformLocation(program, "chromAbParam");
+    vr_attrib.extra6 = glGetUniformLocation(program, "skipBarrelDistortion");
 
     // CHECK COMMAND LINE ARGUMENTS //
     if (argc == 2 || argc == 3) {
@@ -3661,6 +3668,7 @@ void render_vr_eye(EyeParameters *eye) {
     glUniform2fv(vr_attrib.extra3, 1, eye->lensCenter);
     glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
     glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
+    glUniform1i(vr_attrib.extra6, g->vr.skipBarrelDistortion);
 
     // 1rst attribute buffer : vertices
     glEnableVertexAttribArray(vr_attrib.position);
