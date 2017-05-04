@@ -3536,6 +3536,7 @@ void main_shutdown() {
 }
 
 void render_scene();
+void render_vr_eye(void *);
 void one_iter() {
     glfwSwapInterval(VSYNC);
 
@@ -3610,43 +3611,8 @@ void one_iter() {
                 glViewport(0, 0, g->width/2, g->height);
                 render_scene();
 
-                // Render to the screen
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
+                render_vr_eye(&g->vr.left);
 
-                // Clear the screen
-                glClearColor(0.0f, 1.0f, 0.4f, 0.0f); // bright cyan background
-                glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                // Use our shader
-                glUseProgram(vr_attrib.program);
-
-                // Bind our texture in Texture Unit
-                glActiveTexture(GL_TEXTURE4);
-                glBindTexture(GL_TEXTURE_2D, g->vr.texture);
-                glUniform1i(vr_attrib.sampler, 4);
-
-                glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
-                glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
-                glUniform2fv(vr_attrib.extra3, 1, g->vr.left.lensCenter);
-                glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
-                glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
-
-                 // 1rst attribute buffer : vertices
-                glEnableVertexAttribArray(vr_attrib.position);
-                glBindBuffer(GL_ARRAY_BUFFER, g->vr.quad_vertexbuffer);
-                glVertexAttribPointer(
-                    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-                    3,                  // size
-                    GL_FLOAT,           // type
-                    GL_FALSE,           // normalized?
-                    0,                  // stride
-                    (void*)0            // array buffer offset
-                );
-
-                // Draw the triangles !
-                glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
-                glDisableVertexAttribArray(vr_attrib.position);
 
                 //TODO
                 /*
@@ -3685,6 +3651,47 @@ void one_iter() {
     }
 #endif
 }
+
+void render_vr_eye(void *eye) {
+    // Render to the screen
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
+
+    // Clear the screen
+    glClearColor(0.0f, 1.0f, 0.4f, 0.0f); // bright cyan background
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Use our shader
+    glUseProgram(vr_attrib.program);
+
+    // Bind our texture in Texture Unit
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+    glUniform1i(vr_attrib.sampler, 4);
+
+    glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
+    glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
+    glUniform2fv(vr_attrib.extra3, 1, g->vr.left.lensCenter);
+    glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
+    glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
+
+    // 1rst attribute buffer : vertices
+    glEnableVertexAttribArray(vr_attrib.position);
+    glBindBuffer(GL_ARRAY_BUFFER, g->vr.quad_vertexbuffer);
+    glVertexAttribPointer(
+    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+    3,                  // size
+    GL_FLOAT,           // type
+    GL_FALSE,           // normalized?
+    0,                  // stride
+    (void*)0            // array buffer offset
+    );
+
+    // Draw the triangles !
+    glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+    glDisableVertexAttribArray(vr_attrib.position);
+}
+
 
 void render_scene() {
             Player *player = g->players + g->observe1;
