@@ -3211,7 +3211,7 @@ void init_vr() {
 
     glGenRenderbuffers(1, &g->vr.depthrenderbuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, g->vr.depthrenderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, g->width, g->height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, g->width, g->height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, g->vr.depthrenderbuffer);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g->vr.texture, 0);
