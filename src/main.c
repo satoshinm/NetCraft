@@ -3185,6 +3185,7 @@ void init_vr() {
     RTMaterial.uniforms['scale'].value = new THREE.Vector2(1.0/distScale, 1.0*aspect/distScale);
     */
 
+    // Setup offscreen framebuffer to render to, instead of directly to screen
     glGenFramebuffers(1, &g->vr.framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
 
@@ -3206,8 +3207,11 @@ void init_vr() {
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         printf("error setting up framebuffer l: %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
+        exit(1);
     }
 
+    // Render directly to screen by default
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void one_iter();
