@@ -202,6 +202,8 @@ typedef struct {
 
         GLfloat scale[2];
         GLfloat scaleIn[2];
+
+        GLuint quad_vertexbuffer;
     } vr;
 } Model;
 
@@ -3214,6 +3216,19 @@ void init_vr() {
 
     // Render directly to screen by default
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // The (half-)fullscreen quad's FBO
+    static const GLfloat quad_vertex_buffer_data[] = {
+		-1.0f, -1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,
+	};
+    glGenBuffers(1, &g->vr.quad_vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, g->vr.quad_vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertex_buffer_data), quad_vertex_buffer_data, GL_STATIC_DRAW);
 }
 
 void one_iter();
@@ -3595,8 +3610,20 @@ void one_iter() {
                 glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
                 render_scene();
 
-                // Use rendered scene as texture input to vr shader
+                // Render to the screen
+                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                glViewport(0, 0, g->width/2, g->height);
+
+                // Clear the screen
+                glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                // Use our shader
                 glUseProgram(vr_attrib.program);
+
+                // Bind our texture in Texture Unit
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+                glUniform1i(vr_attrib.sampler, 0);
 
                 glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
                 glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
@@ -3604,12 +3631,23 @@ void one_iter() {
                 glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
                 glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, g->vr.texture);
-                glUniform1i(vr_attrib.sampler, 0);
+                 // 1rst attribute buffer : vertices
+                glEnableVertexAttribArray(vr_attrib.position);
+                glBindBuffer(GL_ARRAY_BUFFER, g->vr.quad_vertexbuffer);
+                glVertexAttribPointer(
+                    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+                    3,                  // size
+                    GL_FLOAT,           // type
+                    GL_FALSE,           // normalized?
+                    0,                  // stride
+                    (void*)0            // array buffer offset
+                );
 
-                // TODO: render
+                // Draw the triangles !
+                glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+                glDisableVertexAttribArray(0);
 
+                //TODO
 
 
                 // right eye
