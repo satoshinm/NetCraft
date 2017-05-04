@@ -3539,7 +3539,7 @@ void main_shutdown() {
 }
 
 void render_scene();
-void render_vr_eye(EyeParameters eye);
+void render_vr_eye(EyeParameters *eye);
 void one_iter() {
     glfwSwapInterval(VSYNC);
 
@@ -3613,19 +3613,13 @@ void one_iter() {
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
                 glViewport(0, 0, g->width/2, g->height);
                 render_scene();
+                render_vr_eye(&g->vr.left);
 
-                render_vr_eye(g->vr.left);
-
-                //TODO
-                /*
                 // right eye
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-                glViewport(g->vr.right.viewport[0], g->vr.right.viewport[1], g->vr.right.viewport[2], g->vr.right.viewport[3]);
+                glViewport(0, 0, g->width/2, g->height);
                 render_scene();
-
-                // TODO: now render to screen
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
-                */
+                render_vr_eye(&g->vr.right);
             } else {
                 glViewport(0, 0, g->width, g->height);
                 render_scene();
@@ -3654,13 +3648,14 @@ void one_iter() {
 #endif
 }
 
-void render_vr_eye(EyeParameters eye) {
+void render_vr_eye(EyeParameters *eye) {
     // Render to the screen
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(eye.viewport[0], eye.viewport[1], eye.viewport[2], eye.viewport[3]);
+    glViewport(eye->viewport[0], eye->viewport[1], eye->viewport[2], eye->viewport[3]);
 
     // Clear the screen
-    glClearColor(0.0f, 1.0f, 0.4f, 0.0f); // bright cyan background
+    glClearColor(1.0f, 0.0f, 0.4f, 0.0f); // left = red
+
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Use our shader
@@ -3673,7 +3668,7 @@ void render_vr_eye(EyeParameters eye) {
 
     glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
     glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
-    glUniform2fv(vr_attrib.extra3, 1, eye.lensCenter);
+    glUniform2fv(vr_attrib.extra3, 1, eye->lensCenter);
     glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
     glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
 
