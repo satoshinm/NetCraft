@@ -122,6 +122,14 @@ typedef struct {
     GLuint extra5;
 } Attrib;
 
+
+typedef struct {
+    float proj[16];
+    float transform[16];
+    float viewport[4];
+    float lensCenter[2];
+} EyeParameters;
+
 typedef struct {
     GLFWwindow *window;
     Worker workers[WORKERS];
@@ -190,12 +198,7 @@ typedef struct {
 
         int worldFactor;
 
-        struct {
-            float proj[16];
-            float transform[16];
-            float viewport[4];
-            float lensCenter[2];
-        } left, right;
+        EyeParameters left, right;
 
         GLuint framebuffer;
         GLuint texture;
@@ -3536,7 +3539,7 @@ void main_shutdown() {
 }
 
 void render_scene();
-void render_vr_eye(void *);
+void render_vr_eye(EyeParameters eye);
 void one_iter() {
     glfwSwapInterval(VSYNC);
 
@@ -3611,8 +3614,7 @@ void one_iter() {
                 glViewport(0, 0, g->width/2, g->height);
                 render_scene();
 
-                render_vr_eye(&g->vr.left);
-
+                render_vr_eye(g->vr.left);
 
                 //TODO
                 /*
@@ -3652,10 +3654,10 @@ void one_iter() {
 #endif
 }
 
-void render_vr_eye(void *eye) {
+void render_vr_eye(EyeParameters eye) {
     // Render to the screen
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
+    glViewport(eye.viewport[0], eye.viewport[1], eye.viewport[2], eye.viewport[3]);
 
     // Clear the screen
     glClearColor(0.0f, 1.0f, 0.4f, 0.0f); // bright cyan background
@@ -3671,7 +3673,7 @@ void render_vr_eye(void *eye) {
 
     glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
     glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
-    glUniform2fv(vr_attrib.extra3, 1, g->vr.left.lensCenter);
+    glUniform2fv(vr_attrib.extra3, 1, eye.lensCenter);
     glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
     glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
 
