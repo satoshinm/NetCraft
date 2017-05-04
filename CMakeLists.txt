@@ -50,8 +50,11 @@ if (NO_CRAFT_AUTH)
     add_definitions(-DNO_CRAFT_AUTH)
 endif ()
 
+# Emscripten includes its own GLFW and GLEW ports
 if (NOT EMSCRIPTEN)
-    # Emscripten includes its own GLFW and GLEW ports
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
     add_subdirectory(deps/glfw)
     include_directories(deps/glew/include)
     include_directories(deps/glfw/include)
