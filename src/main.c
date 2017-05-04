@@ -3383,7 +3383,7 @@ int main(int argc, char **argv) {
     vr_attrib.position = glGetAttribLocation(program, "position");;
     vr_attrib.uv = -1; // unused
     vr_attrib.normal = -1; // unused
-    vr_attrib.matrix = glGetUniformLocation(program, "matrix");
+    vr_attrib.matrix = -1; // unused
     vr_attrib.sampler = glGetUniformLocation(program, "texid");
     vr_attrib.extra1 = glGetUniformLocation(program, "scale");
     vr_attrib.extra2 = glGetUniformLocation(program, "scaleIn");
@@ -3626,10 +3626,6 @@ void one_iter() {
                 glBindTexture(GL_TEXTURE_2D, g->vr.texture);
                 glUniform1i(vr_attrib.sampler, 4);
 
-                float matrix[16];
-                mat_identity(matrix);
-
-                glUniformMatrix4fv(vr_attrib.matrix, 1, GL_FALSE, matrix);
                 glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
                 glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
                 glUniform2fv(vr_attrib.extra3, 1, g->vr.left.lensCenter);
