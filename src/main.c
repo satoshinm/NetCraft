@@ -202,6 +202,7 @@ typedef struct {
         EyeParameters left, right;
 
         GLuint framebuffer;
+        GLuint depthrenderbuffer;
         GLuint texture;
 
         GLfloat scale[2];
@@ -3208,7 +3209,11 @@ void init_vr() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    // TODO: or glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+    glGenRenderbuffers(1, &g->vr.depthrenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, g->vr.depthrenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, g->width, g->height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, g->vr.depthrenderbuffer);
+
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g->vr.texture, 0);
 
     GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
