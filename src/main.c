@@ -3653,18 +3653,6 @@ void render_vr_eye(EyeParameters *eye) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(eye->viewport[0], eye->viewport[1], eye->viewport[2], eye->viewport[3]);
 
-    // Clear the screen
-    if (eye == &g->vr.left) {
-        glClearColor(1.0f, 0.0f, 0.4f, 0.0f); // left = red
-    } else if (eye == &g->vr.right) {
-        glClearColor(0.0f, 1.0f, 0.4f, 0.0f); // right = green
-    } else {
-        printf("unknown eye\n");
-        exit(-1);
-    }
-
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     // Use our shader
     glUseProgram(vr_attrib.program);
 
