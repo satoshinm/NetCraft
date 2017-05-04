@@ -3199,7 +3199,7 @@ void init_vr() {
     glGenTextures(1, &g->vr.texture);
     glBindTexture(GL_TEXTURE_2D, g->vr.texture);
     glfwGetFramebufferSize(g->window, &g->width, &g->height);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, g->width/2, g->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, g->width, g->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -3604,20 +3604,15 @@ void one_iter() {
             glClear(GL_DEPTH_BUFFER_BIT);
 
             if (g->show_vr) {
-                // TODO: at eye offset, translation matrix
-                // TODO: lens distortion for native, and/or on web build, WebVR: https://github.com/w3c/webvr
-                // TODO: change aspect ratio, half actual width, so isn't squished (g->width/2)
-
                 // left eye
-                // Render to our framebuffer
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-                glViewport(0, 0, g->width/2, g->height);
+                glViewport(0, 0, g->width, g->height);
                 render_scene();
                 render_vr_eye(&g->vr.left);
 
                 // right eye
                 glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-                glViewport(0, 0, g->width/2, g->height);
+                glViewport(0, 0, g->width, g->height);
                 render_scene();
                 render_vr_eye(&g->vr.right);
             } else {
