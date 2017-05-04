@@ -199,7 +199,6 @@ typedef struct {
 
         GLuint framebuffer;
         GLuint texture;
-        GLuint depthbuffer;
     } vr;
 } Model;
 
@@ -3187,8 +3186,27 @@ void init_vr() {
     */
 
     glGenFramebuffers(1, &g->vr.framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
+
     glGenTextures(1, &g->vr.texture);
-    glGenRenderbuffers(1, &g->vr.depthbuffer);
+    glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, g->width/2, g->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // TODO: or glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g->vr.texture, 0, 0);
+
+    GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, drawBuffers);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        printf("error setting up framebuffer l: %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
+    }
+
 }
 
 void one_iter();
@@ -3565,36 +3583,11 @@ void one_iter() {
                 // TODO: change aspect ratio, half actual width, so isn't squished (g->width/2)
                 // left eye
                 glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
-                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-                glBindTexture(GL_TEXTURE_2D, g->vr.texture);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, g->width/2, g->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-                glBindRenderbuffer(GL_RENDERBUFFER, g->vr.depthbuffer); // TODO: depth buffer not needed?
-                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, g->vr.depthbuffer);
-                glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g->vr.texture, 0, 0);
-                GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
-                glDrawBuffers(1, drawBuffers);
-                if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                    printf("error setting up framebuffer l: %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
-                }
                 render_scene();
 
                 // right eye
                 glViewport(g->vr.right.viewport[0], g->vr.right.viewport[1], g->vr.right.viewport[2], g->vr.right.viewport[3]);
                 /* TODO
-                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-                glBindTexture(GL_TEXTURE_2D, g->vr.texture);
-                glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA4, 1024, 768);
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, g->vr.framebuffer);
-                glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, g->vr.texture, 0);
-                if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                    printf("error setting up framebuffer r\n");
-                }
                 */
                 render_scene();
 
