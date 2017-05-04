@@ -199,6 +199,9 @@ typedef struct {
 
         GLuint framebuffer;
         GLuint texture;
+
+        GLfloat scale[2];
+        GLfloat scaleIn[2];
     } vr;
 } Model;
 
@@ -3178,12 +3181,11 @@ void init_vr() {
     g->vr.right.lensCenter[0] = -lensShift;
     g->vr.right.lensCenter[1] = 0.0;
 
-    /* TODO
-    RTMaterial.uniforms['hmdWarpParam'].value = new THREE.Vector4(g->vr.distortionK[0], g->vr.distortionK[1], g->vr.distortionK[2], g->vr.distortionK[3]);
-    RTMaterial.uniforms['chromAbParam'].value = new THREE.Vector4(g->vr.chromaAbParameter[0], g->vr.chromaAbParameter[1], g->vr.chromaAbParameter[2], g->vr.chromaAbParameter[3]);
-    RTMaterial.uniforms['scaleIn'].value = new THREE.Vector2(1.0,1.0/aspect);
-    RTMaterial.uniforms['scale'].value = new THREE.Vector2(1.0/distScale, 1.0*aspect/distScale);
-    */
+    g->vr.scale[0] = 1.0/distScale;
+    g->vr.scale[1] = 1.0*aspect/distScale;
+
+    g->vr.scaleIn[0] = 1.0;
+    g->vr.scaleIn[1] = 1.0/aspect;
 
     // Setup offscreen framebuffer to render to, instead of directly to screen
     glGenFramebuffers(1, &g->vr.framebuffer);
@@ -3586,14 +3588,33 @@ void one_iter() {
                 // TODO: at eye offset, translation matrix
                 // TODO: lens distortion for native, and/or on web build, WebVR: https://github.com/w3c/webvr
                 // TODO: change aspect ratio, half actual width, so isn't squished (g->width/2)
+
                 // left eye
+                // Render to our framebuffer
+                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
                 glViewport(g->vr.left.viewport[0], g->vr.left.viewport[1], g->vr.left.viewport[2], g->vr.left.viewport[3]);
                 render_scene();
 
+                // Use rendered scene as texture input to vr shader
+                glUseProgram(vr_attrib.program);
+
+                glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
+                glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
+                glUniform2fv(vr_attrib.extra3, 1, g->vr.left.lensCenter);
+                glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
+                glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+                glUniform1i(vr_attrib.sampler, 0);
+
+                // TODO: render
+
+
+
                 // right eye
+                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
                 glViewport(g->vr.right.viewport[0], g->vr.right.viewport[1], g->vr.right.viewport[2], g->vr.right.viewport[3]);
-                /* TODO
-                */
                 render_scene();
 
                 // TODO: now render to screen
