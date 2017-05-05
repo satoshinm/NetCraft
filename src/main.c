@@ -2729,6 +2729,7 @@ void fullscreen_toggle() {
         fullscreen_enter();
     }
 }
+
 void on_window_size(GLFWwindow* window, int width, int height) {
 #ifdef __EMSCRIPTEN__
     static int inFullscreen = 0;
@@ -2760,6 +2761,19 @@ void on_window_size(GLFWwindow* window, int width, int height) {
     g->vr.right.viewport[3] = g->vr.vResolution;
 }
 
+void on_file_drop(GLFWwindow *window, int count, const char **paths) {
+    for (int i = 0; i < count; ++i) {
+        printf("dropped file %s\n", paths[i]);
+
+        GLuint texture;
+        glGenTextures(1, &texture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        load_png_texture(paths[i]);
+    }
+}
 
 void handle_gamepad_input() {
     if (g->gamepad_connected == -1) return;
@@ -3362,6 +3376,7 @@ int main(int argc, char **argv) {
     glfwMakeContextCurrent(g->window);
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetWindowSizeCallback(g->window, on_window_size);
+    glfwSetDropCallback(g->window, on_file_drop);
     glfwSetKeyCallback(g->window, on_key);
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
