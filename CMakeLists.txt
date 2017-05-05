@@ -4,7 +4,6 @@ project(craft)
 
 FILE(GLOB SOURCE_FILES src/*.c)
 
-add_definitions(-g)
 if (EMSCRIPTEN)
     add_executable(
         craft
