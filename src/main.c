@@ -2588,6 +2588,23 @@ EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, vo
     return EM_TRUE;
 }
 
+#ifdef USE_EM_GAMEPAD
+EM_BOOL on_gamepadconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
+    g->gamepad_connected = 1;
+    // TODO: track individual gamepad identifiers?
+    printf("gamepad connected\n");
+
+    return EM_TRUE;
+}
+
+EM_BOOL on_gamepaddisconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
+    g->gamepad_connected = -1;
+    printf("gamepad disconnected\n");
+
+    return EM_TRUE;
+}
+#endif
+
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
     int w = 0;
@@ -2749,8 +2766,28 @@ void handle_gamepad_input() {
         unsigned char digitalButton[16];
     } last_gamepad_state = {0};
 
+#ifdef USE_EM_GAMEPAD
+    static EmscriptenGamepadEvent gp;
+    emscripten_get_gamepad_status(0, &gp);
+
+    static float _axis[16] = {0};
+    static unsigned char _digitalButton[16] = {0};
+    if (!g->gamepad_state.axis) g->gamepad_state.axis = _axis;
+    if (!g->gamepad_state.digitalButton) g->gamepad_state.digitalButton = _digitalButton;
+
+    g->gamepad_state.axis_count = gp.numAxes;
+    for (int i = 0; i < gp.numAxes; ++i) {
+        _axis[i] = gp.axis[i];
+    }
+
+    g->gamepad_state.digitalButton_count = gp.numButtons;
+    for (int i = 0; i < gp.numButtons; ++i) {
+        _digitalButton[i] = gp.digitalButton[i];
+    }
+#else
     g->gamepad_state.axis = glfwGetJoystickAxes(g->gamepad_connected, &g->gamepad_state.axis_count);
     g->gamepad_state.digitalButton = glfwGetJoystickButtons(g->gamepad_connected, &g->gamepad_state.digitalButton_count);
+#endif
 
     // Bumpers scroll
     if (g->gamepad_state.digitalButton_count > GAMEPAD_L1_BUMPER &&
@@ -3311,7 +3348,13 @@ int main(int argc, char **argv) {
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
     glfwSetScrollCallback(g->window, on_scroll);
+#ifdef USE_EM_GAMEPAD
+    emscripten_set_gamepadconnected_callback(NULL, EM_FALSE, on_gamepadconnected);
+    emscripten_set_gamepaddisconnected_callback(NULL, EM_FALSE, on_gamepaddisconnected);
+#else
     glfwSetJoystickCallback(on_joystick_connection);
+#endif
+
 #ifdef __EMSCRIPTEN__
     emscripten_set_touchstart_callback(NULL, NULL, EM_FALSE, on_touchstart);
     emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
