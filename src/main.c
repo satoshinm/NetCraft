@@ -3756,7 +3756,15 @@ void render_scene() {
             if (g->show_info_text && g->show_ui) {
                 snprintf(
                    text_buffer, 1024,
-                   "NetCraft " __DATE__);
+                   "NetCraft "
+#ifdef BUILD_NUM
+                   "build #" BUILD_NUM " "
+#endif
+#ifdef BUILD_COMMIT
+                   BUILD_COMMIT " "
+#endif
+                   __DATE__
+                   );
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
                 ty -= ts * 2;
 
