@@ -2638,57 +2638,71 @@ EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChan
     return EM_TRUE;
 }
 
-void fullscreen_toggle() {
-    printf("fullscreen_toggle\n");
+int is_fullscreen() {
     EmscriptenFullscreenChangeEvent fsce;
 
     emscripten_get_fullscreen_status(&fsce);
+    return fsce.isFullscreen;
+}
 
-    if (fsce.isFullscreen) {
-        printf("Exiting fullscreen...\n");
-        emscripten_exit_fullscreen();
+void fullscreen_exit() {
+    printf("Exiting fullscreen...\n");
+    emscripten_exit_fullscreen();
 
-        printf("Maximizing to canvas...\n");
-        maximize_canvas();
-    } else {
-        emscripten_exit_soft_fullscreen();
+    printf("Maximizing to canvas...\n");
+    maximize_canvas();
+}
 
-        // Workaround https://github.com/kripken/emscripten/issues/5124#issuecomment-292849872
-        // Force JSEvents.canPerformEventHandlerRequests() in library_html5.js to be true
-        // For some reason it is not set even though we are in an event handler and it works
-        EM_ASM(JSEvents.inEventHandler = true);
-        EM_ASM(JSEvents.currentEventHandler = {allowsDeferredCalls:true});
+void fullscreen_enter() {
+    emscripten_exit_soft_fullscreen();
 
-        // Enter fullscreen
-        /* this returns 1=EMSCRIPTEN_RESULT_DEFERRED if EM_TRUE is given to defer
-         * or -2=EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED if EM_FALSE
-         * but the EM_ASM() JS works immediately?
-         */
-        EmscriptenFullscreenStrategy strategy = {
-            .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
-            .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
-            .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
-            .canvasResizedCallback = on_canvassize_changed,
-            .canvasResizedCallbackUserData = NULL
-        };
-        EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_FALSE, &strategy);
-        printf("emscripten_request_fullscreen_strategy = %d\n", ret);
-        //EM_ASM(Module.requestFullscreen(1, 1));
-    }
+    // Workaround https://github.com/kripken/emscripten/issues/5124#issuecomment-292849872
+    // Force JSEvents.canPerformEventHandlerRequests() in library_html5.js to be true
+    // For some reason it is not set even though we are in an event handler and it works
+    EM_ASM(JSEvents.inEventHandler = true);
+    EM_ASM(JSEvents.currentEventHandler = {allowsDeferredCalls:true});
+
+    // Enter fullscreen
+    /* this returns 1=EMSCRIPTEN_RESULT_DEFERRED if EM_TRUE is given to defer
+     * or -2=EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED if EM_FALSE
+     * but the EM_ASM() JS works immediately?
+     */
+    EmscriptenFullscreenStrategy strategy = {
+        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
+        .canvasResizedCallback = on_canvassize_changed,
+        .canvasResizedCallbackUserData = NULL
+    };
+    EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_FALSE, &strategy);
+    printf("emscripten_request_fullscreen_strategy = %d\n", ret);
+    //EM_ASM(Module.requestFullscreen(1, 1));
 }
 
 #else // !__EMSCRIPTEN__
-void fullscreen_toggle() {
-    if (glfwGetWindowMonitor(g->window)) {
-        glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
-    } else {
-        glfwGetWindowPos(g->window, &g->window_xpos, &g->window_ypos);
-        glfwGetWindowSize(g->window, &g->window_width, &g->window_height);
-        glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
-    }
+int is_fullscreen() {
+    return !!glfwGetWindowMonitor(g->window);
 }
+
+void fullscreen_exit() {
+    glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
+}
+
+void fullscreen_enter() {
+    glfwGetWindowPos(g->window, &g->window_xpos, &g->window_ypos);
+    glfwGetWindowSize(g->window, &g->window_width, &g->window_height);
+    glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
+}
+
 #endif
 
+void fullscreen_toggle() {
+    if (is_fullscreen()) {
+        fullscreen_exit();
+    } else {
+        fullscreen_enter();
+    }
+}
 void on_window_size(GLFWwindow* window, int width, int height) {
 #ifdef __EMSCRIPTEN__
     static int inFullscreen = 0;
