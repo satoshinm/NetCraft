@@ -3363,6 +3363,7 @@ int main(int argc, char **argv) {
     EM_ASM(
         var is_typing = Module.cwrap('is_typing');
         window.addEventListener("keydown", function(event) {
+            if (event.metaKey || event.ctrlKey) return;
             // CRAFT_KEY_SIGN, CRAFT_KEY_COMMAND, CRAFT_KEY_CHAT
             if (event.key === "`" || event.key === "/" || event.key === "t") return;
             if (!is_typing()) event.preventDefault();
