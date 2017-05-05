@@ -2401,6 +2401,10 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     }
 }
 
+int is_typing() {
+    return g->typing;
+}
+
 void on_char(GLFWwindow *window, unsigned int u) {
     if (g->suppress_char) {
         g->suppress_char = 0;
@@ -3313,6 +3317,14 @@ int main(int argc, char **argv) {
     emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
     emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
     emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
+    EM_ASM(
+        var is_typing = Module.cwrap('is_typing');
+        window.addEventListener("keydown", function(event) {
+            // CRAFT_KEY_SIGN, CRAFT_KEY_COMMAND, CRAFT_KEY_CHAT
+            if (event.key === "`" || event.key === "/" || event.key === "t") return;
+            if (!is_typing()) event.preventDefault();
+        });
+    );
 #endif
 
     if (glewInit() != GLEW_OK) {
