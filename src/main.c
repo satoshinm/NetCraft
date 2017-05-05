@@ -3754,6 +3754,12 @@ void render_scene() {
             float tx = ts / 2;
             float ty = g->height - ts;
             if (g->show_info_text && g->show_ui) {
+                snprintf(
+                   text_buffer, 1024,
+                   "NetCraft " __DATE__);
+                render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
+                ty -= ts * 2;
+
                 int hour = time_of_day() * 24;
                 char am_pm = hour < 12 ? 'a' : 'p';
                 hour = hour % 12;
