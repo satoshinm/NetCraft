@@ -30,6 +30,11 @@ endif ()
 
 add_definitions(-std=c99 -O3)
 
+if ($ENV{CIRCLECI})
+    add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")
+    add_definitions(-DBUILD_COMMIT="$ENV{CIRCLE_SHA1}")
+endif()
+
 if (EMSCRIPTEN)
     add_definitions(-DNO_CRAFT_AUTH)
 
