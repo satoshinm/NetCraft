@@ -67,7 +67,8 @@
 #define GAMEPAD_DPAD_UP 11
 
 #ifdef __EMSCRIPTEN__
-//#define USE_EM_GAMEPAD 1
+#define USE_EM_GAMEPAD 1
+#define USE_EM_FULLSCREEN 1
 #endif
 
 #define GAMEPAD_LEFT_STICK_HORIZONTAL 0

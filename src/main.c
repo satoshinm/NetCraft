@@ -2650,7 +2650,9 @@ void maximize_canvas() {
 
     on_canvassize_changed(0, NULL, NULL);
 }
+#endif
 
+#ifdef USE_EM_FULLSCREEN
 EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
     printf("fullscreen_change_callback, isFullscreen=%d\n", event->isFullscreen);
 
@@ -2703,7 +2705,7 @@ void fullscreen_enter() {
     //EM_ASM(Module.requestFullscreen(1, 1));
 }
 
-#else // !__EMSCRIPTEN__
+#else
 int is_fullscreen() {
     return !!glfwGetWindowMonitor(g->window);
 }
@@ -2862,7 +2864,7 @@ void on_joystick_connection(int joy, int event) {
 
 
 void init_fullscreen_monitor_dimensions() {
-#ifndef __EMSCRIPTEN__
+#ifndef USE_EM_FULLSCREEN
     int mode_count;
     g->fullscreen_monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode *mode = glfwGetVideoMode(g->fullscreen_monitor);
