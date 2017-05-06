@@ -101,7 +101,7 @@ index dfa4896c4..73db4cf7c 100644
      },
  
 +    setJoystickCallback: function(cbfun) {
-+      GLFW.joystickFunc = cbfun;
++      GLFW.joystickFunc = cbfun; GLFW.refreshJoysticks();
 +    },
 +
 +    joys: {}, // glfw joystick data
