@@ -2903,7 +2903,6 @@ void create_window() {
 
 void handle_mouse_input() {
     int exclusive =
-        g->gamepad_connected != -1 ||
 #ifdef __EMSCRIPTEN__
         touch_active ||
 #endif
@@ -2911,7 +2910,7 @@ void handle_mouse_input() {
     static double px = 0;
     static double py = 0;
     State *s = &g->players->state;
-    if (exclusive && (px || py)) {
+    if (g->gamepad_connected != -1 || (exclusive && (px || py))) {
         double mx, my;
         if (touch_active) {
             mx = touch_clientX;
