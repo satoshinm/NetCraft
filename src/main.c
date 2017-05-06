@@ -3166,10 +3166,6 @@ void reset_model() {
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
     g->show_vr = 0;
-    g->gamepad_connected = -1;
-    if (glfwJoystickPresent(GLFW_JOYSTICK_1)) {
-        init_joystick(GLFW_JOYSTICK_1);
-    }
 
     // based on https://github.com/mrdoob/three.js/blob/36565aa86a44d02cdb9c8af4ba91816928180fab/examples/js/effects/OculusRiftEffect.js#L13
     // DK1
