@@ -2811,7 +2811,8 @@ void handle_gamepad_input() {
     }
 
     // Jump key needs events to detect double-tap for toggling fly
-    if (g->gamepad_state.digitalButton[GAMEPAD_A] && !last_gamepad_state.digitalButton[GAMEPAD_A]) {
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_A &&
+        g->gamepad_state.digitalButton[GAMEPAD_A] && !last_gamepad_state.digitalButton[GAMEPAD_A]) {
         on_key(g->window, CRAFT_KEY_JUMP, 0, GLFW_PRESS, 0);
     }
 
@@ -2973,8 +2974,11 @@ void handle_movement(double dt) {
             if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_RIGHT &&
                 g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
 
-            sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL];
-            sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL];
+            if (g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_HORIZONTAL &&
+                g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_VERTICAL) {
+                sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL];
+                sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL];
+            }
         }
     }
     float vx, vy = 0, vz;
@@ -2984,7 +2988,8 @@ void handle_movement(double dt) {
         int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
 
         if (g->gamepad_connected != -1) {
-            if (g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
+            if (g->gamepad_state.digitalButton_count > GAMEPAD_A &&
+                g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
 
             if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_UP &&
                 g->gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) jumping = 1;
