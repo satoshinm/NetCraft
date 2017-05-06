@@ -181,6 +181,9 @@ typedef struct {
     int show_vr;
     int gamepad_connected;
     struct {
+        float scale_moveH, scale_moveV;
+        float scale_lookH, scale_lookV;
+
         int axis_count;
         const float *axis;
         int digitalButton_count;
@@ -2829,7 +2832,20 @@ void handle_gamepad_input() {
 }
 
 void init_joystick(int joy) {
-    printf("Joystick %d connected: %s\n", joy, glfwGetJoystickName(joy));
+    const char *name = glfwGetJoystickName(joy);
+
+    printf("Joystick %d connected: %s\n", joy, name);
+    g->gamepad_state.scale_lookH = GAMEPAD_LOOK_SENSITIVITY;
+    g->gamepad_state.scale_lookV = GAMEPAD_LOOK_SENSITIVITY;
+    g->gamepad_state.scale_moveH = GAMEPAD_MOVE_SENSITIVITY;
+    g->gamepad_state.scale_moveV = GAMEPAD_MOVE_SENSITIVITY;
+
+    if (strstr(name, "STANDARD GAMEPAD")) {
+        // Invert axes, for some reason these seem to be backwards TODO: configurable
+        g->gamepad_state.scale_lookV *= -1;
+        g->gamepad_state.scale_moveV *= -1;
+    }
+
     g->gamepad_connected = joy;
     handle_gamepad_input();
     printf("Joystick axes: %d, buttons: %d\n", g->gamepad_state.axis_count, g->gamepad_state.digitalButton_count);
@@ -2903,8 +2919,8 @@ void handle_mouse_input() {
         } else if (g->gamepad_connected != -1) {
             if (g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_HORIZONTAL &&
                 g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_VERTICAL) {
-                mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * GAMEPAD_LOOK_SENSITIVITY;
-                my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * GAMEPAD_LOOK_SENSITIVITY;
+                mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * g->gamepad_state.scale_lookH;
+                my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * g->gamepad_state.scale_lookV;
             }
         } else {
             glfwGetCursorPos(g->window, &mx, &my);
@@ -2976,8 +2992,8 @@ void handle_movement(double dt) {
 
             if (g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_HORIZONTAL &&
                 g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_VERTICAL) {
-                sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL];
-                sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL];
+                sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] * g->gamepad_state.scale_moveH;
+                sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] * g->gamepad_state.scale_moveV;
             }
         }
     }
