@@ -9,6 +9,8 @@ or through [WebSandboxMC](https://github.com/satoshinm/WebSandboxMC/).
 
 [![CircleCI](https://circleci.com/gh/satoshinm/NetCraft.svg?style=svg)](https://circleci.com/gh/satoshinm/NetCraft)
 
+[![AppVeyor](https://ci.appveyor.com/api/projects/status/asql58oxt14pfva4?svg=true)](https://ci.appveyor.com/project/satoshinm/netcraft)
+
 Based on Michael Fogleman's [Craft](https://github.com/fogleman/Craft):
 
 http://www.michaelfogleman.com/craft/
@@ -33,11 +35,23 @@ and also natively, as with the original Craft:
 
 ### Download
 
+JavaScript, WebAssembly, and Linux builds are available from CircleCI: https://circleci.com/gh/satoshinm/NetCraft
+
+Windows builds are available from AppVeyor: https://ci.appveyor.com/project/satoshinm/netcraft
+
 See below to run from source.
 
 ### Web builds
 
-To build for the web, compiling to JavaScript, install [Emscripten](http://emscripten.org) and run:
+To build for the web, compiling to JavaScript, first install [Emscripten](http://emscripten.org).
+The EM SDK is the easiest to install, but to get my patch fixes you can either build from source
+using this branch: https://github.com/satoshinm/emscripten/commits/netcraft, or alternatively
+install 1.37.9 from the SDK and apply a patch:
+
+    patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.9+netcraftfixes.patch
+    cp deps/glfw/include/GLFW/glfw3.h $EMSCRIPTEN/system/include/GLFW/glfw3.h
+
+Once your Emscripten environment is setup, then run:
 
     git clone https://github.com/satoshinm/NetCraft.git
     cd NetCraft
@@ -195,6 +209,8 @@ hostname "-" can be used to connect to the same server the page is served from.
 - Arrow keys emulate mouse movement.
 - Enter emulates mouse click.
 - F11 to toggle fullscreen/windowed mode.
+- F4 to toggle VR side-by-side stereo rendering.
+- Shift-F4 to toggle barrel distortion effect.
 - F3 to toggle debug info text.
 - F1 to toggle all user interface elements.
 

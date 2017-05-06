@@ -30,9 +30,16 @@ endif ()
 
 add_definitions(-std=c99 -O3)
 
+if ($ENV{CIRCLECI})
+    add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")
+    add_definitions(-DBUILD_COMMIT="$ENV{CIRCLE_SHA1}")
+endif()
+
 if (EMSCRIPTEN)
+    add_definitions(-DNO_CRAFT_AUTH)
+
     # Emscripten default is GLFW 2.x but we use GLFW 3.x, also include data files
-    set_target_properties(craft PROPERTIES LINK_FLAGS "-s USE_GLFW=3 --pre-js ../src/pre.js --shell-file ../src/shell.html --embed-file ../shaders/ -s TOTAL_MEMORY=33554432 --embed-file ../textures/")
+    set_target_properties(craft PROPERTIES LINK_FLAGS "-s USE_GLFW=3 --pre-js ../src/pre.js --shell-file ../src/shell.html --embed-file ../shaders/ -s TOTAL_MEMORY=33554432 --embed-file ../textures/ -s EXPORTED_FUNCTIONS=\"['_main','_is_typing']\"")
 
     if (CMAKE_RELEASE_TYPE EQUAL "Release")
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -O3")
@@ -43,8 +50,15 @@ if (EMSCRIPTEN)
     endif ()
 endif ()
 
+if (NO_CRAFT_AUTH)
+    add_definitions(-DNO_CRAFT_AUTH)
+endif ()
+
+# Emscripten includes its own GLFW and GLEW ports
 if (NOT EMSCRIPTEN)
-    # Emscripten includes its own GLFW and GLEW ports
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs")
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
     add_subdirectory(deps/glfw)
     include_directories(deps/glew/include)
     include_directories(deps/glfw/include)

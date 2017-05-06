@@ -1,0 +1,27 @@
+version: 1.0.{build}
+build_script:
+- cmd: >-
+    set PATH=C:\MinGW\bin;%PATH%
+
+    set PATH=%PATH:C:\Program Files\Git\usr\bin;=%
+
+    cmake -G "MinGW Makefiles" -DNO_CRAFT_AUTH=1
+
+    mingw32-make
+
+    mkdir native-build
+
+    copy craft.exe native-build
+
+    mkdir native-build\shaders
+
+    copy shaders native-build\shaders
+
+    mkdir native-build\textures
+
+    copy textures native-build\textures
+
+artifacts:
+    - path: native-build
+      name: NetCraft-Win32
+      type: zip

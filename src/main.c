@@ -119,7 +119,17 @@ typedef struct {
     GLuint extra2;
     GLuint extra3;
     GLuint extra4;
+    GLuint extra5;
+    GLuint extra6;
 } Attrib;
+
+
+typedef struct {
+    float transform[16];
+    float viewport[4];
+    float lensCenter[2];
+    float h;
+} EyeParameters;
 
 typedef struct {
     GLFWwindow *window;
@@ -168,6 +178,43 @@ typedef struct {
     Block copy1;
     int show_info_text;
     int show_ui;
+    int show_vr;
+    int gamepad_connected;
+    struct {
+        float scale_moveH, scale_moveV;
+        float scale_lookH, scale_lookV;
+
+        int axis_count;
+        const float *axis;
+        int digitalButton_count;
+        const unsigned char *digitalButton;
+    } gamepad_state;
+    struct {
+        int hResolution;
+        int vResolution;
+        GLfloat hScreenSize;
+        GLfloat vScreenSize;
+        GLfloat interpupillaryDistance;
+        GLfloat lensSeparationDistance;
+        GLfloat eyeToScreenDistance;
+        GLfloat distortionK[4];
+        GLfloat chromaAbParameter[4];
+
+        int worldFactor;
+
+        EyeParameters left, right;
+
+        GLuint framebuffer;
+        GLuint depthrenderbuffer;
+        GLuint texture;
+
+        GLfloat scale[2];
+        GLfloat scaleIn[2];
+
+        GLuint quad_vertexbuffer;
+
+        int skipBarrelDistortion;
+    } vr;
 } Model;
 
 static Model model;
@@ -221,7 +268,7 @@ void get_sight_vector(float rx, float ry, float *vx, float *vy, float *vz) {
     *vz = sinf(rx - RADIANS(90)) * m;
 }
 
-void get_motion_vector(int flying, int sz, int sx, float rx, float ry,
+void get_motion_vector(int flying, double sz, double sx, double rx, float ry,
     float *vx, float *vy, float *vz) {
     *vx = 0; *vy = 0; *vz = 0;
     if (!sz && !sx) {
@@ -314,6 +361,7 @@ GLuint gen_text_buffer(float x, float y, float n, char *text) {
 }
 
 void draw_triangles_3d_ao(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -328,6 +376,7 @@ void draw_triangles_3d_ao(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_3d_text(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -342,6 +391,7 @@ void draw_triangles_3d_text(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_3d_sky(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -356,6 +406,7 @@ void draw_triangles_3d_sky(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_triangles_2d(Attrib *attrib, GLuint buffer, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glEnableVertexAttribArray(attrib->uv);
@@ -370,6 +421,7 @@ void draw_triangles_2d(Attrib *attrib, GLuint buffer, int count) {
 }
 
 void draw_lines(Attrib *attrib, GLuint buffer, int components, int count) {
+    if (count == 0) return;
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     glEnableVertexAttribArray(attrib->position);
     glVertexAttribPointer(
@@ -2216,11 +2268,12 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
+void init_vr();
 void fullscreen_toggle();
-static int super_down = 0;
+static int touch_forward = 0;
+static int touch_jump = 0;
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int control = mods & GLFW_MOD_CONTROL;
-    super_down = mods & GLFW_MOD_SUPER;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
@@ -2241,9 +2294,9 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (action != GLFW_PRESS) {
         return;
     }
-    if (key == CRAFT_KEY_JUMP) {
+    if (key == CRAFT_KEY_JUMP || touch_jump) {
         static double last_jumped = 0;
-        if (last_jumped != 0 && glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
+        if (!g->typing && last_jumped != 0 && glfwGetTime() - last_jumped < JUMP_FLY_THRESHOLD) {
             g->flying = !g->flying;
             printf("fly mode toggled: %d\n", g->flying);
         }
@@ -2262,6 +2315,14 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     }
     if (key == CRAFT_KEY_UI) {
         g->show_ui = !g->show_ui;
+    }
+    if (key == CRAFT_KEY_VR) {
+        if (mods & GLFW_MOD_SHIFT) {
+            g->vr.skipBarrelDistortion = !g->vr.skipBarrelDistortion;
+        } else {
+            g->show_vr = !g->show_vr;
+            if (g->show_vr) init_vr();
+        }
     }
     if (key == GLFW_KEY_ENTER) {
         if (g->typing) {
@@ -2343,12 +2404,11 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     }
 }
 
+int is_typing() {
+    return g->typing;
+}
+
 void on_char(GLFWwindow *window, unsigned int u) {
-    if (super_down) {
-        // TODO: why does emscripten call on_char if control is down? Cmd-` -> `
-        printf("on_char ignoring u=%d since control_down\n", u);
-        return;
-    }
     if (g->suppress_char) {
         g->suppress_char = 0;
         return;
@@ -2446,24 +2506,13 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
-static int touch_forward = 0;
-static int touch_jump = 0;
-#ifdef __EMSCRIPTEN__
 static long touch_active = 0;
-static double touch_activated_at = 0;
-static int touch_just_activated = 0;
 static long touch_clientX = 0;
 static long touch_clientY = 0;
 
-void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
-    if (touch_active) {
-        *xp = touch_clientX;
-        *yp = touch_clientY;
-        return;
-    }
-
-    glfwGetCursorPos(window, xp, yp);
-}
+#ifdef __EMSCRIPTEN__
+static double touch_activated_at = 0;
+static int touch_just_activated = 0;
 
 EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     if (touch_active) {
@@ -2542,6 +2591,22 @@ EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, vo
     return EM_TRUE;
 }
 
+#ifdef USE_EM_GAMEPAD
+EM_BOOL on_gamepadconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
+    g->gamepad_connected = 1;
+    // TODO: track individual gamepad identifiers?
+    printf("gamepad connected\n");
+
+    return EM_TRUE;
+}
+
+EM_BOOL on_gamepaddisconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
+    g->gamepad_connected = -1;
+    printf("gamepad disconnected\n");
+
+    return EM_TRUE;
+}
+#endif
 
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
@@ -2565,7 +2630,7 @@ EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userDat
     // size, which is in pixels, for pixel-based calls."
     int w_w, w_h;
     glfwGetWindowSize(g->window, &w_w, &w_h);
-    printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
+    //printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
 
 
     return EM_FALSE;
@@ -2586,7 +2651,84 @@ void maximize_canvas() {
     on_canvassize_changed(0, NULL, NULL);
 }
 
+EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
+    printf("fullscreen_change_callback, isFullscreen=%d\n", event->isFullscreen);
+
+    if (!event->isFullscreen) {
+        // Go back to windowed mode with full-sized <canvas>, when user escapes out (instead of F11)
+        maximize_canvas();
+    }
+
+    return EM_TRUE;
+}
+
+int is_fullscreen() {
+    EmscriptenFullscreenChangeEvent fsce;
+
+    emscripten_get_fullscreen_status(&fsce);
+    return fsce.isFullscreen;
+}
+
+void fullscreen_exit() {
+    printf("Exiting fullscreen...\n");
+    emscripten_exit_fullscreen();
+
+    printf("Maximizing to canvas...\n");
+    maximize_canvas();
+}
+
+void fullscreen_enter() {
+    emscripten_exit_soft_fullscreen();
+
+    // Workaround https://github.com/kripken/emscripten/issues/5124#issuecomment-292849872
+    // Force JSEvents.canPerformEventHandlerRequests() in library_html5.js to be true
+    // For some reason it is not set even though we are in an event handler and it works
+    EM_ASM(JSEvents.inEventHandler = true);
+    EM_ASM(JSEvents.currentEventHandler = {allowsDeferredCalls:true});
+
+    // Enter fullscreen
+    /* this returns 1=EMSCRIPTEN_RESULT_DEFERRED if EM_TRUE is given to defer
+     * or -2=EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED if EM_FALSE
+     * but the EM_ASM() JS works immediately?
+     */
+    EmscriptenFullscreenStrategy strategy = {
+        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
+        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
+        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
+        .canvasResizedCallback = on_canvassize_changed,
+        .canvasResizedCallbackUserData = NULL
+    };
+    EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_FALSE, &strategy);
+    printf("emscripten_request_fullscreen_strategy = %d\n", ret);
+    //EM_ASM(Module.requestFullscreen(1, 1));
+}
+
+#else // !__EMSCRIPTEN__
+int is_fullscreen() {
+    return !!glfwGetWindowMonitor(g->window);
+}
+
+void fullscreen_exit() {
+    glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
+}
+
+void fullscreen_enter() {
+    glfwGetWindowPos(g->window, &g->window_xpos, &g->window_ypos);
+    glfwGetWindowSize(g->window, &g->window_width, &g->window_height);
+    glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
+}
+
+#endif
+
+void fullscreen_toggle() {
+    if (is_fullscreen()) {
+        fullscreen_exit();
+    } else {
+        fullscreen_enter();
+    }
+}
 void on_window_size(GLFWwindow* window, int width, int height) {
+#ifdef __EMSCRIPTEN__
     static int inFullscreen = 0;
     static int wasFullscreen = 0;
 
@@ -2603,83 +2745,139 @@ void on_window_size(GLFWwindow* window, int width, int height) {
         wasFullscreen = isInFullscreen;
         maximize_canvas();
     }
-}
-
-EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
-    printf("fullscreen_change_callback, isFullscreen=%d\n", event->isFullscreen);
-
-    if (!event->isFullscreen) {
-        // Go back to windowed mode with full-sized <canvas>, when user escapes out (instead of F11)
-        maximize_canvas();
-    }
-
-    return EM_TRUE;
-}
-
-void fullscreen_toggle() {
-    printf("fullscreen_toggle\n");
-    EmscriptenFullscreenChangeEvent fsce;
-
-    emscripten_get_fullscreen_status(&fsce);
-
-    if (fsce.isFullscreen) {
-        printf("Exiting fullscreen...\n");
-        emscripten_exit_fullscreen();
-
-        printf("Maximizing to canvas...\n");
-        maximize_canvas();
-    } else {
-        emscripten_exit_soft_fullscreen();
-
-        // Workaround https://github.com/kripken/emscripten/issues/5124#issuecomment-292849872
-        // Force JSEvents.canPerformEventHandlerRequests() in library_html5.js to be true
-        // For some reason it is not set even though we are in an event handler and it works
-        EM_ASM(JSEvents.inEventHandler = true);
-        EM_ASM(JSEvents.currentEventHandler = {allowsDeferredCalls:true});
-
-        // Enter fullscreen
-        /* this returns 1=EMSCRIPTEN_RESULT_DEFERRED if EM_TRUE is given to defer
-         * or -2=EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED if EM_FALSE
-         * but the EM_ASM() JS works immediately?
-         */
-        EmscriptenFullscreenStrategy strategy = {
-            .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
-            .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
-            .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
-            .canvasResizedCallback = on_canvassize_changed,
-            .canvasResizedCallbackUserData = NULL
-        };
-        EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_FALSE, &strategy);
-        printf("emscripten_request_fullscreen_strategy = %d\n", ret);
-        //EM_ASM(Module.requestFullscreen(1, 1));
-    }
-}
-
-#else // !__EMSCRIPTEN__
-void on_window_size(GLFWwindow* window, int width, int height) {}
-
-void fullscreen_toggle() {
-    if (glfwGetWindowMonitor(g->window)) {
-        glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
-    } else {
-        glfwGetWindowPos(g->window, &g->window_xpos, &g->window_ypos);
-        glfwGetWindowSize(g->window, &g->window_width, &g->window_height);
-        glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
-    }
-}
-
-void craftGetCursorPos(GLFWwindow *window, double *xp, double *yp) {
-    glfwGetCursorPos(window, xp, yp);
-}
 #endif
+
+    g->vr.left.viewport[0] = width/2 - g->vr.hResolution/2;
+    g->vr.left.viewport[1] = height/2 - g->vr.vResolution/2;
+    g->vr.left.viewport[2] = g->vr.hResolution/2;
+    g->vr.left.viewport[3] = g->vr.vResolution;
+
+    g->vr.right.viewport[0] = width/2;
+    g->vr.right.viewport[1] = height/2 - g->vr.vResolution/2;
+    g->vr.right.viewport[2] = g->vr.hResolution/2;
+    g->vr.right.viewport[3] = g->vr.vResolution;
+}
+
+
+void handle_gamepad_input() {
+    if (g->gamepad_connected == -1) return;
+
+    static struct {
+        int axis_count;
+        float axis[16];
+        int digitalButton_count;
+        unsigned char digitalButton[16];
+    } last_gamepad_state = {0};
+
+#ifdef USE_EM_GAMEPAD
+    static EmscriptenGamepadEvent gp;
+    emscripten_get_gamepad_status(0, &gp);
+
+    static float _axis[16] = {0};
+    static unsigned char _digitalButton[16] = {0};
+    if (!g->gamepad_state.axis) g->gamepad_state.axis = _axis;
+    if (!g->gamepad_state.digitalButton) g->gamepad_state.digitalButton = _digitalButton;
+
+    g->gamepad_state.axis_count = gp.numAxes;
+    for (int i = 0; i < gp.numAxes; ++i) {
+        _axis[i] = gp.axis[i];
+    }
+
+    g->gamepad_state.digitalButton_count = gp.numButtons;
+    for (int i = 0; i < gp.numButtons; ++i) {
+        _digitalButton[i] = gp.digitalButton[i];
+    }
+#else
+    g->gamepad_state.axis = glfwGetJoystickAxes(g->gamepad_connected, &g->gamepad_state.axis_count);
+    g->gamepad_state.digitalButton = glfwGetJoystickButtons(g->gamepad_connected, &g->gamepad_state.digitalButton_count);
+#endif
+
+    // Bumpers scroll
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_L1_BUMPER &&
+        g->gamepad_state.digitalButton[GAMEPAD_L1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_L1_BUMPER]) {
+        on_scroll(g->window, 0, SCROLL_THRESHOLD + 1);
+    }
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_R1_BUMPER &&
+        g->gamepad_state.digitalButton[GAMEPAD_R1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_R1_BUMPER]) {
+        on_scroll(g->window, 0, -SCROLL_THRESHOLD - 1);
+    }
+
+    // Triggers click
+    // TODO: holding to mine/place: https://github.com/satoshinm/NetCraft/issues/8
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_L2_TRIGGER &&
+        g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
+        on_right_click();
+    }
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_R2_TRIGGER &&
+        g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
+        on_left_click();
+    }
+
+    // Jump key needs events to detect double-tap for toggling fly
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_A &&
+        g->gamepad_state.digitalButton[GAMEPAD_A] && !last_gamepad_state.digitalButton[GAMEPAD_A]) {
+        on_key(g->window, CRAFT_KEY_JUMP, 0, GLFW_PRESS, 0);
+    }
+
+
+    last_gamepad_state.axis_count =  g->gamepad_state.axis_count;
+    for (int i = 0; i < g->gamepad_state.axis_count; ++i) {
+        last_gamepad_state.axis[i] = g->gamepad_state.axis[i];
+    }
+
+    last_gamepad_state.digitalButton_count =  g->gamepad_state.digitalButton_count;
+    for (int i = 0; i < g->gamepad_state.digitalButton_count; ++i) {
+        last_gamepad_state.digitalButton[i] = g->gamepad_state.digitalButton[i];
+    }
+}
+
+void init_joystick(int joy) {
+    const char *name = glfwGetJoystickName(joy);
+
+    printf("Joystick %d connected: %s\n", joy, name);
+    g->gamepad_state.scale_lookH = GAMEPAD_LOOK_SENSITIVITY;
+    g->gamepad_state.scale_lookV = GAMEPAD_LOOK_SENSITIVITY;
+    g->gamepad_state.scale_moveH = GAMEPAD_MOVE_SENSITIVITY;
+    g->gamepad_state.scale_moveV = GAMEPAD_MOVE_SENSITIVITY;
+
+    if (strstr(name, "STANDARD GAMEPAD")) {
+        // Invert axes, for some reason these seem to be backwards TODO: configurable
+        g->gamepad_state.scale_lookV *= -1;
+        g->gamepad_state.scale_moveV *= -1;
+    }
+
+    g->gamepad_connected = joy;
+    handle_gamepad_input();
+    printf("Joystick axes: %d, buttons: %d\n", g->gamepad_state.axis_count, g->gamepad_state.digitalButton_count);
+}
+
+void on_joystick_connection(int joy, int event) {
+    if (event == GLFW_CONNECTED) {
+        init_joystick(joy);
+    } else if (event == GLFW_DISCONNECTED) {
+        printf("Joystick disconnected: %d\n", joy);
+        g->gamepad_connected = -1;
+    }
+}
+
 
 void init_fullscreen_monitor_dimensions() {
 #ifndef __EMSCRIPTEN__
     int mode_count;
     g->fullscreen_monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
-    g->fullscreen_width = modes[mode_count - 1].width;
-    g->fullscreen_height= modes[mode_count - 1].height;
+    const GLFWvidmode *mode = glfwGetVideoMode(g->fullscreen_monitor);
+    if (mode->width == 1920 && mode->height == 1080 && mode->refreshRate == 75) {
+        g->fullscreen_width = mode->width;
+        g->fullscreen_height= mode->height;
+        // This is the native mode for Oculus Rift DK2, even though it isn't the
+        // "highest" (last) resolution (which is 1600x2560), it is the native and
+        // what we want and need for correct 90 degree rotation.
+        printf("Using current video mode for fullscreen: %d x %d @ %d Hz\n", mode->width, mode->height, mode->refreshRate);
+    } else {
+        const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
+        g->fullscreen_width = modes[mode_count - 1].width;
+        g->fullscreen_height= modes[mode_count - 1].height;
+    }
 
     GLFWwindow *test_window = glfwCreateWindow(
         g->fullscreen_width, g->fullscreen_height, "Craft", NULL, NULL);
@@ -2705,13 +2903,28 @@ void create_window() {
 
 void handle_mouse_input() {
     int exclusive =
+#ifdef __EMSCRIPTEN__
+        touch_active ||
+#endif
         glfwGetInputMode(g->window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     static double px = 0;
     static double py = 0;
     State *s = &g->players->state;
-    if (exclusive && (px || py)) {
+    if (g->gamepad_connected != -1 || (exclusive && (px || py))) {
         double mx, my;
-        craftGetCursorPos(g->window, &mx, &my);
+        if (touch_active) {
+            mx = touch_clientX;
+            my = touch_clientY;
+        } else if (g->gamepad_connected != -1) {
+            if (g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_HORIZONTAL &&
+                g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_VERTICAL) {
+                mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * g->gamepad_state.scale_lookH;
+                my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * g->gamepad_state.scale_lookV;
+            }
+        } else {
+            glfwGetCursorPos(g->window, &mx, &my);
+        }
+
         if (g->just_clicked) {
             // If the user had pressed or released a mouse button immediately before, ignore
             // the first mouse movement -- workaround bug(?) in Firefox, where clicking caused
@@ -2741,65 +2954,66 @@ void handle_mouse_input() {
         py = my;
     }
     else {
-        craftGetCursorPos(g->window, &px, &py);
+        if (touch_active) {
+            px = touch_clientX;
+            py = touch_clientY;
+        } else {
+            glfwGetCursorPos(g->window, &px, &py);
+        }
     }
 }
-
-// Partial workaround stuck keys in web, TODO: fix upstream in https://github.com/kripken/emscripten/issues/5122 and delete all this
-// When blurred, treat all keys as released. However, once the player refocuses
-// the game, then the keys will be stuck, again. Emscripten fix may be only possibility.
-// This is only for character keys, TODO: also for modifier keys like Command
-static int blurred = 0;
-int craftGetKey(GLFWwindow *window, int key) {
-    if (blurred) {
-        return GLFW_RELEASE;
-    }
-
-    if (touch_forward && key == CRAFT_KEY_FORWARD) {
-        return GLFW_PRESS;
-    }
-    if (touch_jump && key == CRAFT_KEY_JUMP) {
-        return GLFW_PRESS;
-    }
-
-    return glfwGetKey(window, key);
-}
-#ifdef __EMSCRIPTEN__
-EM_BOOL on_focus(int eventType, const EmscriptenFocusEvent *focusEvent, void *userData) {
-   switch(eventType) {
-       case EMSCRIPTEN_EVENT_BLUR:
-           blurred = 1;
-           break;
-       case EMSCRIPTEN_EVENT_FOCUS:
-           blurred = 0;
-           break;
-   }
-   return EM_FALSE;
-}
-#endif
 
 void handle_movement(double dt) {
     static float dy = 0;
     State *s = &g->players->state;
-    int sz = 0;
-    int sx = 0;
+    double sz = 0;
+    double sx = 0;
     if (!g->typing) {
         float m = dt * 1.0;
-        g->ortho = craftGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
-        g->fov = craftGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
-        if (craftGetKey(g->window, CRAFT_KEY_FORWARD)) sz--;
-        if (craftGetKey(g->window, CRAFT_KEY_BACKWARD)) sz++;
-        if (craftGetKey(g->window, CRAFT_KEY_LEFT)) sx--;
-        if (craftGetKey(g->window, CRAFT_KEY_RIGHT)) sx++;
-        if (craftGetKey(g->window, GLFW_KEY_LEFT)) s->rx -= m;
-        if (craftGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
-        if (craftGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
-        if (craftGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
+
+        g->ortho = glfwGetKey(g->window, CRAFT_KEY_ORTHO) ? 64 : 0;
+        g->fov = glfwGetKey(g->window, CRAFT_KEY_ZOOM) ? 15 : 65;
+        if (glfwGetKey(g->window, CRAFT_KEY_FORWARD) || touch_forward) sz--;
+        if (glfwGetKey(g->window, CRAFT_KEY_BACKWARD)) sz++;
+        if (glfwGetKey(g->window, CRAFT_KEY_LEFT)) sx--;
+        if (glfwGetKey(g->window, CRAFT_KEY_RIGHT)) sx++;
+        if (glfwGetKey(g->window, GLFW_KEY_LEFT)) s->rx -= m;
+        if (glfwGetKey(g->window, GLFW_KEY_RIGHT)) s->rx += m;
+        if (glfwGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
+        if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
+
+        if (g->gamepad_connected != -1) {
+            if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_LEFT &&
+                g->gamepad_state.digitalButton[GAMEPAD_DPAD_LEFT]) sx--;
+
+            if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_RIGHT &&
+                g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
+
+            if (g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_HORIZONTAL &&
+                g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_VERTICAL) {
+                sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] * g->gamepad_state.scale_moveH;
+                sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] * g->gamepad_state.scale_moveV;
+            }
+        }
     }
     float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
-        if (craftGetKey(g->window, CRAFT_KEY_JUMP)) {
+        int jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump;
+        int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
+
+        if (g->gamepad_connected != -1) {
+            if (g->gamepad_state.digitalButton_count > GAMEPAD_A &&
+                g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
+
+            if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_UP &&
+                g->gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) jumping = 1;
+
+            if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_DOWN &&
+                g->gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) crouching = 1;
+        }
+
+        if (jumping) {
             if (g->flying) {
                 vy++;
             }
@@ -2807,19 +3021,19 @@ void handle_movement(double dt) {
                 dy = 8;
             }
         }
-        if (craftGetKey(g->window, CRAFT_KEY_CROUCH)) {
+        if (crouching) {
             if (g->flying) {
                 int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
-                if (exclusive) {
+                if (exclusive || !glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
                     vy--;
                 }
             }
         }
     }
     float speed = g->flying ? 20 : 5;
-    if (craftGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
-    if (craftGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
+    if (glfwGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
+    if (glfwGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
     int estimate = roundf(sqrtf(
         powf(vx * speed, 2) +
         powf(vy * speed + ABS(dy) * 2, 2) +
@@ -2966,6 +3180,143 @@ void reset_model() {
     g->time_changed = 1;
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
+    g->show_vr = 0;
+
+    // based on https://github.com/mrdoob/three.js/blob/36565aa86a44d02cdb9c8af4ba91816928180fab/examples/js/effects/OculusRiftEffect.js#L13
+    // DK1
+    /*
+    g->vr.hResolution = 1280;
+    g->vr.vResolution = 800;
+    g->vr.hScreenSize = 0.14976;
+    g->vr.vScreenSize = 0.0936;
+    g->vr.interpupillaryDistance = 0.064;
+    g->vr.lensSeparationDistance = 0.064;
+    g->vr.eyeToScreenDistance = 0.041;
+    g->vr.distortionK[0] = 1.0;
+    g->vr.distortionK[1] = 0.22;
+    g->vr.distortionK[2] = 1.24;
+    g->vr.distortionK[3] = 0.0;
+    g->vr.chromaAbParameter[0] = 0.996;
+    g->vr.chromaAbParameter[1] = -0.004;
+    g->vr.chromaAbParameter[2] = 1.014;
+    g->vr.chromaAbParameter[3] = 0.0;
+    */
+    // DK2
+    g->vr.hResolution = 1920;
+    g->vr.vResolution = 1080;
+    g->vr.hScreenSize = 0.12576;
+    g->vr.vScreenSize = 0.07074;
+    g->vr.interpupillaryDistance = 0.0635;
+    g->vr.lensSeparationDistance = 0.0635;
+    g->vr.eyeToScreenDistance = 0.041;
+    g->vr.distortionK[0] = 1.0;
+    g->vr.distortionK[1] = 0.22;
+    g->vr.distortionK[2] = 1.24;
+    g->vr.distortionK[3] = 0.0;
+    g->vr.chromaAbParameter[0] = 0.996;
+    g->vr.chromaAbParameter[1] = -0.004;
+    g->vr.chromaAbParameter[2] = 1.014;
+    g->vr.chromaAbParameter[3] = 0.0;
+
+    g->vr.worldFactor = 1;
+    g->vr.skipBarrelDistortion = 0;
+}
+
+void init_vr() {
+    static int inited = 0;
+    if (inited) return;
+
+    inited = 1;
+
+    // Compute aspect ratio and FOV
+    float aspect = g->vr.hResolution / (2.0*g->vr.vResolution);
+
+    // Fov is normally computed with:
+    //   ( 2*atan2(g->vr.vScreenSize,2*g->vr.eyeToScreenDistance) );
+    // But with lens distortion it is increased (see Oculus SDK Documentation)
+    float r = -1.0 - (4 * (g->vr.hScreenSize/4 - g->vr.lensSeparationDistance/2) / g->vr.hScreenSize);
+    float distScale = (g->vr.distortionK[0] + g->vr.distortionK[1] * powf(r,2) + g->vr.distortionK[2] * powf(r,4) + g->vr.distortionK[3] * powf(r,6));
+    float fov = 2*atan2f(g->vr.vScreenSize*distScale, 2*g->vr.eyeToScreenDistance);
+
+    // Compute x translation offset (h) for projection matrix
+    double h = 4 * (g->vr.hScreenSize/4 - g->vr.interpupillaryDistance/2) / g->vr.hScreenSize;
+
+    g->vr.left.h = h;
+    g->vr.right.h = -h;
+
+    // Compute camera transformation matrices
+    mat_translate(g->vr.left.transform, -g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
+    mat_translate(g->vr.right.transform, g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
+
+    // Compute Viewport
+    g->vr.left.viewport[0] = 0;
+    g->vr.left.viewport[1] = 0;
+    g->vr.left.viewport[2] = g->vr.hResolution/2;
+    g->vr.left.viewport[3] = g->vr.vResolution;
+
+    g->vr.right.viewport[0] = g->vr.hResolution/2;
+    g->vr.right.viewport[1] = 0;
+    g->vr.right.viewport[2] = g->vr.hResolution/2;
+    g->vr.right.viewport[3] = g->vr.vResolution;
+
+    // Distortion shader parameters
+    float lensShift = 4 * (g->vr.hScreenSize/4 - g->vr.lensSeparationDistance/2) / g->vr.hScreenSize;
+    g->vr.left.lensCenter[0] = lensShift;
+    g->vr.left.lensCenter[1] = 0.0;
+
+    g->vr.right.lensCenter[0] = -lensShift;
+    g->vr.right.lensCenter[1] = 0.0;
+
+    g->vr.scale[0] = 1.0/distScale;
+    g->vr.scale[1] = 1.0*aspect/distScale;
+
+    g->vr.scaleIn[0] = 1.0;
+    g->vr.scaleIn[1] = 1.0/aspect;
+
+    // Setup offscreen framebuffer to render to, instead of directly to screen
+    glGenFramebuffers(1, &g->vr.framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
+
+    glGenTextures(1, &g->vr.texture);
+    glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+    glfwGetFramebufferSize(g->window, &g->width, &g->height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, g->width, g->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glGenRenderbuffers(1, &g->vr.depthrenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, g->vr.depthrenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, g->width, g->height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, g->vr.depthrenderbuffer);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g->vr.texture, 0);
+
+    GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, drawBuffers);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        printf("error setting up framebuffer l: %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
+        exit(1);
+    }
+
+    // Render directly to screen by default
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // The (half-)fullscreen quad's FBO
+    static const GLfloat quad_vertex_buffer_data[] = {
+		-1.0f, -1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,
+	};
+    glGenBuffers(1, &g->vr.quad_vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, g->vr.quad_vertexbuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertex_buffer_data), quad_vertex_buffer_data, GL_STATIC_DRAW);
 }
 
 void one_iter();
@@ -2982,24 +3333,15 @@ static Attrib block_attrib = {0};
 static Attrib line_attrib = {0};
 static Attrib text_attrib = {0};
 static Attrib sky_attrib = {0};
+static Attrib vr_attrib = {0};
 static GLuint sky_buffer;
 static int g_running;
 static int g_inner_break;
 
 
-#ifdef __EMSCRIPTEN__
-EM_BOOL on_pointerlockchange(int eventType, const EmscriptenPointerlockChangeEvent *pointerlockChangeEvent, void *userData) {
-    if (!pointerlockChangeEvent->isActive) {
-        printf("pointerlockchange deactivated, so enabling cursor\n");
-        glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
-    return 0;
-}
-#endif
-
 int main(int argc, char **argv) {
     // INITIALIZATION //
-#ifndef __EMSCRIPTEN__
+#ifndef NO_CRAFT_AUTH
     curl_global_init(CURL_GLOBAL_DEFAULT);
 #endif
     srand(time(NULL));
@@ -3016,21 +3358,34 @@ int main(int argc, char **argv) {
     }
 
     glfwMakeContextCurrent(g->window);
-#ifdef __EMSCRIPTEN__
-    emscripten_set_pointerlockchange_callback(NULL, NULL, 0, on_pointerlockchange);
-#else // web pointer lock requires user action to activate, start off disabled
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-#endif
     glfwSetWindowSizeCallback(g->window, on_window_size);
     glfwSetKeyCallback(g->window, on_key);
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
     glfwSetScrollCallback(g->window, on_scroll);
+#ifdef USE_EM_GAMEPAD
+    emscripten_set_gamepadconnected_callback(NULL, EM_FALSE, on_gamepadconnected);
+    emscripten_set_gamepaddisconnected_callback(NULL, EM_FALSE, on_gamepaddisconnected);
+#else
+    g->gamepad_connected = -1;
+    glfwSetJoystickCallback(on_joystick_connection);
+#endif
+
 #ifdef __EMSCRIPTEN__
     emscripten_set_touchstart_callback(NULL, NULL, EM_FALSE, on_touchstart);
     emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
     emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
     emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
+    EM_ASM(
+        var is_typing = Module.cwrap('is_typing');
+        window.addEventListener("keydown", function(event) {
+            if (event.metaKey || event.ctrlKey) return;
+            // CRAFT_KEY_SIGN, CRAFT_KEY_COMMAND, CRAFT_KEY_CHAT
+            if (event.key === "`" || event.key === "/" || event.key === "t") return;
+            if (!is_typing()) event.preventDefault();
+        });
+    );
 #endif
 
     if (glewInit() != GLEW_OK) {
@@ -3090,8 +3445,8 @@ int main(int argc, char **argv) {
         "shaders/block_vertex.glsl", "shaders/block_fragment.glsl");
     block_attrib.program = program;
     block_attrib.position = glGetAttribLocation(program, "position");
-    block_attrib.normal = glGetAttribLocation(program, "normal");
     block_attrib.uv = glGetAttribLocation(program, "uv");
+    block_attrib.normal = glGetAttribLocation(program, "normal");
     block_attrib.matrix = glGetUniformLocation(program, "matrix");
     block_attrib.sampler = glGetUniformLocation(program, "sampler");
     block_attrib.extra1 = glGetUniformLocation(program, "sky_sampler");
@@ -3120,11 +3475,26 @@ int main(int argc, char **argv) {
         "shaders/sky_vertex.glsl", "shaders/sky_fragment.glsl");
     sky_attrib.program = program;
     sky_attrib.position = glGetAttribLocation(program, "position");
-    sky_attrib.normal = -1; // unused
     sky_attrib.uv = glGetAttribLocation(program, "uv");
+    sky_attrib.normal = -1; // unused
     sky_attrib.matrix = glGetUniformLocation(program, "matrix");
     sky_attrib.sampler = glGetUniformLocation(program, "sampler");
     sky_attrib.timer = glGetUniformLocation(program, "timer");
+
+    program = load_program(
+        "shaders/vr_vertex.glsl", "shaders/vr_fragment.glsl");
+    vr_attrib.program = program;
+    vr_attrib.position = glGetAttribLocation(program, "position");;
+    vr_attrib.uv = -1; // unused
+    vr_attrib.normal = -1; // unused
+    vr_attrib.matrix = -1; // unused
+    vr_attrib.sampler = glGetUniformLocation(program, "texid");
+    vr_attrib.extra1 = glGetUniformLocation(program, "scale");
+    vr_attrib.extra2 = glGetUniformLocation(program, "scaleIn");
+    vr_attrib.extra3 = glGetUniformLocation(program, "lensCenter");
+    vr_attrib.extra4 = glGetUniformLocation(program, "hmdWarpParam");
+    vr_attrib.extra5 = glGetUniformLocation(program, "chromAbParam");
+    vr_attrib.extra6 = glGetUniformLocation(program, "skipBarrelDistortion");
 
     // CHECK COMMAND LINE ARGUMENTS //
     if (argc == 2 || argc == 3) {
@@ -3156,8 +3526,6 @@ int main(int argc, char **argv) {
     // OUTER LOOP //
     g_running = 1;
 #ifdef __EMSCRIPTEN__
-    emscripten_set_blur_callback(NULL, NULL, EM_TRUE, on_focus);
-    emscripten_set_focus_callback(NULL, NULL, EM_TRUE, on_focus);
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
     //main_shutdown(); // called in one_iter() if g_inner_break
@@ -3174,7 +3542,7 @@ int main(int argc, char **argv) {
 #endif
 
     glfwTerminate();
-#ifndef __EMSCRIPTEN__
+#ifndef NO_CRAFT_AUTH
     curl_global_cleanup();
 #endif
     return 0;
@@ -3271,13 +3639,10 @@ void main_shutdown() {
         delete_all_players();
 }
 
+void render_scene();
+void render_vr_eye(EyeParameters *eye);
 void one_iter() {
     glfwSwapInterval(VSYNC);
-
-            // WINDOW SIZE AND SCALE //
-            g->scale = get_scale_factor(g->window);
-            glfwGetFramebufferSize(g->window, &g->width, &g->height);
-            glViewport(0, 0, g->width, g->height);
 
             // FRAME RATE //
             if (g->time_changed) {
@@ -3295,6 +3660,8 @@ void one_iter() {
 
             // HANDLE MOUSE INPUT //
             handle_mouse_input();
+
+            handle_gamepad_input();
 
             // HANDLE MOVEMENT //
             handle_movement(dt);
@@ -3329,11 +3696,100 @@ void one_iter() {
             for (int i = 1; i < g->player_count; i++) {
                 interpolate_player(g->players + i);
             }
+
+            // WINDOW SIZE AND SCALE //
+            g->scale = get_scale_factor(g->window);
+            glfwGetFramebufferSize(g->window, &g->width, &g->height);
+
+            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+            if (g->show_vr) {
+                // left eye
+                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
+                glViewport(0, 0, g->width, g->height);
+                me->state.x += g->vr.left.h;
+                render_scene();
+                me->state.x -= g->vr.left.h;
+                render_vr_eye(&g->vr.left);
+
+                // right eye
+                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
+                glViewport(0, 0, g->width, g->height);
+                me->state.x += g->vr.right.h;
+                render_scene();
+                me->state.x -= g->vr.right.h;
+                render_vr_eye(&g->vr.right);
+            } else {
+                glViewport(0, 0, g->width, g->height);
+                render_scene();
+            }
+
+            // SWAP AND POLL //
+            glfwSwapBuffers(g->window);
+            glfwPollEvents();
+            if (glfwWindowShouldClose(g->window)) {
+                g_running = 0;
+                g_inner_break = 1;
+            }
+            if (g->mode_changed) {
+                g->mode_changed = 0;
+                g_inner_break = 1;
+            }
+
+#ifdef __EMSCRIPTEN__
+    if (g_inner_break) {
+        g_inner_break = 0;
+        main_shutdown();
+        emscripten_cancel_main_loop();
+        emscripten_push_main_loop_blocker(main_init, NULL);
+        emscripten_set_main_loop(one_iter, 0, 1);
+    }
+#endif
+}
+
+void render_vr_eye(EyeParameters *eye) {
+    // Render to the screen
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(eye->viewport[0], eye->viewport[1], eye->viewport[2], eye->viewport[3]);
+
+    // Use our shader
+    glUseProgram(vr_attrib.program);
+
+    // Bind our texture in Texture Unit
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, g->vr.texture);
+    glUniform1i(vr_attrib.sampler, 4);
+
+    glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
+    glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
+    glUniform2fv(vr_attrib.extra3, 1, eye->lensCenter);
+    glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
+    glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
+    glUniform1i(vr_attrib.extra6, g->vr.skipBarrelDistortion);
+
+    // 1rst attribute buffer : vertices
+    glEnableVertexAttribArray(vr_attrib.position);
+    glBindBuffer(GL_ARRAY_BUFFER, g->vr.quad_vertexbuffer);
+    glVertexAttribPointer(
+    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+    3,                  // size
+    GL_FLOAT,           // type
+    GL_FALSE,           // normalized?
+    0,                  // stride
+    (void*)0            // array buffer offset
+    );
+
+    // Draw the triangles !
+    glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+    glDisableVertexAttribArray(vr_attrib.position);
+}
+
+
+void render_scene() {
             Player *player = g->players + g->observe1;
 
             // RENDER 3-D SCENE //
-            glClear(GL_COLOR_BUFFER_BIT);
-            glClear(GL_DEPTH_BUFFER_BIT);
             render_sky(&sky_attrib, player, sky_buffer);
             glClear(GL_DEPTH_BUFFER_BIT);
             int face_count = render_chunks(&block_attrib, player);
@@ -3359,6 +3815,20 @@ void one_iter() {
             float tx = ts / 2;
             float ty = g->height - ts;
             if (g->show_info_text && g->show_ui) {
+                snprintf(
+                   text_buffer, 1024,
+                   "NetCraft "
+#ifdef BUILD_NUM
+                   "build #" BUILD_NUM " "
+#endif
+#ifdef BUILD_COMMIT
+                   BUILD_COMMIT " "
+#endif
+                   __DATE__
+                   );
+                render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
+                ty -= ts * 2;
+
                 int hour = time_of_day() * 24;
                 char am_pm = hour < 12 ? 'a' : 'p';
                 hour = hour % 12;
@@ -3435,26 +3905,5 @@ void one_iter() {
                 }
             }
 
-            // SWAP AND POLL //
-            glfwSwapBuffers(g->window);
-            glfwPollEvents();
-            if (glfwWindowShouldClose(g->window)) {
-                g_running = 0;
-                g_inner_break = 1;
-            }
-            if (g->mode_changed) {
-                g->mode_changed = 0;
-                g_inner_break = 1;
-            }
-
-#ifdef __EMSCRIPTEN__
-    if (g_inner_break) {
-        g_inner_break = 0;
-        main_shutdown();
-        emscripten_cancel_main_loop();
-        emscripten_push_main_loop_blocker(main_init, NULL);
-        emscripten_set_main_loop(one_iter, 0, 1);
-    }
-#endif
 }
 
