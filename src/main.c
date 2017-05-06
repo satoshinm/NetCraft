@@ -3369,6 +3369,7 @@ int main(int argc, char **argv) {
     emscripten_set_gamepadconnected_callback(NULL, EM_FALSE, on_gamepadconnected);
     emscripten_set_gamepaddisconnected_callback(NULL, EM_FALSE, on_gamepaddisconnected);
 #else
+    g->gamepad_connected = -1;
     glfwSetJoystickCallback(on_joystick_connection);
 #endif
 
