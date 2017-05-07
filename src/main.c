@@ -26,6 +26,7 @@
 #include "tinycthread.h"
 #include "util.h"
 #include "world.h"
+#include "mining.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -2224,7 +2225,7 @@ void on_light() {
     }
 }
 
-void on_left_click() {
+void on_mine() {
     State *s = &g->players->state;
     int hx, hy, hz;
     int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
@@ -2237,7 +2238,7 @@ void on_left_click() {
     }
 }
 
-void on_right_click() {
+void on_build() {
     State *s = &g->players->state;
     int hx, hy, hz;
     int hw = hit_test(1, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
@@ -2280,6 +2281,12 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
+        if (!g->typing) {
+            if (key == GLFW_KEY_ENTER) {
+                mining_stop();
+                building_stop();
+            }
+        }
         return;
     }
     if (key == GLFW_KEY_BACKSPACE) {
@@ -2355,10 +2362,10 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
         }
         else {
             if (control) {
-                on_right_click();
+                building_start();
             }
             else {
-                on_left_click();
+                mining_start();
             }
         }
     }
@@ -2476,16 +2483,24 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
+
+    if (action == GLFW_RELEASE) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT) mining_stop();
+        else if (button == GLFW_MOUSE_BUTTON_RIGHT) building_stop();
+        return;
+    }
+
     if (action != GLFW_PRESS) {
         return;
     }
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (exclusive) {
             if (control) {
-                on_right_click();
+                // Control + Left-Click builds a block instantly, no repeat
+                on_build();
             }
             else {
-                on_left_click();
+                mining_start();
             }
         }
         else {
@@ -2498,7 +2513,7 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
                 on_light();
             }
             else {
-                on_right_click();
+                building_start();
             }
         }
     }
@@ -2528,7 +2543,7 @@ EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, voi
             // 3-finger = jump
             touch_jump = 1;
         }
-        // TODO: support other interesting gestures, tap to on_left_click()/on_right_click()?
+        // TODO: support other interesting gestures
         return EM_TRUE;
     }
 
@@ -2577,10 +2592,10 @@ EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void 
 
                 if (touch.clientX < 80) { // TODO: && touch.clientY < height - 80? (bottom left center vs corner)
                     // Tapping near the item icon = place
-                    on_right_click();
+                    on_build();
                 } else {
                     // Tapping elswhere = break
-                    on_left_click();
+                    on_mine();
                 }
             }
         }
@@ -2828,14 +2843,19 @@ void handle_gamepad_input() {
     }
 
     // Triggers click
-    // TODO: holding to mine/place: https://github.com/satoshinm/NetCraft/issues/8
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_L2_TRIGGER &&
-        g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
-        on_right_click();
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_L2_TRIGGER) {
+        if (g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] &&!last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
+            building_start();
+        } else if (!g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
+            building_stop();
+        }
     }
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_R2_TRIGGER &&
-        g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
-        on_left_click();
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_R2_TRIGGER) {
+        if (g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
+            mining_start();
+        } else if (!g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
+            mining_stop();
+        }
     }
 
     // Jump key needs events to detect double-tap for toggling fly
@@ -3657,6 +3677,9 @@ void one_iter() {
 
             // HANDLE MOUSE INPUT //
             handle_mouse_input();
+
+            mining_tick();
+            building_tick();
 
             handle_gamepad_input();
 
