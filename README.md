@@ -213,6 +213,7 @@ hostname "-" can be used to connect to the same server the page is served from.
 - Shift-F4 to toggle barrel distortion effect.
 - F3 to toggle debug info text.
 - F1 to toggle all user interface elements.
+- Drop files onto the canvas to change the texture.png.
 
 ### Chat Commands
 

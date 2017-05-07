@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <libgen.h>
 #include "auth.h"
 #include "client.h"
 #include "config.h"
@@ -2729,6 +2730,7 @@ void fullscreen_toggle() {
         fullscreen_enter();
     }
 }
+
 void on_window_size(GLFWwindow* window, int width, int height) {
 #ifdef __EMSCRIPTEN__
     static int inFullscreen = 0;
@@ -2760,6 +2762,25 @@ void on_window_size(GLFWwindow* window, int width, int height) {
     g->vr.right.viewport[3] = g->vr.vResolution;
 }
 
+void on_file_drop(GLFWwindow *window, int count, const char **paths) {
+    for (int i = 0; i < count; ++i) {
+        const char *path = paths[i];
+
+        printf("dropped file %s\n", path);
+
+        char *base = basename((char *)path);
+
+        if (strcmp(base, "font.png") == 0) {
+            load_font_texture(path);
+        } else if (strcmp(base, "sky.png") == 0) {
+            load_sky_texture(path);
+        } else if (strcmp(base, "sign.png") == 0) {
+            load_sign_texture(path);
+        } else {
+            load_block_texture(paths[i]);
+        }
+    }
+}
 
 void handle_gamepad_input() {
     if (g->gamepad_connected == -1) return;
@@ -3362,6 +3383,7 @@ int main(int argc, char **argv) {
     glfwMakeContextCurrent(g->window);
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetWindowSizeCallback(g->window, on_window_size);
+    glfwSetDropCallback(g->window, on_file_drop);
     glfwSetKeyCallback(g->window, on_key);
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
@@ -3406,39 +3428,10 @@ int main(int argc, char **argv) {
 #endif
 
     // LOAD TEXTURES //
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    load_png_texture("textures/texture.png");
-
-    GLuint font;
-    glGenTextures(1, &font);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, font);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    load_png_texture("textures/font.png");
-
-    GLuint sky;
-    glGenTextures(1, &sky);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, sky);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    load_png_texture("textures/sky.png");
-
-    GLuint sign;
-    glGenTextures(1, &sign);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, sign);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    load_png_texture("textures/sign.png");
+    load_block_texture("textures/texture.png");
+    load_font_texture("textures/font.png");
+    load_sky_texture("textures/sky.png");
+    load_sign_texture("textures/sign.png");
 
     // LOAD SHADERS //
     GLuint program;
