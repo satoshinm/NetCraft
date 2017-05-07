@@ -1638,6 +1638,8 @@ void set_block(int x, int y, int z, int w) {
         }
     }
     client_block(x, y, z, w);
+    int l = is_illuminated(w);
+    if (l) set_light(p, q, x, y, z, l);
 }
 
 void record_block(int x, int y, int z, int w) {

@@ -56,7 +56,8 @@ const int items[] = {
     COLOR_28,
     COLOR_29,
     COLOR_30,
-    COLOR_31
+    COLOR_31,
+    GLOWING_STONE
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -127,6 +128,7 @@ const int blocks[256][6] = {
     {205, 205, 205, 205, 205, 205}, // 61
     {206, 206, 206, 206, 206, 206}, // 62
     {207, 207, 207, 207, 207, 207}, // 63
+    {17, 17, 17, 17, 17, 17}, // 64
 };
 
 const int plants[256] = {
@@ -195,5 +197,14 @@ int is_destructable(int w) {
             return 0;
         default:
             return 1;
+    }
+}
+
+int is_illuminated(int w) {
+    switch (w) {
+        case GLOWING_STONE:
+            return 15;
+        default:
+            return 0;
     }
 }
