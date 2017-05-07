@@ -2183,10 +2183,14 @@ void on_light() {
     }
 }
 
-void on_mine() {
+int get_targeted_block(int *hx, int *hy, int *hz) {
     State *s = &g->players->state;
+    return hit_test(0, s->x, s->y, s->z, s->rx, s->ry, hx, hy, hz);
+}
+
+void on_mine() {
     int hx, hy, hz;
-    int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+    int hw = get_targeted_block(&hx, &hy, &hz);
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
         record_block(hx, hy, hz, 0);
