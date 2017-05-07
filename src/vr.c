@@ -53,12 +53,12 @@ struct {
     GLuint sampler;
     GLuint camera;
     GLuint timer;
-    GLuint extra1;
-    GLuint extra2;
-    GLuint extra3;
-    GLuint extra4;
-    GLuint extra5;
-    GLuint extra6;
+    GLuint scale;
+    GLuint scaleIn;
+    GLuint lensCenter;
+    GLuint hmdWarpParam;
+    GLuint chromAbParam;
+    GLuint skipBarrelDistortion;
 } vr_attrib;
 
 
@@ -71,12 +71,12 @@ void load_vr_shader() {
     vr_attrib.normal = -1; // unused
     vr_attrib.matrix = -1; // unused
     vr_attrib.sampler = glGetUniformLocation(program, "texid");
-    vr_attrib.extra1 = glGetUniformLocation(program, "scale");
-    vr_attrib.extra2 = glGetUniformLocation(program, "scaleIn");
-    vr_attrib.extra3 = glGetUniformLocation(program, "lensCenter");
-    vr_attrib.extra4 = glGetUniformLocation(program, "hmdWarpParam");
-    vr_attrib.extra5 = glGetUniformLocation(program, "chromAbParam");
-    vr_attrib.extra6 = glGetUniformLocation(program, "skipBarrelDistortion");
+    vr_attrib.scale = glGetUniformLocation(program, "scale");
+    vr_attrib.scaleIn = glGetUniformLocation(program, "scaleIn");
+    vr_attrib.lensCenter = glGetUniformLocation(program, "lensCenter");
+    vr_attrib.hmdWarpParam = glGetUniformLocation(program, "hmdWarpParam");
+    vr_attrib.chromAbParam = glGetUniformLocation(program, "chromAbParam");
+    vr_attrib.skipBarrelDistortion = glGetUniformLocation(program, "skipBarrelDistortion");
 }
 
 void init_vr(GLFWwindow *window) {
@@ -245,12 +245,12 @@ static void render_vr_eye(EyeParameters *eye) {
     glBindTexture(GL_TEXTURE_2D, texture);
     glUniform1i(vr_attrib.sampler, 4);
 
-    glUniform2fv(vr_attrib.extra1, 1, scale);
-    glUniform2fv(vr_attrib.extra2, 1, scaleIn);
-    glUniform2fv(vr_attrib.extra3, 1, eye->lensCenter);
-    glUniform4fv(vr_attrib.extra4, 1, distortionK); // hmdWarpParam = distortionK
-    glUniform4fv(vr_attrib.extra5, 1, chromaAbParameter); // chromAbParam = chromaAbParameter
-    glUniform1i(vr_attrib.extra6, skipBarrelDistortion);
+    glUniform2fv(vr_attrib.scale, 1, scale);
+    glUniform2fv(vr_attrib.scaleIn, 1, scaleIn);
+    glUniform2fv(vr_attrib.lensCenter, 1, eye->lensCenter);
+    glUniform4fv(vr_attrib.hmdWarpParam, 1, distortionK); // hmdWarpParam = distortionK
+    glUniform4fv(vr_attrib.chromAbParam, 1, chromaAbParameter); // chromAbParam = chromaAbParameter
+    glUniform1i(vr_attrib.skipBarrelDistortion, skipBarrelDistortion);
 
     // 1rst attribute buffer : vertices
     glEnableVertexAttribArray(vr_attrib.position);
