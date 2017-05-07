@@ -2842,14 +2842,19 @@ void handle_gamepad_input() {
     }
 
     // Triggers click
-    // TODO: holding to mine/place: https://github.com/satoshinm/NetCraft/issues/8
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_L2_TRIGGER &&
-        g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
-        on_right_click();
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_L2_TRIGGER) {
+        if (g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] &&!last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
+            building_start();
+        } else if (!g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
+            building_stop();
+        }
     }
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_R2_TRIGGER &&
-        g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
-        on_left_click();
+    if (g->gamepad_state.digitalButton_count > GAMEPAD_R2_TRIGGER) {
+        if (g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
+            mining_start();
+        } else if (!g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
+            mining_stop();
+        }
     }
 
     // Jump key needs events to detect double-tap for toggling fly
