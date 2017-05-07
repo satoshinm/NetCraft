@@ -62,7 +62,7 @@ struct {
 } vr_attrib;
 
 
-void load_vr_shader() {
+static void load_vr_shader() {
     GLuint program = load_program(
         "shaders/vr_vertex.glsl", "shaders/vr_fragment.glsl");
     vr_attrib.program = program;
@@ -84,6 +84,8 @@ void init_vr(GLFWwindow *window) {
     if (inited) return;
 
     inited = 1;
+
+    load_vr_shader();
 
     // based on https://github.com/mrdoob/three.js/blob/36565aa86a44d02cdb9c8af4ba91816928180fab/examples/js/effects/OculusRiftEffect.js#L13
     // DK1
