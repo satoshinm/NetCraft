@@ -12,6 +12,8 @@
 #define GAMEPAD_MOVE_SENSITIVITY 1
 #define JUMP_FLY_THRESHOLD 0.2
 #define SCROLL_BLOCK_SELECT 1
+#define BLOCK_BUILD_TIME 10
+#define BLOCK_BREAK_TIME 10
 #define MAX_MESSAGES 4
 #define DB_PATH "craft.db"
 #define USE_CACHE 1

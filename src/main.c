@@ -147,6 +147,8 @@ typedef struct {
     int just_clicked;
     int mining_progress;
     int holding_mine_button;
+    int building_progress;
+    int holding_build_button;
     char typing_buffer[MAX_TEXT_LENGTH];
     int message_index;
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
@@ -2479,19 +2481,43 @@ void mining_stop() {
 
 void mining_tick() {
     if (g->holding_mine_button) {
-        g->mining_progress++;
-        // TODO: block break indicator
-
-        if (g->mining_progress == 10) { // TODO: variable hardness
+        if (g->mining_progress == BLOCK_BREAK_TIME) { // TODO: variable hardness
             g->mining_progress = 0;
             on_left_click();
         }
+
+        g->mining_progress++;
+        // TODO: block break indicator
     }
 }
 
 void mining_start() {
     g->holding_mine_button = 1;
 }
+
+
+void building_stop() {
+    g->holding_build_button = 0;
+    g->building_progress = 0;
+}
+
+
+void building_tick() {
+    if (g->holding_build_button) {
+        if (g->building_progress == BLOCK_BUILD_TIME) {
+            g->building_progress = 0;
+            on_right_click();
+        }
+
+        g->building_progress++;
+    }
+}
+
+void building_start() {
+    g->holding_build_button = 1;
+    g->building_progress = BLOCK_BUILD_TIME; // place first instantly
+}
+
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     g->just_clicked = 1;
@@ -2501,6 +2527,7 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 
     if (action == GLFW_RELEASE) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) mining_stop();
+        else if (button == GLFW_MOUSE_BUTTON_RIGHT) building_stop();
         return;
     }
 
@@ -2526,7 +2553,7 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
                 on_light();
             }
             else {
-                on_right_click();
+                building_start();
             }
         }
     }
@@ -3228,6 +3255,8 @@ void reset_model() {
     g->just_clicked = 0;
     g->mining_progress = 0;
     g->holding_mine_button = 0;
+    g->building_progress = 0;
+    g->holding_build_button = 0;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);
     g->message_index = 0;
     g->day_length = DAY_LENGTH;
@@ -3689,6 +3718,7 @@ void one_iter() {
             handle_mouse_input();
 
             mining_tick();
+            building_tick();
 
             handle_gamepad_input();
 
