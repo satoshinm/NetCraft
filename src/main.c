@@ -145,6 +145,8 @@ typedef struct {
     int player_count;
     int typing;
     int just_clicked;
+    int mining_progress;
+    int holding_mine_button;
     char typing_buffer[MAX_TEXT_LENGTH];
     int message_index;
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
@@ -2470,12 +2472,38 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
     }
 }
 
+void mining_stop() {
+    g->holding_mine_button = 0;
+    g->mining_progress = 0;
+}
+
+void mining_tick() {
+    if (g->holding_mine_button) {
+        g->mining_progress++;
+        // TODO: block break indicator
+
+        if (g->mining_progress == 10) { // TODO: variable hardness
+            g->mining_progress = 0;
+            on_left_click();
+        }
+    }
+}
+
+void mining_start() {
+    g->holding_mine_button = 1;
+}
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     g->just_clicked = 1;
     int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
+
+    if (action == GLFW_RELEASE) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT) mining_stop();
+        return;
+    }
+
     if (action != GLFW_PRESS) {
         return;
     }
@@ -2485,7 +2513,7 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
                 on_right_click();
             }
             else {
-                on_left_click();
+                mining_start();
             }
         }
         else {
@@ -2528,7 +2556,7 @@ EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, voi
             // 3-finger = jump
             touch_jump = 1;
         }
-        // TODO: support other interesting gestures, tap to on_left_click()/on_right_click()?
+        // TODO: support other interesting gestures
         return EM_TRUE;
     }
 
@@ -3198,6 +3226,8 @@ void reset_model() {
     memset(g->typing_buffer, 0, sizeof(char) * MAX_TEXT_LENGTH);
     g->typing = 0;
     g->just_clicked = 0;
+    g->mining_progress = 0;
+    g->holding_mine_button = 0;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);
     g->message_index = 0;
     g->day_length = DAY_LENGTH;
@@ -3657,6 +3687,8 @@ void one_iter() {
 
             // HANDLE MOUSE INPUT //
             handle_mouse_input();
+
+            mining_tick();
 
             handle_gamepad_input();
 
