@@ -2225,7 +2225,7 @@ void on_light() {
     }
 }
 
-void on_left_click() {
+void on_mine() {
     State *s = &g->players->state;
     int hx, hy, hz;
     int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
@@ -2238,7 +2238,7 @@ void on_left_click() {
     }
 }
 
-void on_right_click() {
+void on_build() {
     State *s = &g->players->state;
     int hx, hy, hz;
     int hw = hit_test(1, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
@@ -2496,7 +2496,8 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     if (button == GLFW_MOUSE_BUTTON_LEFT) {
         if (exclusive) {
             if (control) {
-                on_right_click();
+                // Control + Left-Click builds a block instantly, no repeat
+                on_build();
             }
             else {
                 mining_start();
@@ -2591,10 +2592,10 @@ EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void 
 
                 if (touch.clientX < 80) { // TODO: && touch.clientY < height - 80? (bottom left center vs corner)
                     // Tapping near the item icon = place
-                    on_right_click();
+                    on_build();
                 } else {
                     // Tapping elswhere = break
-                    on_left_click();
+                    on_mine();
                 }
             }
         }

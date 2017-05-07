@@ -5,8 +5,8 @@ static int holding_mine_button = 0;
 static int building_progress = 0;
 static int holding_build_button = 0;
 
-extern void on_left_click();
-extern void on_right_click();
+extern void on_mine();
+extern void on_build();
 
 void mining_stop() {
     holding_mine_button = 0;
@@ -17,7 +17,7 @@ void mining_tick() {
     if (holding_mine_button) {
         if (mining_progress == BLOCK_BREAK_TIME) { // TODO: variable hardness
             mining_progress = 0;
-            on_left_click();
+            on_mine();
         }
 
         mining_progress++;
@@ -40,7 +40,7 @@ void building_tick() {
     if (holding_build_button) {
         if (building_progress == BLOCK_BUILD_TIME) {
             building_progress = 0;
-            on_right_click();
+            on_build();
         }
 
         building_progress++;
