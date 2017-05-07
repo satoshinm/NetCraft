@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <libgen.h>
 #include "auth.h"
 #include "client.h"
 #include "config.h"
@@ -2763,9 +2764,21 @@ void on_window_size(GLFWwindow* window, int width, int height) {
 
 void on_file_drop(GLFWwindow *window, int count, const char **paths) {
     for (int i = 0; i < count; ++i) {
-        printf("dropped file %s\n", paths[i]);
+        const char *path = paths[i];
 
-        load_block_texture(paths[i]);
+        printf("dropped file %s\n", path);
+
+        char *base = basename((char *)path);
+
+        if (strcmp(base, "font.png") == 0) {
+            load_font_texture(path);
+        } else if (strcmp(base, "sky.png") == 0) {
+            load_sky_texture(path);
+        } else if (strcmp(base, "sign.png") == 0) {
+            load_sign_texture(path);
+        } else {
+            load_block_texture(paths[i]);
+        }
     }
 }
 
