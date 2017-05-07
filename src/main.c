@@ -122,8 +122,6 @@ typedef struct {
     GLuint extra2;
     GLuint extra3;
     GLuint extra4;
-    GLuint extra5;
-    GLuint extra6;
 } Attrib;
 
 
