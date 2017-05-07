@@ -26,6 +26,7 @@
 #include "tinycthread.h"
 #include "util.h"
 #include "world.h"
+#include "mining.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -145,10 +146,6 @@ typedef struct {
     int player_count;
     int typing;
     int just_clicked;
-    int mining_progress;
-    int holding_mine_button;
-    int building_progress;
-    int holding_build_button;
     char typing_buffer[MAX_TEXT_LENGTH];
     int message_index;
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
@@ -2275,50 +2272,6 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
-void mining_stop() {
-    g->holding_mine_button = 0;
-    g->mining_progress = 0;
-}
-
-void mining_tick() {
-    if (g->holding_mine_button) {
-        if (g->mining_progress == BLOCK_BREAK_TIME) { // TODO: variable hardness
-            g->mining_progress = 0;
-            on_left_click();
-        }
-
-        g->mining_progress++;
-        // TODO: block break indicator
-    }
-}
-
-void mining_start() {
-    g->holding_mine_button = 1;
-}
-
-
-void building_stop() {
-    g->holding_build_button = 0;
-    g->building_progress = 0;
-}
-
-
-void building_tick() {
-    if (g->holding_build_button) {
-        if (g->building_progress == BLOCK_BUILD_TIME) {
-            g->building_progress = 0;
-            on_right_click();
-        }
-
-        g->building_progress++;
-    }
-}
-
-void building_start() {
-    g->holding_build_button = 1;
-    g->building_progress = BLOCK_BUILD_TIME; // place first instantly
-}
-
 void init_vr();
 void fullscreen_toggle();
 static int touch_forward = 0;
@@ -3259,10 +3212,6 @@ void reset_model() {
     memset(g->typing_buffer, 0, sizeof(char) * MAX_TEXT_LENGTH);
     g->typing = 0;
     g->just_clicked = 0;
-    g->mining_progress = 0;
-    g->holding_mine_button = 0;
-    g->building_progress = 0;
-    g->holding_build_button = 0;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);
     g->message_index = 0;
     g->day_length = DAY_LENGTH;
