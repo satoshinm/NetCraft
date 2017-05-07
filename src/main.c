@@ -27,6 +27,7 @@
 #include "util.h"
 #include "world.h"
 #include "mining.h"
+#include "vr.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -121,17 +122,8 @@ typedef struct {
     GLuint extra2;
     GLuint extra3;
     GLuint extra4;
-    GLuint extra5;
-    GLuint extra6;
 } Attrib;
 
-
-typedef struct {
-    float transform[16];
-    float viewport[4];
-    float lensCenter[2];
-    float h;
-} EyeParameters;
 
 typedef struct {
     GLFWwindow *window;
@@ -191,32 +183,6 @@ typedef struct {
         int digitalButton_count;
         const unsigned char *digitalButton;
     } gamepad_state;
-    struct {
-        int hResolution;
-        int vResolution;
-        GLfloat hScreenSize;
-        GLfloat vScreenSize;
-        GLfloat interpupillaryDistance;
-        GLfloat lensSeparationDistance;
-        GLfloat eyeToScreenDistance;
-        GLfloat distortionK[4];
-        GLfloat chromaAbParameter[4];
-
-        int worldFactor;
-
-        EyeParameters left, right;
-
-        GLuint framebuffer;
-        GLuint depthrenderbuffer;
-        GLuint texture;
-
-        GLfloat scale[2];
-        GLfloat scaleIn[2];
-
-        GLuint quad_vertexbuffer;
-
-        int skipBarrelDistortion;
-    } vr;
 } Model;
 
 static Model model;
@@ -2272,7 +2238,6 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
-void init_vr();
 void fullscreen_toggle();
 static int touch_forward = 0;
 static int touch_jump = 0;
@@ -2328,10 +2293,10 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     }
     if (key == CRAFT_KEY_VR) {
         if (mods & GLFW_MOD_SHIFT) {
-            g->vr.skipBarrelDistortion = !g->vr.skipBarrelDistortion;
+            vr_toggle_skip_barrel_distortion();
         } else {
             g->show_vr = !g->show_vr;
-            if (g->show_vr) init_vr();
+            if (g->show_vr) init_vr(g->window);
         }
     }
     if (key == GLFW_KEY_ENTER) {
@@ -2768,15 +2733,7 @@ void on_window_size(GLFWwindow* window, int width, int height) {
     }
 #endif
 
-    g->vr.left.viewport[0] = width/2 - g->vr.hResolution/2;
-    g->vr.left.viewport[1] = height/2 - g->vr.vResolution/2;
-    g->vr.left.viewport[2] = g->vr.hResolution/2;
-    g->vr.left.viewport[3] = g->vr.vResolution;
-
-    g->vr.right.viewport[0] = width/2;
-    g->vr.right.viewport[1] = height/2 - g->vr.vResolution/2;
-    g->vr.right.viewport[2] = g->vr.hResolution/2;
-    g->vr.right.viewport[3] = g->vr.vResolution;
+    vr_update_viewport(width, height);
 }
 
 void on_file_drop(GLFWwindow *window, int count, const char **paths) {
@@ -3226,142 +3183,6 @@ void reset_model() {
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = 1;
     g->show_vr = 0;
-
-    // based on https://github.com/mrdoob/three.js/blob/36565aa86a44d02cdb9c8af4ba91816928180fab/examples/js/effects/OculusRiftEffect.js#L13
-    // DK1
-    /*
-    g->vr.hResolution = 1280;
-    g->vr.vResolution = 800;
-    g->vr.hScreenSize = 0.14976;
-    g->vr.vScreenSize = 0.0936;
-    g->vr.interpupillaryDistance = 0.064;
-    g->vr.lensSeparationDistance = 0.064;
-    g->vr.eyeToScreenDistance = 0.041;
-    g->vr.distortionK[0] = 1.0;
-    g->vr.distortionK[1] = 0.22;
-    g->vr.distortionK[2] = 1.24;
-    g->vr.distortionK[3] = 0.0;
-    g->vr.chromaAbParameter[0] = 0.996;
-    g->vr.chromaAbParameter[1] = -0.004;
-    g->vr.chromaAbParameter[2] = 1.014;
-    g->vr.chromaAbParameter[3] = 0.0;
-    */
-    // DK2
-    g->vr.hResolution = 1920;
-    g->vr.vResolution = 1080;
-    g->vr.hScreenSize = 0.12576;
-    g->vr.vScreenSize = 0.07074;
-    g->vr.interpupillaryDistance = 0.0635;
-    g->vr.lensSeparationDistance = 0.0635;
-    g->vr.eyeToScreenDistance = 0.041;
-    g->vr.distortionK[0] = 1.0;
-    g->vr.distortionK[1] = 0.22;
-    g->vr.distortionK[2] = 1.24;
-    g->vr.distortionK[3] = 0.0;
-    g->vr.chromaAbParameter[0] = 0.996;
-    g->vr.chromaAbParameter[1] = -0.004;
-    g->vr.chromaAbParameter[2] = 1.014;
-    g->vr.chromaAbParameter[3] = 0.0;
-
-    g->vr.worldFactor = 1;
-    g->vr.skipBarrelDistortion = 0;
-}
-
-void init_vr() {
-    static int inited = 0;
-    if (inited) return;
-
-    inited = 1;
-
-    // Compute aspect ratio and FOV
-    float aspect = g->vr.hResolution / (2.0*g->vr.vResolution);
-
-    // Fov is normally computed with:
-    //   ( 2*atan2(g->vr.vScreenSize,2*g->vr.eyeToScreenDistance) );
-    // But with lens distortion it is increased (see Oculus SDK Documentation)
-    float r = -1.0 - (4 * (g->vr.hScreenSize/4 - g->vr.lensSeparationDistance/2) / g->vr.hScreenSize);
-    float distScale = (g->vr.distortionK[0] + g->vr.distortionK[1] * powf(r,2) + g->vr.distortionK[2] * powf(r,4) + g->vr.distortionK[3] * powf(r,6));
-    float fov = 2*atan2f(g->vr.vScreenSize*distScale, 2*g->vr.eyeToScreenDistance);
-
-    // Compute x translation offset (h) for projection matrix
-    double h = 4 * (g->vr.hScreenSize/4 - g->vr.interpupillaryDistance/2) / g->vr.hScreenSize;
-
-    g->vr.left.h = h;
-    g->vr.right.h = -h;
-
-    // Compute camera transformation matrices
-    mat_translate(g->vr.left.transform, -g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
-    mat_translate(g->vr.right.transform, g->vr.worldFactor * g->vr.interpupillaryDistance/2, 0.0, 0.0);
-
-    // Compute Viewport
-    g->vr.left.viewport[0] = 0;
-    g->vr.left.viewport[1] = 0;
-    g->vr.left.viewport[2] = g->vr.hResolution/2;
-    g->vr.left.viewport[3] = g->vr.vResolution;
-
-    g->vr.right.viewport[0] = g->vr.hResolution/2;
-    g->vr.right.viewport[1] = 0;
-    g->vr.right.viewport[2] = g->vr.hResolution/2;
-    g->vr.right.viewport[3] = g->vr.vResolution;
-
-    // Distortion shader parameters
-    float lensShift = 4 * (g->vr.hScreenSize/4 - g->vr.lensSeparationDistance/2) / g->vr.hScreenSize;
-    g->vr.left.lensCenter[0] = lensShift;
-    g->vr.left.lensCenter[1] = 0.0;
-
-    g->vr.right.lensCenter[0] = -lensShift;
-    g->vr.right.lensCenter[1] = 0.0;
-
-    g->vr.scale[0] = 1.0/distScale;
-    g->vr.scale[1] = 1.0*aspect/distScale;
-
-    g->vr.scaleIn[0] = 1.0;
-    g->vr.scaleIn[1] = 1.0/aspect;
-
-    // Setup offscreen framebuffer to render to, instead of directly to screen
-    glGenFramebuffers(1, &g->vr.framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-
-    glGenTextures(1, &g->vr.texture);
-    glBindTexture(GL_TEXTURE_2D, g->vr.texture);
-    glfwGetFramebufferSize(g->window, &g->width, &g->height);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, g->width, g->height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    glGenRenderbuffers(1, &g->vr.depthrenderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, g->vr.depthrenderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, g->width, g->height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, g->vr.depthrenderbuffer);
-
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, g->vr.texture, 0);
-
-    GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, drawBuffers);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        printf("error setting up framebuffer l: %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
-        exit(1);
-    }
-
-    // Render directly to screen by default
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    // The (half-)fullscreen quad's FBO
-    static const GLfloat quad_vertex_buffer_data[] = {
-		-1.0f, -1.0f, 0.0f,
-		 1.0f, -1.0f, 0.0f,
-		-1.0f,  1.0f, 0.0f,
-		-1.0f,  1.0f, 0.0f,
-		 1.0f, -1.0f, 0.0f,
-		 1.0f,  1.0f, 0.0f,
-	};
-    glGenBuffers(1, &g->vr.quad_vertexbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, g->vr.quad_vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertex_buffer_data), quad_vertex_buffer_data, GL_STATIC_DRAW);
 }
 
 void one_iter();
@@ -3378,7 +3199,6 @@ static Attrib block_attrib = {0};
 static Attrib line_attrib = {0};
 static Attrib text_attrib = {0};
 static Attrib sky_attrib = {0};
-static Attrib vr_attrib = {0};
 static GLuint sky_buffer;
 static int g_running;
 static int g_inner_break;
@@ -3497,21 +3317,6 @@ int main(int argc, char **argv) {
     sky_attrib.matrix = glGetUniformLocation(program, "matrix");
     sky_attrib.sampler = glGetUniformLocation(program, "sampler");
     sky_attrib.timer = glGetUniformLocation(program, "timer");
-
-    program = load_program(
-        "shaders/vr_vertex.glsl", "shaders/vr_fragment.glsl");
-    vr_attrib.program = program;
-    vr_attrib.position = glGetAttribLocation(program, "position");;
-    vr_attrib.uv = -1; // unused
-    vr_attrib.normal = -1; // unused
-    vr_attrib.matrix = -1; // unused
-    vr_attrib.sampler = glGetUniformLocation(program, "texid");
-    vr_attrib.extra1 = glGetUniformLocation(program, "scale");
-    vr_attrib.extra2 = glGetUniformLocation(program, "scaleIn");
-    vr_attrib.extra3 = glGetUniformLocation(program, "lensCenter");
-    vr_attrib.extra4 = glGetUniformLocation(program, "hmdWarpParam");
-    vr_attrib.extra5 = glGetUniformLocation(program, "chromAbParam");
-    vr_attrib.extra6 = glGetUniformLocation(program, "skipBarrelDistortion");
 
     // CHECK COMMAND LINE ARGUMENTS //
     if (argc == 2 || argc == 3) {
@@ -3657,7 +3462,6 @@ void main_shutdown() {
 }
 
 void render_scene();
-void render_vr_eye(EyeParameters *eye);
 void one_iter() {
     glfwSwapInterval(VSYNC);
 
@@ -3725,21 +3529,7 @@ void one_iter() {
             glClear(GL_DEPTH_BUFFER_BIT);
 
             if (g->show_vr) {
-                // left eye
-                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-                glViewport(0, 0, g->width, g->height);
-                me->state.x += g->vr.left.h;
-                render_scene();
-                me->state.x -= g->vr.left.h;
-                render_vr_eye(&g->vr.left);
-
-                // right eye
-                glBindFramebuffer(GL_FRAMEBUFFER, g->vr.framebuffer);
-                glViewport(0, 0, g->width, g->height);
-                me->state.x += g->vr.right.h;
-                render_scene();
-                me->state.x -= g->vr.right.h;
-                render_vr_eye(&g->vr.right);
+                vr_render();
             } else {
                 glViewport(0, 0, g->width, g->height);
                 render_scene();
@@ -3768,43 +3558,9 @@ void one_iter() {
 #endif
 }
 
-void render_vr_eye(EyeParameters *eye) {
-    // Render to the screen
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(eye->viewport[0], eye->viewport[1], eye->viewport[2], eye->viewport[3]);
-
-    // Use our shader
-    glUseProgram(vr_attrib.program);
-
-    // Bind our texture in Texture Unit
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, g->vr.texture);
-    glUniform1i(vr_attrib.sampler, 4);
-
-    glUniform2fv(vr_attrib.extra1, 1, g->vr.scale);
-    glUniform2fv(vr_attrib.extra2, 1, g->vr.scaleIn);
-    glUniform2fv(vr_attrib.extra3, 1, eye->lensCenter);
-    glUniform4fv(vr_attrib.extra4, 1, g->vr.distortionK); // hmdWarpParam = distortionK
-    glUniform4fv(vr_attrib.extra5, 1, g->vr.chromaAbParameter); // chromAbParam = chromaAbParameter
-    glUniform1i(vr_attrib.extra6, g->vr.skipBarrelDistortion);
-
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(vr_attrib.position);
-    glBindBuffer(GL_ARRAY_BUFFER, g->vr.quad_vertexbuffer);
-    glVertexAttribPointer(
-    0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-    3,                  // size
-    GL_FLOAT,           // type
-    GL_FALSE,           // normalized?
-    0,                  // stride
-    (void*)0            // array buffer offset
-    );
-
-    // Draw the triangles !
-    glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
-    glDisableVertexAttribArray(vr_attrib.position);
+void translate_camera_x_offset(float h) {
+    me->state.x += h;
 }
-
 
 void render_scene() {
             Player *player = g->players + g->observe1;
