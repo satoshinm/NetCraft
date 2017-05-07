@@ -1,4 +1,5 @@
 #include "mining.h"
+#include "item.h"
 
 static int mining_progress = 0;
 static int holding_mine_button = 0;
@@ -30,7 +31,7 @@ void mining_tick() {
             return;
         }
 
-        if (mining_progress == BLOCK_BREAK_TIME) { // TODO: variable hardness based on block type w
+        if (mining_progress == is_hardness(w)) {
             mining_progress = 0;
             on_mine();
             return;

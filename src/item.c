@@ -208,3 +208,15 @@ int is_illuminated(int w) {
             return 0;
     }
 }
+
+int is_hardness(int w) {
+    // TODO: more comprehensive variable hardness
+    switch (w) {
+        case SAND:
+            return 5;
+        case TALL_GRASS:
+            return 0;
+        default:
+            return 10;
+    }
+}
