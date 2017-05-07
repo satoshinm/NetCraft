@@ -2275,6 +2275,50 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
+void mining_stop() {
+    g->holding_mine_button = 0;
+    g->mining_progress = 0;
+}
+
+void mining_tick() {
+    if (g->holding_mine_button) {
+        if (g->mining_progress == BLOCK_BREAK_TIME) { // TODO: variable hardness
+            g->mining_progress = 0;
+            on_left_click();
+        }
+
+        g->mining_progress++;
+        // TODO: block break indicator
+    }
+}
+
+void mining_start() {
+    g->holding_mine_button = 1;
+}
+
+
+void building_stop() {
+    g->holding_build_button = 0;
+    g->building_progress = 0;
+}
+
+
+void building_tick() {
+    if (g->holding_build_button) {
+        if (g->building_progress == BLOCK_BUILD_TIME) {
+            g->building_progress = 0;
+            on_right_click();
+        }
+
+        g->building_progress++;
+    }
+}
+
+void building_start() {
+    g->holding_build_button = 1;
+    g->building_progress = BLOCK_BUILD_TIME; // place first instantly
+}
+
 void init_vr();
 void fullscreen_toggle();
 static int touch_forward = 0;
@@ -2284,6 +2328,12 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
+        if (!g->typing) {
+            if (key == GLFW_KEY_ENTER) {
+                mining_stop();
+                building_stop();
+            }
+        }
         return;
     }
     if (key == GLFW_KEY_BACKSPACE) {
@@ -2359,10 +2409,10 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
         }
         else {
             if (control) {
-                on_right_click();
+                building_start();
             }
             else {
-                on_left_click();
+                mining_start();
             }
         }
     }
@@ -2472,50 +2522,6 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
         _on_scroll_blockselect(ydelta);
 #endif
     }
-}
-
-void mining_stop() {
-    g->holding_mine_button = 0;
-    g->mining_progress = 0;
-}
-
-void mining_tick() {
-    if (g->holding_mine_button) {
-        if (g->mining_progress == BLOCK_BREAK_TIME) { // TODO: variable hardness
-            g->mining_progress = 0;
-            on_left_click();
-        }
-
-        g->mining_progress++;
-        // TODO: block break indicator
-    }
-}
-
-void mining_start() {
-    g->holding_mine_button = 1;
-}
-
-
-void building_stop() {
-    g->holding_build_button = 0;
-    g->building_progress = 0;
-}
-
-
-void building_tick() {
-    if (g->holding_build_button) {
-        if (g->building_progress == BLOCK_BUILD_TIME) {
-            g->building_progress = 0;
-            on_right_click();
-        }
-
-        g->building_progress++;
-    }
-}
-
-void building_start() {
-    g->holding_build_button = 1;
-    g->building_progress = BLOCK_BUILD_TIME; // place first instantly
 }
 
 
