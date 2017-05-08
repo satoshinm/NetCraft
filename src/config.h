@@ -12,7 +12,11 @@
 #define SCROLL_BLOCK_SELECT 1
 #define MAX_MESSAGES 4
 #define DB_PATH "craft.db"
+#ifdef __EMSCRIPTEN__
+#define USE_CACHE 0
+#else
 #define USE_CACHE 1
+#endif
 #define DAY_LENGTH 600
 #define INVERT_MOUSE 0
 #define PLAYER_NAME_DISTANCE 96 // Maximum distance to display a player's name at
