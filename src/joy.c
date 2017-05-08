@@ -25,6 +25,7 @@ int is_gamepad_connected() {
 }
 
 #ifdef USE_EM_GAMEPAD
+#include <emscripten/html5.h>
 static EM_BOOL on_gamepadconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
     gamepad_connected = 1;
     // TODO: track individual gamepad identifiers?
