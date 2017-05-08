@@ -139,8 +139,8 @@ typedef struct {
     int sign_radius;
     Player players[MAX_PLAYERS];
     int player_count;
-    int typing;
-    int just_clicked;
+    bool typing;
+    bool just_clicked;
     char typing_buffer[MAX_TEXT_LENGTH];
     int message_index;
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
@@ -155,27 +155,27 @@ typedef struct {
     int fullscreen_height;
     int observe1;
     int observe2;
-    int flying;
+    bool flying;
     int item_index;
     int scale;
     int ortho;
     float ortho_zoom;
     float fov;
-    int suppress_char;
+    bool suppress_char;
     int mode;
-    int mode_changed;
+    bool mode_changed;
     char db_path[MAX_PATH_LENGTH];
     char server_addr[MAX_ADDR_LENGTH];
     int server_port;
     int day_length;
-    int time_changed;
+    bool time_changed;
     Block block0;
     Block block1;
     Block copy0;
     Block copy1;
-    int show_info_text;
-    int show_ui;
-    int show_vr;
+    bool show_info_text;
+    bool show_ui;
+    bool show_vr;
 } Model;
 
 static Model model;
@@ -229,7 +229,7 @@ void get_sight_vector(float rx, float ry, float *vx, float *vy, float *vz) {
     *vz = sinf(rx - RADIANS(90)) * m;
 }
 
-void get_motion_vector(int flying, double sz, double sx, double rx, float ry,
+void get_motion_vector(bool flying, double sz, double sx, double rx, float ry,
     float *vx, float *vy, float *vz) {
     *vx = 0; *vy = 0; *vz = 0;
     if (!sz && !sx) {
@@ -2093,19 +2093,19 @@ void parse_command(const char *buffer, int forward) {
     else if (sscanf(buffer,
         "/online %128s %d", server_addr, &server_port) >= 1)
     {
-        g->mode_changed = 1;
+        g->mode_changed = true;
         g->mode = MODE_ONLINE;
         strncpy(g->server_addr, server_addr, MAX_ADDR_LENGTH);
         g->server_port = server_port;
         set_db_path();
     }
     else if (sscanf(buffer, "/offline %128s", filename) == 1) {
-        g->mode_changed = 1;
+        g->mode_changed = true;
         g->mode = MODE_OFFLINE;
         snprintf(g->db_path, MAX_PATH_LENGTH, "%s.db", filename);
     }
     else if (strcmp(buffer, "/offline") == 0) {
-        g->mode_changed = 1;
+        g->mode_changed = true;
         g->mode = MODE_OFFLINE;
         snprintf(g->db_path, MAX_PATH_LENGTH, "%s", DB_PATH);
     }
@@ -2279,7 +2279,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     }
     if (key == GLFW_KEY_ESCAPE) {
         if (g->typing) {
-            g->typing = 0;
+            g->typing = false;
         }
         else if (exclusive) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -2309,7 +2309,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
                 }
             }
             else {
-                g->typing = 0;
+                g->typing = false;
                 if (g->typing_buffer[0] == CRAFT_KEY_SIGN) {
                     Player *player = g->players;
                     int x, y, z, face;
@@ -2337,7 +2337,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     if (control && key == 'V') {
         const char *buffer = glfwGetClipboardString(window);
         if (g->typing) {
-            g->suppress_char = 1;
+            g->suppress_char = true;
             strncat(g->typing_buffer, buffer,
                 MAX_TEXT_LENGTH - strlen(g->typing_buffer) - 1);
         }
@@ -2379,13 +2379,13 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     }
 }
 
-int is_typing() {
+bool is_typing() {
     return g->typing;
 }
 
 void on_char(GLFWwindow *window, unsigned int u) {
     if (g->suppress_char) {
-        g->suppress_char = 0;
+        g->suppress_char = false;
         return;
     }
     if (g->typing) {
@@ -2400,16 +2400,16 @@ void on_char(GLFWwindow *window, unsigned int u) {
     }
     else {
         if (u == CRAFT_KEY_CHAT) {
-            g->typing = 1;
+            g->typing = true;
             g->typing_buffer[0] = '\0';
         }
         if (u == CRAFT_KEY_COMMAND) {
-            g->typing = 1;
+            g->typing = true;
             g->typing_buffer[0] = '/';
             g->typing_buffer[1] = '\0';
         }
         if (u == CRAFT_KEY_SIGN) {
-            g->typing = 1;
+            g->typing = true;
             g->typing_buffer[0] = CRAFT_KEY_SIGN;
             g->typing_buffer[1] = '\0';
         }
@@ -2443,11 +2443,11 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
 }
 
 void set_just_clicked() {
-    g->just_clicked = 1;
+    g->just_clicked = true;
 }
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
-    g->just_clicked = 1;
+    g->just_clicked = true;
     int control = mods & GLFW_MOD_CONTROL;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
@@ -2726,7 +2726,7 @@ void handle_mouse_input() {
             // player to look down and rotate. TODO: investigate further, is it Firefox's issue?
             px = mx;
             py = my;
-            g->just_clicked = 0;
+            g->just_clicked = false;
             return;
         }
         float m = 0.0025;
@@ -2904,7 +2904,7 @@ void parse_buffer(char *buffer) {
         if (sscanf(line, "E,%lf,%d", &elapsed, &day_length) == 2) {
             glfwSetTime(fmod(elapsed, day_length));
             g->day_length = day_length;
-            g->time_changed = 1;
+            g->time_changed = true;
         }
         if (line[0] == 'T' && line[1] == ',') {
             char *text = line + 2;
@@ -2941,20 +2941,20 @@ void reset_model() {
     g->player_count = 0;
     g->observe1 = 0;
     g->observe2 = 0;
-    g->flying = 0;
+    g->flying = false;
     g->item_index = 0;
     g->ortho_zoom = 32;
     memset(g->typing_buffer, 0, sizeof(char) * MAX_TEXT_LENGTH);
-    g->typing = 0;
-    g->just_clicked = 0;
+    g->typing = false;
+    g->just_clicked = false;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);
     g->message_index = 0;
     g->day_length = DAY_LENGTH;
     glfwSetTime(g->day_length / 3.0);
-    g->time_changed = 1;
+    g->time_changed = true;
     g->show_info_text = SHOW_INFO_TEXT;
-    g->show_ui = 1;
-    g->show_vr = 0;
+    g->show_ui = true;
+    g->show_vr = false;
 }
 
 void one_iter();
@@ -3230,7 +3230,7 @@ void one_iter() {
 
             // FRAME RATE //
             if (g->time_changed) {
-                g->time_changed = 0;
+                g->time_changed = false;
                 last_commit = glfwGetTime();
                 last_update = glfwGetTime();
                 memset(&fps, 0, sizeof(fps));
@@ -3306,7 +3306,7 @@ void one_iter() {
                 g_inner_break = 1;
             }
             if (g->mode_changed) {
-                g->mode_changed = 0;
+                g->mode_changed = false;
                 g_inner_break = 1;
             }
 

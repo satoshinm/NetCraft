@@ -26,12 +26,12 @@
 #define SHOW_PLANTS 1
 #define SHOW_CLOUDS 1
 #define SHOW_TREES 1
-#define SHOW_ITEM 1
-#define SHOW_CROSSHAIRS 1
-#define SHOW_WIREFRAME 1
-#define SHOW_INFO_TEXT 1
-#define SHOW_CHAT_TEXT 1
-#define SHOW_PLAYER_NAMES 1
+#define SHOW_ITEM true
+#define SHOW_CROSSHAIRS true
+#define SHOW_WIREFRAME true
+#define SHOW_INFO_TEXT true
+#define SHOW_CHAT_TEXT true
+#define SHOW_PLAYER_NAMES true
 
 // key bindings
 #define CRAFT_KEY_FORWARD 'W'
