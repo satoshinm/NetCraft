@@ -3379,11 +3379,11 @@ void render_scene() {
 
                 snprintf(
                     text_buffer, 1024,
-                    "(%d, %d) (%.2f, %.2f, %.2f) %s[%d, %d, %d] %d%cm %dfps",
+                    "(%d, %d) (%.2f, %.2f, %.2f) [%d, %d, %d] %d%cm %dfps %s",
                     chunked(s->x), chunked(s->z), s->x, s->y, s->z,
-                    block_info,
                     g->player_count, g->chunk_count,
-                    face_count * 2, hour, am_pm, fps.fps);
+                    face_count * 2, hour, am_pm, fps.fps,
+                    block_info);
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
                 ty -= ts * 2;
             }
