@@ -185,18 +185,23 @@ hostname "-" can be used to connect to the same server the page is served from.
 
 ### Controls
 
-- Left Click to destroy a block.
+Mouse:
+
+- Left mouse button (hold) to destroy a block.
 - Right Click or Ctrl + Left Click to create a block.
-- Touch: swipe to free look, 2-finger to walk forward, 3-finger to jump, tap to destroy, tap left edge to create.
 - Ctrl + Right Click to toggle a block as a light source.
-- Middle Click to change the current block selection to the targeted block
+- Middle Click to change the current block selection to the targeted block.
+- Scrollwheel to cycle through the block types, or zoom in orthogonal mode.
+
+Keyboard:
+
 - WASD to move forward, left, backward, right.
 - Space to jump.
 - Space double-tap to toggle between walking and flying (when flying, space to ascend, shift to descend).
 - Shift to crouch, walk slower.
 - Tab to sprint, while holding another directional key (increases movement speed).
 - 1-9 to select the block type to create.
-- E, or the scrollwheel to cycle through the block types.
+- E or R to cycle through the block types.
 - ZXCVBN to move in exact directions along the XYZ axes.
 - Z to zoom.
 - F to show the scene in orthographic mode.
@@ -213,6 +218,26 @@ hostname "-" can be used to connect to the same server the page is served from.
 - Shift-F4 to toggle barrel distortion effect.
 - F3 to toggle debug info text.
 - F1 to toggle all user interface elements.
+- Drop files onto the canvas to change the texture.png.
+
+Joystick:
+
+- A or D-pad up to jump.
+- Left stick to move.
+- Right stick to look.
+- L1 and R1 bumpers to cycle through the block types.
+- L2 trigger to destroy a block.
+- R2 trigger to create a block.
+- D-pad left/right to move left/right.
+- D-pad down to crouch.
+
+Touch:
+
+- Swipe to free look.
+- 2-finger touch to walk forward.
+- 3-finger tap to jump.
+- Tap to destroy a block.
+- Tap left edge to create a block.
 
 ### Chat Commands
 

@@ -56,7 +56,76 @@ const int items[] = {
     COLOR_28,
     COLOR_29,
     COLOR_30,
-    COLOR_31
+    COLOR_31,
+    GLOWING_STONE
+};
+
+const char *item_names[] = {
+    "EMPTY",
+    "GRASS",
+    "SAND",
+    "STONE",
+    "BRICK",
+    "WOOD",
+    "CEMENT",
+    "DIRT",
+    "PLANK",
+    "SNOW",
+    "GLASS",
+    "COBBLE",
+    "LIGHT_STONE",
+    "DARK_STONE",
+    "CHEST",
+    "LEAVES",
+    "CLOUD",
+    "TALL_GRASS",
+    "YELLOW_FLOWER",
+    "RED_FLOWER",
+    "PURPLE_FLOWER",
+    "SUN_FLOWER",
+    "WHITE_FLOWER",
+    "BLUE_FLOWER",
+    "x24",
+    "x25",
+    "x26",
+    "x27",
+    "x28",
+    "x29",
+    "x30",
+    "x31",
+    "COLOR_00",
+    "COLOR_01",
+    "COLOR_02",
+    "COLOR_03",
+    "COLOR_04",
+    "COLOR_05",
+    "COLOR_06",
+    "COLOR_07",
+    "COLOR_08",
+    "COLOR_09",
+    "COLOR_10",
+    "COLOR_11",
+    "COLOR_12",
+    "COLOR_13",
+    "COLOR_14",
+    "COLOR_15",
+    "COLOR_16",
+    "COLOR_17",
+    "COLOR_18",
+    "COLOR_19",
+    "COLOR_20",
+    "COLOR_21",
+    "COLOR_22",
+    "COLOR_23",
+    "COLOR_24",
+    "COLOR_25",
+    "COLOR_26",
+    "COLOR_27",
+    "COLOR_28",
+    "COLOR_29",
+    "COLOR_30",
+    "COLOR_31",
+    "GLOWING_STONE",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -127,6 +196,7 @@ const int blocks[256][6] = {
     {205, 205, 205, 205, 205, 205}, // 61
     {206, 206, 206, 206, 206, 206}, // 62
     {207, 207, 207, 207, 207, 207}, // 63
+    {17, 17, 17, 17, 17, 17}, // 64
 };
 
 const int plants[256] = {
@@ -195,5 +265,42 @@ int is_destructable(int w) {
             return 0;
         default:
             return 1;
+    }
+}
+
+int is_illuminated(int w) {
+    switch (w) {
+        case GLOWING_STONE:
+            return 15;
+        default:
+            return 0;
+    }
+}
+
+int is_hardness(int w) {
+    if (is_plant(w)) return 0;
+
+    switch (w) {
+        case LEAVES:
+            return 3;
+        case SAND:
+            return 5;
+        case WOOD:
+        case PLANK:
+        case CHEST:
+            return 7;
+        case GLASS:
+            return 8;
+
+        case STONE:
+        case BRICK:
+        case CEMENT:
+        case COBBLE:
+        case LIGHT_STONE:
+        case DARK_STONE:
+            return 13;
+
+        default:
+            return 10;
     }
 }

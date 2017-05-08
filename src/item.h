@@ -25,6 +25,7 @@
 #define SUN_FLOWER 21
 #define WHITE_FLOWER 22
 #define BLUE_FLOWER 23
+
 #define COLOR_00 32
 #define COLOR_01 33
 #define COLOR_02 34
@@ -57,8 +58,10 @@
 #define COLOR_29 61
 #define COLOR_30 62
 #define COLOR_31 63
+#define GLOWING_STONE 64
 
 extern const int items[];
+extern const char* item_names[];
 extern const int item_count;
 extern const int blocks[256][6];
 extern const int plants[256];
@@ -67,5 +70,7 @@ int is_plant(int w);
 int is_obstacle(int w);
 int is_transparent(int w);
 int is_destructable(int w);
+int is_illuminated(int w);
+int is_hardness(int w);
 
 #endif

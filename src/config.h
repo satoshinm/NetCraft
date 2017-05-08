@@ -8,13 +8,15 @@
 #define WINDOW_HEIGHT 768
 #define VSYNC 1
 #define SCROLL_THRESHOLD 0.1
-#define GAMEPAD_LOOK_SENSITIVITY 10
-#define GAMEPAD_MOVE_SENSITIVITY 1
 #define JUMP_FLY_THRESHOLD 0.2
 #define SCROLL_BLOCK_SELECT 1
 #define MAX_MESSAGES 4
 #define DB_PATH "craft.db"
+#ifdef __EMSCRIPTEN__
+#define USE_CACHE 0
+#else
 #define USE_CACHE 1
+#endif
 #define DAY_LENGTH 600
 #define INVERT_MOUSE 0
 #define PLAYER_NAME_DISTANCE 96 // Maximum distance to display a player's name at
@@ -53,21 +55,9 @@
 #define CRAFT_KEY_DEBUG GLFW_KEY_F3
 #define CRAFT_KEY_UI GLFW_KEY_F1
 
-// joystick bindings
-// See standard gamepad at https://www.w3.org/TR/gamepad/#remapping
-// and test site http://html5gamepad.com
-#define GAMEPAD_A 0
-#define GAMEPAD_L1_BUMPER 4
-#define GAMEPAD_R1_BUMPER 5
-#define GAMEPAD_L2_TRIGGER 6
-#define GAMEPAD_R2_TRIGGER 7
-#define GAMEPAD_DPAD_LEFT 8
-#define GAMEPAD_DPAD_DOWN 9
-#define GAMEPAD_DPAD_RIGHT 10
-#define GAMEPAD_DPAD_UP 11
-
 #ifdef __EMSCRIPTEN__
 //#define USE_EM_GAMEPAD 1
+#define USE_EM_FULLSCREEN 1
 #endif
 
 #define GAMEPAD_LEFT_STICK_HORIZONTAL 0
