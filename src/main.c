@@ -29,6 +29,7 @@
 #include "mining.h"
 #include "vr.h"
 #include "joy.h"
+#include "touch.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -2230,8 +2231,6 @@ void change_ortho_zoom(double ydelta) {
 }
 
 void fullscreen_toggle();
-static int touch_forward = 0;
-static int touch_jump = 0;
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int control = mods & GLFW_MOD_CONTROL;
     if (window == NULL) window = g->window;
@@ -2434,6 +2433,9 @@ void on_scroll(GLFWwindow *window, double xdelta, double ydelta) {
     }
 }
 
+void set_just_clicked() {
+    g->just_clicked = 1;
+}
 
 void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     g->just_clicked = 1;
@@ -2481,92 +2483,8 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
     }
 }
 
-static long touch_active = 0;
-static long touch_clientX = 0;
-static long touch_clientY = 0;
 
 #ifdef __EMSCRIPTEN__
-static double touch_activated_at = 0;
-static int touch_just_activated = 0;
-
-EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-    if (touch_active) {
-        // Another finger was touched when one was already touching.
-        if (touchEvent->numTouches == 2) {
-            // 2-finger = move forward
-            touch_forward = 1;
-            touch_jump = 0;
-        } else if (touchEvent->numTouches == 3) {
-            // 3-finger = jump
-            touch_jump = 1;
-        }
-        // TODO: support other interesting gestures
-        return EM_TRUE;
-    }
-
-    touch_active = touchEvent->touches[0].identifier;
-    touch_activated_at = glfwGetTime();
-    touch_just_activated = 1;
-    glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    return EM_TRUE;
-}
-
-EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-    if (touch_just_activated) {
-        g->just_clicked = 1; // ignore next movement, since two datapoints are needed to move
-        touch_just_activated = 0;
-    }
-    touch_clientX = touchEvent->touches[0].clientX;
-    touch_clientY = touchEvent->touches[0].clientY;
-    return EM_TRUE;
-}
-
-EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-    if (touchEvent->numTouches <= 2) {
-        touch_forward = 0;
-    }
-
-    if (touchEvent->numTouches <= 3) {
-        touch_jump = 0;
-    }
-
-    for (int i = 0; i < touchEvent->numTouches; ++i) {
-        EmscriptenTouchPoint touch = touchEvent->touches[i];
-        if (touch.isChanged && touch.identifier == touch_active) {
-            // Was the first touch released? If so, exit touch.
-            glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            touch_active = 0;
-
-            double duration = glfwGetTime() - touch_activated_at;
-            if (duration < 0.07) {
-                // Short duration = tap = left-click = break blocks
-                // TODO: only tap if touchstart position =~ touchend position?
-
-                int width = 0, height = 0;
-                glfwGetWindowSize(g->window, &width, &height);
-
-                //printf("tap at (%ld,%ld) within (%d,%d)\n", touch.clientX, touch.clientY, width, height);
-
-                if (touch.clientX < 80) { // TODO: && touch.clientY < height - 80? (bottom left center vs corner)
-                    // Tapping near the item icon = place
-                    on_build();
-                } else {
-                    // Tapping elswhere = break
-                    on_mine();
-                }
-            }
-        }
-    }
-
-    return EM_TRUE;
-}
-
-EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-    touch_active = 0;
-    return EM_TRUE;
-}
-
-
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
     int w = 0;
@@ -3076,12 +2994,9 @@ int main(int argc, char **argv) {
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
     glfwSetScrollCallback(g->window, on_scroll);
     init_joystick_callbacks();
+    init_touch_callbacks(g->window);
 
 #ifdef __EMSCRIPTEN__
-    emscripten_set_touchstart_callback(NULL, NULL, EM_FALSE, on_touchstart);
-    emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
-    emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
-    emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
     EM_ASM(
         var is_typing = Module.cwrap('is_typing');
         window.addEventListener("keydown", function(event) {

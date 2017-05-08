@@ -7,3 +7,6 @@ void building_start();
 
 #define BLOCK_BUILD_TIME 10
 #define BLOCK_BREAK_TIME 10
+
+extern void on_mine();
+extern void on_build();
