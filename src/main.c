@@ -28,6 +28,7 @@
 #include "world.h"
 #include "mining.h"
 #include "vr.h"
+#include "joy.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -173,16 +174,6 @@ typedef struct {
     int show_info_text;
     int show_ui;
     int show_vr;
-    int gamepad_connected;
-    struct {
-        float scale_moveH, scale_moveV;
-        float scale_lookH, scale_lookV;
-
-        int axis_count;
-        const float *axis;
-        int digitalButton_count;
-        const unsigned char *digitalButton;
-    } gamepad_state;
 } Model;
 
 static Model model;
@@ -2243,6 +2234,7 @@ static int touch_forward = 0;
 static int touch_jump = 0;
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     int control = mods & GLFW_MOD_CONTROL;
+    if (window == NULL) window = g->window;
     int exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
@@ -2574,22 +2566,6 @@ EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEvent, vo
     return EM_TRUE;
 }
 
-#ifdef USE_EM_GAMEPAD
-EM_BOOL on_gamepadconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
-    g->gamepad_connected = 1;
-    // TODO: track individual gamepad identifiers?
-    printf("gamepad connected\n");
-
-    return EM_TRUE;
-}
-
-EM_BOOL on_gamepaddisconnected(int eventType, const EmscriptenGamepadEvent *gamepadEvent, void *userData) {
-    g->gamepad_connected = -1;
-    printf("gamepad disconnected\n");
-
-    return EM_TRUE;
-}
-#endif
 
 EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
     // Resize window to match canvas size (as browser is resized).
@@ -2756,112 +2732,6 @@ void on_file_drop(GLFWwindow *window, int count, const char **paths) {
     }
 }
 
-void handle_gamepad_input() {
-    if (g->gamepad_connected == -1) return;
-
-    static struct {
-        int axis_count;
-        float axis[16];
-        int digitalButton_count;
-        unsigned char digitalButton[16];
-    } last_gamepad_state = {0};
-
-#ifdef USE_EM_GAMEPAD
-    static EmscriptenGamepadEvent gp;
-    emscripten_get_gamepad_status(0, &gp);
-
-    static float _axis[16] = {0};
-    static unsigned char _digitalButton[16] = {0};
-    if (!g->gamepad_state.axis) g->gamepad_state.axis = _axis;
-    if (!g->gamepad_state.digitalButton) g->gamepad_state.digitalButton = _digitalButton;
-
-    g->gamepad_state.axis_count = gp.numAxes;
-    for (int i = 0; i < gp.numAxes; ++i) {
-        _axis[i] = gp.axis[i];
-    }
-
-    g->gamepad_state.digitalButton_count = gp.numButtons;
-    for (int i = 0; i < gp.numButtons; ++i) {
-        _digitalButton[i] = gp.digitalButton[i];
-    }
-#else
-    g->gamepad_state.axis = glfwGetJoystickAxes(g->gamepad_connected, &g->gamepad_state.axis_count);
-    g->gamepad_state.digitalButton = glfwGetJoystickButtons(g->gamepad_connected, &g->gamepad_state.digitalButton_count);
-#endif
-
-    // Bumpers scroll
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_L1_BUMPER &&
-        g->gamepad_state.digitalButton[GAMEPAD_L1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_L1_BUMPER]) {
-        on_scroll(g->window, 0, SCROLL_THRESHOLD + 1);
-    }
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_R1_BUMPER &&
-        g->gamepad_state.digitalButton[GAMEPAD_R1_BUMPER] && !last_gamepad_state.digitalButton[GAMEPAD_R1_BUMPER]) {
-        on_scroll(g->window, 0, -SCROLL_THRESHOLD - 1);
-    }
-
-    // Triggers click
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_L2_TRIGGER) {
-        if (g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] &&!last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
-            building_start();
-        } else if (!g->gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER] && last_gamepad_state.digitalButton[GAMEPAD_L2_TRIGGER]) {
-            building_stop();
-        }
-    }
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_R2_TRIGGER) {
-        if (g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && !last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
-            mining_start();
-        } else if (!g->gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER] && last_gamepad_state.digitalButton[GAMEPAD_R2_TRIGGER]) {
-            mining_stop();
-        }
-    }
-
-    // Jump key needs events to detect double-tap for toggling fly
-    if (g->gamepad_state.digitalButton_count > GAMEPAD_A &&
-        g->gamepad_state.digitalButton[GAMEPAD_A] && !last_gamepad_state.digitalButton[GAMEPAD_A]) {
-        on_key(g->window, CRAFT_KEY_JUMP, 0, GLFW_PRESS, 0);
-    }
-
-
-    last_gamepad_state.axis_count =  g->gamepad_state.axis_count;
-    for (int i = 0; i < g->gamepad_state.axis_count; ++i) {
-        last_gamepad_state.axis[i] = g->gamepad_state.axis[i];
-    }
-
-    last_gamepad_state.digitalButton_count =  g->gamepad_state.digitalButton_count;
-    for (int i = 0; i < g->gamepad_state.digitalButton_count; ++i) {
-        last_gamepad_state.digitalButton[i] = g->gamepad_state.digitalButton[i];
-    }
-}
-
-void init_joystick(int joy) {
-    const char *name = glfwGetJoystickName(joy);
-
-    printf("Joystick %d connected: %s\n", joy, name);
-    g->gamepad_state.scale_lookH = GAMEPAD_LOOK_SENSITIVITY;
-    g->gamepad_state.scale_lookV = GAMEPAD_LOOK_SENSITIVITY;
-    g->gamepad_state.scale_moveH = GAMEPAD_MOVE_SENSITIVITY;
-    g->gamepad_state.scale_moveV = GAMEPAD_MOVE_SENSITIVITY;
-
-    if (strstr(name, "STANDARD GAMEPAD")) {
-        // Invert axes, for some reason these seem to be backwards TODO: configurable
-        g->gamepad_state.scale_lookV *= -1;
-        g->gamepad_state.scale_moveV *= -1;
-    }
-
-    g->gamepad_connected = joy;
-    handle_gamepad_input();
-    printf("Joystick axes: %d, buttons: %d\n", g->gamepad_state.axis_count, g->gamepad_state.digitalButton_count);
-}
-
-void on_joystick_connection(int joy, int event) {
-    if (event == GLFW_CONNECTED) {
-        init_joystick(joy);
-    } else if (event == GLFW_DISCONNECTED) {
-        printf("Joystick disconnected: %d\n", joy);
-        g->gamepad_connected = -1;
-    }
-}
-
 
 void init_fullscreen_monitor_dimensions() {
 #ifndef USE_EM_FULLSCREEN
@@ -2912,17 +2782,13 @@ void handle_mouse_input() {
     static double px = 0;
     static double py = 0;
     State *s = &g->players->state;
-    if (g->gamepad_connected != -1 || (exclusive && (px || py))) {
+    if (is_gamepad_connected() || (exclusive && (px || py))) {
         double mx, my;
         if (touch_active) {
             mx = touch_clientX;
             my = touch_clientY;
-        } else if (g->gamepad_connected != -1) {
-            if (g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_HORIZONTAL &&
-                g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_VERTICAL) {
-                mx = px + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_HORIZONTAL] * g->gamepad_state.scale_lookH;
-                my = py + g->gamepad_state.axis[GAMEPAD_RIGHT_STICK_VERTICAL] * g->gamepad_state.scale_lookV;
-            }
+        } else if (is_gamepad_connected()) {
+            joystick_apply_look(&mx, &my, px, py);
         } else {
             glfwGetCursorPos(g->window, &mx, &my);
         }
@@ -2984,19 +2850,7 @@ void handle_movement(double dt) {
         if (glfwGetKey(g->window, GLFW_KEY_UP)) s->ry += m;
         if (glfwGetKey(g->window, GLFW_KEY_DOWN)) s->ry -= m;
 
-        if (g->gamepad_connected != -1) {
-            if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_LEFT &&
-                g->gamepad_state.digitalButton[GAMEPAD_DPAD_LEFT]) sx--;
-
-            if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_RIGHT &&
-                g->gamepad_state.digitalButton[GAMEPAD_DPAD_RIGHT]) sx++;
-
-            if (g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_HORIZONTAL &&
-                g->gamepad_state.axis_count > GAMEPAD_RIGHT_STICK_VERTICAL) {
-                sx += g->gamepad_state.axis[GAMEPAD_LEFT_STICK_HORIZONTAL] * g->gamepad_state.scale_moveH;
-                sz -= g->gamepad_state.axis[GAMEPAD_LEFT_STICK_VERTICAL] * g->gamepad_state.scale_moveV;
-            }
-        }
+        joystick_apply_move(&sx, &sz);
     }
     float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
@@ -3004,16 +2858,7 @@ void handle_movement(double dt) {
         int jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump;
         int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
 
-        if (g->gamepad_connected != -1) {
-            if (g->gamepad_state.digitalButton_count > GAMEPAD_A &&
-                g->gamepad_state.digitalButton[GAMEPAD_A]) jumping = 1;
-
-            if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_UP &&
-                g->gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) jumping = 1;
-
-            if (g->gamepad_state.digitalButton_count > GAMEPAD_DPAD_DOWN &&
-                g->gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) crouching = 1;
-        }
+        joystick_apply_buttons(&jumping, &crouching);
 
         if (jumping) {
             if (g->flying) {
@@ -3230,13 +3075,7 @@ int main(int argc, char **argv) {
     glfwSetCharCallback(g->window, on_char);
     glfwSetMouseButtonCallback(g->window, on_mouse_button);
     glfwSetScrollCallback(g->window, on_scroll);
-    g->gamepad_connected = -1;
-#ifdef USE_EM_GAMEPAD
-    emscripten_set_gamepadconnected_callback(NULL, EM_FALSE, on_gamepadconnected);
-    emscripten_set_gamepaddisconnected_callback(NULL, EM_FALSE, on_gamepaddisconnected);
-#else
-    glfwSetJoystickCallback(on_joystick_connection);
-#endif
+    init_joystick_callbacks();
 
 #ifdef __EMSCRIPTEN__
     emscripten_set_touchstart_callback(NULL, NULL, EM_FALSE, on_touchstart);
