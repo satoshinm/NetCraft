@@ -690,7 +690,7 @@ int hit_test(
 int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
     State *s = &player->state;
     int w = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
-    if (is_obstacle(w)) {
+
         int hx, hy, hz;
         hit_test(1, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
         int dx = hx - *x;
@@ -716,7 +716,7 @@ int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
             int top = ((degrees + 45) / 90) % 4;
             *face = 4 + top; return 1;
         }
-    }
+
     return 0;
 }
 
@@ -2183,10 +2183,13 @@ void on_light() {
     }
 }
 
+int get_targeted_block(int *hx, int *hy, int *hz, int *face) {
+    return hit_test_face(g->players, hx, hy, hz, face);
+}
+
 void on_mine() {
-    State *s = &g->players->state;
-    int hx, hy, hz;
-    int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+    int hx, hy, hz, face;
+    int hw = get_targeted_block(&hx, &hy, &hz, &face);
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
         record_block(hx, hy, hz, 0);
