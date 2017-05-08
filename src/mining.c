@@ -5,9 +5,6 @@ static int holding_mine_button = 0;
 static int building_progress = 0;
 static int holding_build_button = 0;
 
-extern void on_mine();
-extern void on_build();
-
 void mining_stop() {
     holding_mine_button = 0;
     mining_progress = 0;
