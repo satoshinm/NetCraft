@@ -210,12 +210,28 @@ int is_illuminated(int w) {
 }
 
 int is_hardness(int w) {
-    // TODO: more comprehensive variable hardness
+    if (is_plant(w)) return 0;
+
     switch (w) {
+        case LEAVES:
+            return 3;
         case SAND:
             return 5;
-        case TALL_GRASS:
-            return 0;
+        case WOOD:
+        case PLANK:
+        case CHEST:
+            return 7;
+        case GLASS:
+            return 8;
+
+        case STONE:
+        case BRICK:
+        case CEMENT:
+        case COBBLE:
+        case LIGHT_STONE:
+        case DARK_STONE:
+            return 13;
+
         default:
             return 10;
     }
