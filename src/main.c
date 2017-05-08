@@ -690,7 +690,7 @@ int hit_test(
 int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
     State *s = &player->state;
     int w = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
-
+    if (is_obstacle(w)) {
         int hx, hy, hz;
         hit_test(1, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
         int dx = hx - *x;
@@ -716,7 +716,7 @@ int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
             int top = ((degrees + 45) / 90) % 4;
             *face = 4 + top; return 1;
         }
-
+    }
     return 0;
 }
 
@@ -2183,13 +2183,14 @@ void on_light() {
     }
 }
 
-int get_targeted_block(int *hx, int *hy, int *hz, int *face) {
-    return hit_test_face(g->players, hx, hy, hz, face);
+int get_targeted_block(int *hx, int *hy, int *hz) {
+    State *s = &g->players->state;
+    return hit_test(0, s->x, s->y, s->z, s->rx, s->ry, hx, hy, hz);
 }
 
 void on_mine() {
-    int hx, hy, hz, face;
-    int hw = get_targeted_block(&hx, &hy, &hz, &face);
+    int hx, hy, hz;
+    int hw = get_targeted_block(&hx, &hy, &hz);
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
         record_block(hx, hy, hz, 0);
@@ -3370,12 +3371,22 @@ void render_scene() {
                 char am_pm = hour < 12 ? 'a' : 'p';
                 hour = hour % 12;
                 hour = hour ? hour : 12;
+
+                // Targeted block information
+                // TODO: also show face (hit_target_face? but note return type)
+                int hx, hy, hz, hw;
+                hw = mining_get_target(&hx, &hy, &hz);
+                char block_info[256] = {0};
+                if (hw) snprintf(block_info, 256,
+                        "{%d, %d, %d} #%d %s", hx, hy, hz, hw, item_names[hw]);
+
                 snprintf(
                     text_buffer, 1024,
-                    "(%d, %d) (%.2f, %.2f, %.2f) [%d, %d, %d] %d%cm %dfps",
+                    "(%d, %d) (%.2f, %.2f, %.2f) [%d, %d, %d] %d%cm %dfps %s",
                     chunked(s->x), chunked(s->z), s->x, s->y, s->z,
                     g->player_count, g->chunk_count,
-                    face_count * 2, hour, am_pm, fps.fps);
+                    face_count * 2, hour, am_pm, fps.fps,
+                    block_info);
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
                 ty -= ts * 2;
             }
