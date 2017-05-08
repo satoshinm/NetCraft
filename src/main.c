@@ -690,7 +690,7 @@ int hit_test(
 int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
     State *s = &player->state;
     int w = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
-    if (is_obstacle(w)) {
+
         int hx, hy, hz;
         hit_test(1, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
         int dx = hx - *x;
@@ -716,7 +716,7 @@ int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
             int top = ((degrees + 45) / 90) % 4;
             *face = 4 + top; return 1;
         }
-    }
+
     return 0;
 }
 
