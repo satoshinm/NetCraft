@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "item.h"
 #include "util.h"
 
@@ -211,7 +212,7 @@ const int plants[256] = {
     54, // 23 - blue flower
 };
 
-int is_plant(int w) {
+bool is_plant(int w) {
     switch (w) {
         case TALL_GRASS:
         case YELLOW_FLOWER:
@@ -220,51 +221,51 @@ int is_plant(int w) {
         case SUN_FLOWER:
         case WHITE_FLOWER:
         case BLUE_FLOWER:
-            return 1;
+            return true;
         default:
-            return 0;
+            return false;
     }
 }
 
-int is_obstacle(int w) {
+bool is_obstacle(int w) {
     w = ABS(w);
     if (is_plant(w)) {
-        return 0;
+        return false;
     }
     switch (w) {
         case EMPTY:
         case CLOUD:
-            return 0;
+            return false;
         default:
-            return 1;
+            return true;
     }
 }
 
-int is_transparent(int w) {
+bool is_transparent(int w) {
     if (w == EMPTY) {
-        return 1;
+        return true;
     }
     w = ABS(w);
     if (is_plant(w)) {
-        return 1;
+        return true;
     }
     switch (w) {
         case EMPTY:
         case GLASS:
         case LEAVES:
-            return 1;
+            return true;
         default:
-            return 0;
+            return false;
     }
 }
 
-int is_destructable(int w) {
+bool is_destructable(int w) {
     switch (w) {
         case EMPTY:
         case CLOUD:
-            return 0;
+            return false;
         default:
-            return 1;
+            return true;
     }
 }
 

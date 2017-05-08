@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdbool.h>
 #include "cube.h"
 #include "item.h"
 #include "matrix.h"

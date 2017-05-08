@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "mining.h"
 #include "item.h"
 
