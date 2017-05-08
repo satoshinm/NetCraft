@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "mining.h"
 #include "item.h"
 
@@ -7,14 +6,11 @@ static int holding_mine_button = 0;
 static int building_progress = 0;
 static int holding_build_button = 0;
 
-static int mining_x = 0;
-static int mining_y = 0;
-static int mining_z = 0;
-static int mining_face = 0;
+static int mining_x = 0, mining_y = 0, mining_z = 0;
 
 extern void on_mine();
 extern void on_build();
-extern int get_targeted_block(int *hx, int *hy, int *hz, int *face);
+extern int get_targeted_block(int *hx, int *hy, int *hz);
 
 void mining_stop() {
     holding_mine_button = 0;
@@ -23,8 +19,8 @@ void mining_stop() {
 
 void mining_tick() {
     if (holding_mine_button) {
-        int x, y, z, face;
-        int w = get_targeted_block(&x, &y, &z, &face);
+        int x, y, z;
+        int w = get_targeted_block(&x, &y, &z);
 
         if (x != mining_x || y != mining_y || z != mining_z) {
             mining_x = x;
@@ -49,7 +45,7 @@ void mining_tick() {
 void mining_start() {
     holding_mine_button = 1;
 
-    (void) get_targeted_block(&mining_x, &mining_y, &mining_z, &mining_face);
+    (void) get_targeted_block(&mining_x, &mining_y, &mining_z);
 }
 
 
