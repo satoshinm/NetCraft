@@ -3375,7 +3375,7 @@ void render_scene() {
                 // Targeted block information
                 // TODO: also show face (hit_target_face? but note return type)
                 int hx, hy, hz, hw;
-                hw = get_targeted_block(&hx, &hy, &hz);
+                hw = mining_get_target(&hx, &hy, &hz);
                 char block_info[256] = {0};
                 if (hw) snprintf(block_info, 256,
                         "{%d, %d, %d} #%d %s", hx, hy, hz, hw, item_names[hw]);

@@ -1,3 +1,4 @@
+int mining_get_target(int *hx, int *hy, int *hz);
 void mining_stop();
 void mining_tick();
 void mining_start();
