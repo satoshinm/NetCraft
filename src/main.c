@@ -3372,11 +3372,13 @@ void render_scene() {
                 hour = hour % 12;
                 hour = hour ? hour : 12;
 
-                int hx, hy, hz, hw, hface;
-                hw = get_targeted_block(&hx, &hy, &hz, &hface);
+                // Targeted block information
+                // TODO: also show face (hit_target_face? but note return type)
+                int hx, hy, hz, hw;
+                hw = get_targeted_block(&hx, &hy, &hz);
                 char block_info[256] = {0};
                 if (hw) snprintf(block_info, 256,
-                        "%d,%d,%d,%d %d ", hx, hy, hz, hface, hw);
+                        "{%d, %d, %d} #%d %s", hx, hy, hz, hw, item_names[hw]);
 
                 snprintf(
                     text_buffer, 1024,
