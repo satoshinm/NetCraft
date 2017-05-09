@@ -711,15 +711,6 @@ int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
             int top = ((degrees + 45) / 90) % 4;
             *face = 4 + top; return w;
         }
-        if (dx == 0 && dy == -1 && dz == 0) {
-            int degrees = roundf(DEGREES(atan2f(s->x - hx, s->z - hz)));
-            if (degrees < 0) {
-                degrees += 360;
-            }
-            int top = ((degrees + 45) / 90) % 4;
-            *face = 4 + top; return w;
-        }
-
     }
     return 0;
 }
@@ -784,12 +775,12 @@ bool player_intersects_block(
 int _gen_sign_buffer(
     GLfloat *data, float x, float y, float z, int face, const char *text)
 {
-    static const int glyph_dx[12] = {0, 0, -1, 1, 1, 0, -1, 0, 1, 0, -1, 0};
-    static const int glyph_dz[12] = {1, -1, 0, 0, 0, -1, 0, 1, 0, -1, 0, 1};
-    static const int line_dx[12] = {0, 0, 0, 0, 0, 1, 0, -1, 0, 1, 0, -1};
-    static const int line_dy[12] = {-1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0};
-    static const int line_dz[12] = {0, 0, 0, 0, 1, 0, -1, 0, 1, 0, -1, 0};
-    if (face < 0 || face >= 12) {
+    static const int glyph_dx[8] = {0, 0, -1, 1, 1, 0, -1, 0};
+    static const int glyph_dz[8] = {1, -1, 0, 0, 0, -1, 0, 1};
+    static const int line_dx[8] = {0, 0, 0, 0, 0, 1, 0, -1};
+    static const int line_dy[8] = {-1, -1, -1, -1, 0, 0, 0, 0};
+    static const int line_dz[8] = {0, 0, 0, 0, 1, 0, -1, 0};
+    if (face < 0 || face >= 8) {
         return 0;
     }
     int count = 0;
