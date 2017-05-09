@@ -59,7 +59,7 @@ typedef struct {
     int q;
     int faces;
     int sign_faces;
-    int dirty;
+    bool dirty;
     int miny;
     int maxy;
     GLuint buffer;
@@ -69,7 +69,7 @@ typedef struct {
 typedef struct {
     int p;
     int q;
-    int load;
+    bool load;
     Map *block_maps[3][3];
     Map *light_maps[3][3];
     int miny;
@@ -444,7 +444,7 @@ Player *find_player(int id) {
 }
 
 void update_player(Player *player,
-    float x, float y, float z, float rx, float ry, int interpolate)
+    float x, float y, float z, float rx, float ry, bool interpolate)
 {
     if (interpolate) {
         State *s1 = &player->state1;
@@ -482,7 +482,7 @@ void interpolate_player(Player *player) {
         s1->z + (s2->z - s1->z) * p,
         s1->rx + (s2->rx - s1->rx) * p,
         s1->ry + (s2->ry - s1->ry) * p,
-        0);
+        false);
 }
 
 void delete_player(int id) {
@@ -626,7 +626,7 @@ int highest_block(float x, float z) {
 }
 
 int _hit_test(
-    Map *map, float max_distance, int previous,
+    Map *map, float max_distance, bool previous,
     float x, float y, float z,
     float vx, float vy, float vz,
     int *hx, int *hy, int *hz)
@@ -658,7 +658,7 @@ int _hit_test(
 }
 
 int hit_test(
-    int previous, float x, float y, float z, float rx, float ry,
+    bool previous, float x, float y, float z, float rx, float ry,
     int *bx, int *by, int *bz)
 {
     int result = 0;
@@ -688,26 +688,26 @@ int hit_test(
     return result;
 }
 
-int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
+bool hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
     State *s = &player->state;
-    int w = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
+    int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
     if (is_obstacle(w)) {
         int hx, hy, hz;
-        hit_test(1, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+        hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
         int dx = hx - *x;
         int dy = hy - *y;
         int dz = hz - *z;
         if (dx == -1 && dy == 0 && dz == 0) {
-            *face = 0; return 1;
+            *face = 0; return true;
         }
         if (dx == 1 && dy == 0 && dz == 0) {
-            *face = 1; return 1;
+            *face = 1; return true;
         }
         if (dx == 0 && dy == 0 && dz == -1) {
-            *face = 2; return 1;
+            *face = 2; return true;
         }
         if (dx == 0 && dy == 0 && dz == 1) {
-            *face = 3; return 1;
+            *face = 3; return true;
         }
         if (dx == 0 && dy == 1 && dz == 0) {
             int degrees = roundf(DEGREES(atan2f(s->x - hx, s->z - hz)));
@@ -715,14 +715,14 @@ int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
                 degrees += 360;
             }
             int top = ((degrees + 45) / 90) % 4;
-            *face = 4 + top; return 1;
+            *face = 4 + top; return true;
         }
     }
-    return 0;
+    return false;
 }
 
-int collide(int height, float *x, float *y, float *z) {
-    int result = 0;
+bool collide(int height, float *x, float *y, float *z) {
+    bool result = false;
     int p = chunked(*x);
     int q = chunked(*z);
     Chunk *chunk = find_chunk(p, q);
@@ -746,11 +746,11 @@ int collide(int height, float *x, float *y, float *z) {
         }
         if (py < -pad && is_obstacle(map_get(map, nx, ny - dy - 1, nz))) {
             *y = ny - pad;
-            result = 1;
+            result = true;
         }
         if (py > pad && is_obstacle(map_get(map, nx, ny - dy + 1, nz))) {
             *y = ny + pad;
-            result = 1;
+            result = true;
         }
         if (pz < -pad && is_obstacle(map_get(map, nx, ny - dy, nz - 1))) {
             *z = nz - pad;
@@ -762,7 +762,7 @@ int collide(int height, float *x, float *y, float *z) {
     return result;
 }
 
-int player_intersects_block(
+bool player_intersects_block(
     int height,
     float x, float y, float z,
     int hx, int hy, int hz)
@@ -772,10 +772,10 @@ int player_intersects_block(
     int nz = roundf(z);
     for (int i = 0; i < height; i++) {
         if (nx == hx && ny - i == hy && nz == hz) {
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
 int _gen_sign_buffer(
@@ -865,9 +865,9 @@ void gen_sign_buffer(Chunk *chunk) {
     chunk->sign_faces = faces;
 }
 
-int has_lights(Chunk *chunk) {
+bool has_lights(Chunk *chunk) {
     if (!SHOW_LIGHTS) {
-        return 0;
+        return false;
     }
     for (int dp = -1; dp <= 1; dp++) {
         for (int dq = -1; dq <= 1; dq++) {
@@ -880,21 +880,21 @@ int has_lights(Chunk *chunk) {
             }
             Map *map = &other->lights;
             if (map->size) {
-                return 1;
+                return true;
             }
         }
     }
-    return 0;
+    return false;
 }
 
 void dirty_chunk(Chunk *chunk) {
-    chunk->dirty = 1;
+    chunk->dirty = true;
     if (has_lights(chunk)) {
         for (int dp = -1; dp <= 1; dp++) {
             for (int dq = -1; dq <= 1; dq++) {
                 Chunk *other = find_chunk(chunk->p + dp, chunk->q + dq);
                 if (other) {
-                    other->dirty = 1;
+                    other->dirty = true;
                 }
             }
         }
@@ -1190,7 +1190,7 @@ void gen_chunk_buffer(Chunk *chunk) {
     }
     compute_chunk(item);
     generate_chunk(chunk, item);
-    chunk->dirty = 0;
+    chunk->dirty = false;
 }
 
 void map_set_func(int x, int y, int z, int w, void *arg) {
@@ -1399,10 +1399,10 @@ void ensure_chunks_worker(Player *player, Worker *worker) {
     }
     int a = best_a;
     int b = best_b;
-    int load = 0;
+    bool load = false;
     Chunk *chunk = find_chunk(a, b);
     if (!chunk) {
-        load = 1;
+        load = true;
         if (g->chunk_count < MAX_CHUNKS) {
             chunk = g->chunks + g->chunk_count++;
             init_chunk(chunk, a, b);
@@ -1435,7 +1435,7 @@ void ensure_chunks_worker(Player *player, Worker *worker) {
             }
         }
     }
-    chunk->dirty = 0;
+    chunk->dirty = false;
     worker->state = WORKER_BUSY;
     cnd_signal(&worker->cnd);
 }
@@ -1455,7 +1455,7 @@ void ensure_chunks(Player *player) {
 
 int worker_run(void *arg) {
     Worker *worker = (Worker *)arg;
-    int running = 1;
+    bool running = true;
     while (running) {
         mtx_lock(&worker->mtx);
         while (worker->state != WORKER_BUSY) {
@@ -1481,7 +1481,7 @@ void unset_sign(int x, int y, int z) {
     if (chunk) {
         SignList *signs = &chunk->signs;
         if (sign_list_remove_all(signs, x, y, z)) {
-            chunk->dirty = 1;
+            chunk->dirty = true;
             db_delete_signs(x, y, z);
         }
     }
@@ -1497,7 +1497,7 @@ void unset_sign_face(int x, int y, int z, int face) {
     if (chunk) {
         SignList *signs = &chunk->signs;
         if (sign_list_remove(signs, x, y, z, face)) {
-            chunk->dirty = 1;
+            chunk->dirty = true;
             db_delete_sign(x, y, z, face);
         }
     }
@@ -1507,7 +1507,7 @@ void unset_sign_face(int x, int y, int z, int face) {
 }
 
 void _set_sign(
-    int p, int q, int x, int y, int z, int face, const char *text, int dirty)
+    int p, int q, int x, int y, int z, int face, const char *text, bool dirty)
 {
     if (strlen(text) == 0) {
         unset_sign_face(x, y, z, face);
@@ -1518,7 +1518,7 @@ void _set_sign(
         SignList *signs = &chunk->signs;
         sign_list_add(signs, x, y, z, face, text);
         if (dirty) {
-            chunk->dirty = 1;
+            chunk->dirty = true;
         }
     }
     db_insert_sign(p, q, x, y, z, face, text);
@@ -1527,7 +1527,7 @@ void _set_sign(
 void set_sign(int x, int y, int z, int face, const char *text) {
     int p = chunked(x);
     int q = chunked(z);
-    _set_sign(p, q, x, y, z, face, text, 1);
+    _set_sign(p, q, x, y, z, face, text, true);
     client_sign(x, y, z, face, text);
 }
 
@@ -1559,7 +1559,7 @@ void set_light(int p, int q, int x, int y, int z, int w) {
     }
 }
 
-void _set_block(int p, int q, int x, int y, int z, int w, int dirty) {
+void _set_block(int p, int q, int x, int y, int z, int w, bool dirty) {
     Chunk *chunk = find_chunk(p, q);
     if (chunk) {
         Map *map = &chunk->map;
@@ -1582,7 +1582,7 @@ void _set_block(int p, int q, int x, int y, int z, int w, int dirty) {
 void set_block(int x, int y, int z, int w) {
     int p = chunked(x);
     int q = chunked(z);
-    _set_block(p, q, x, y, z, w, 1);
+    _set_block(p, q, x, y, z, w, true);
     for (int dx = -1; dx <= 1; dx++) {
         for (int dz = -1; dz <= 1; dz++) {
             if (dx == 0 && dz == 0) {
@@ -1594,7 +1594,7 @@ void set_block(int x, int y, int z, int w) {
             if (dz && chunked(z + dz) == q) {
                 continue;
             }
-            _set_block(p + dx, q + dz, x, y, z, -w, 1);
+            _set_block(p + dx, q + dz, x, y, z, -w, true);
         }
     }
     client_block(x, y, z, w);
@@ -1765,7 +1765,7 @@ void render_wireframe(Attrib *attrib, Player *player) {
         matrix, g->width, g->height,
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
     int hx = -1, hy = -1, hz = -1;
-    int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+    int hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
     if (is_obstacle(hw)) {
         glUseProgram(attrib->program);
         glLineWidth(1);
@@ -2066,7 +2066,7 @@ void set_db_path() {
 #endif
 }
 
-void parse_command(const char *buffer, int forward) {
+void parse_command(const char *buffer, bool forward) {
     char username[128] = {0};
     char token[128] = {0};
     char server_addr[MAX_ADDR_LENGTH];
@@ -2178,7 +2178,7 @@ void parse_command(const char *buffer, int forward) {
 void on_light() {
     State *s = &g->players->state;
     int hx, hy, hz;
-    int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+    int hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         toggle_light(hx, hy, hz);
     }
@@ -2186,7 +2186,7 @@ void on_light() {
 
 int get_targeted_block(int *hx, int *hy, int *hz) {
     State *s = &g->players->state;
-    return hit_test(0, s->x, s->y, s->z, s->rx, s->ry, hx, hy, hz);
+    return hit_test(false, s->x, s->y, s->z, s->rx, s->ry, hx, hy, hz);
 }
 
 void on_mine() {
@@ -2204,10 +2204,10 @@ void on_mine() {
 void on_build() {
     State *s = &g->players->state;
     int hx, hy, hz;
-    int hw = hit_test(1, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+    int hw = hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
     if (hy > 0 && hy < 256) {
         if (!is_obstacle(hw)) {
-            hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+            hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
         }
 
         if (!player_intersects_block(2, s->x, s->y, s->z, hx, hy, hz)) {
@@ -2220,7 +2220,7 @@ void on_build() {
 void on_middle_click() {
     State *s = &g->players->state;
     int hx, hy, hz;
-    int hw = hit_test(0, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+    int hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
     for (int i = 0; i < item_count; i++) {
         if (items[i] == hw) {
             g->item_index = i;
@@ -2241,9 +2241,9 @@ void change_ortho_zoom(double ydelta) {
 
 void fullscreen_toggle();
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
-    int control = mods & GLFW_MOD_CONTROL;
+    bool control = (mods & GLFW_MOD_CONTROL) != 0;
     if (window == NULL) window = g->window;
-    int exclusive =
+    bool exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
         if (!g->typing) {
@@ -2318,7 +2318,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
                     }
                 }
                 else if (g->typing_buffer[0] == '/') {
-                    parse_command(g->typing_buffer, 1);
+                    parse_command(g->typing_buffer, true);
                 }
                 else {
                     client_talk(g->typing_buffer);
@@ -2342,7 +2342,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
                 MAX_TEXT_LENGTH - strlen(g->typing_buffer) - 1);
         }
         else {
-            parse_command(buffer, 0);
+            parse_command(buffer, false);
         }
     }
     if (!g->typing) {
@@ -2550,11 +2550,11 @@ EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChan
     return EM_TRUE;
 }
 
-int is_fullscreen() {
+bool is_fullscreen() {
     EmscriptenFullscreenChangeEvent fsce;
 
     emscripten_get_fullscreen_status(&fsce);
-    return fsce.isFullscreen;
+    return fsce.isFullscreen != 0;
 }
 
 void fullscreen_exit() {
@@ -2592,8 +2592,8 @@ void fullscreen_enter() {
 }
 
 #else
-int is_fullscreen() {
-    return !!glfwGetWindowMonitor(g->window);
+bool is_fullscreen() {
+    return glfwGetWindowMonitor(g->window) != NULL;
 }
 
 void fullscreen_exit() {
@@ -2701,7 +2701,7 @@ void create_window() {
 }
 
 void handle_mouse_input() {
-    int exclusive =
+    bool exclusive =
 #ifdef __EMSCRIPTEN__
         touch_active ||
 #endif
@@ -2797,7 +2797,7 @@ void handle_movement(double dt) {
         }
         if (crouching) {
             if (g->flying) {
-                int exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
+                bool exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
                 if (exclusive || !glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
                     vy--;
@@ -2859,7 +2859,7 @@ void parse_buffer(char *buffer) {
         if (sscanf(line, "B,%d,%d,%d,%d,%d,%d",
             &bp, &bq, &bx, &by, &bz, &bw) == 6)
         {
-            _set_block(bp, bq, bx, by, bz, bw, 0);
+            _set_block(bp, bq, bx, by, bz, bw, false);
             if (player_intersects_block(2, s->x, s->y, s->z, bx, by, bz)) {
                 s->y = highest_block(s->x, s->z) + 2;
             }
@@ -2880,10 +2880,10 @@ void parse_buffer(char *buffer) {
                 player->id = pid;
                 player->buffer = 0;
                 snprintf(player->name, MAX_NAME_LENGTH, "player%d", pid);
-                update_player(player, px, py, pz, prx, pry, 1); // twice
+                update_player(player, px, py, pz, prx, pry, true); // twice
             }
             if (player) {
-                update_player(player, px, py, pz, prx, pry, 1);
+                update_player(player, px, py, pz, prx, pry, true);
             }
         }
         if (sscanf(line, "D,%d", &pid) == 1) {
@@ -2972,8 +2972,8 @@ static Attrib line_attrib = {0};
 static Attrib text_attrib = {0};
 static Attrib sky_attrib = {0};
 static GLuint sky_buffer;
-static int g_running;
-static int g_inner_break;
+static bool g_running;
+static bool g_inner_break;
 
 
 int main(int argc, char **argv) {
@@ -3109,7 +3109,7 @@ int main(int argc, char **argv) {
     }
 
     // OUTER LOOP //
-    g_running = 1;
+    g_running = true;
 #ifdef __EMSCRIPTEN__
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
@@ -3117,7 +3117,7 @@ int main(int argc, char **argv) {
 #else
     while (g_running) {
         main_init(NULL);
-        g_inner_break = 0;
+        g_inner_break = false;
         while (1) {
             one_iter();
             if (g_inner_break) break;
@@ -3302,17 +3302,17 @@ void one_iter() {
             glfwSwapBuffers(g->window);
             glfwPollEvents();
             if (glfwWindowShouldClose(g->window)) {
-                g_running = 0;
-                g_inner_break = 1;
+                g_running = false;
+                g_inner_break = true;
             }
             if (g->mode_changed) {
                 g->mode_changed = false;
-                g_inner_break = 1;
+                g_inner_break = true;
             }
 
 #ifdef __EMSCRIPTEN__
     if (g_inner_break) {
-        g_inner_break = 0;
+        g_inner_break = false;
         main_shutdown();
         emscripten_cancel_main_loop();
         emscripten_push_main_loop_blocker(main_init, NULL);
