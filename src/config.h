@@ -2,30 +2,30 @@
 #define _config_h_
 
 // app parameters
-#define DEBUG 0
-#define FULLSCREEN 0
+#define DEBUG true
+#define FULLSCREEN false
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
-#define VSYNC 1
+#define VSYNC true
 #define SCROLL_THRESHOLD 0.1
 #define JUMP_FLY_THRESHOLD 0.2
-#define SCROLL_BLOCK_SELECT 1
+#define SCROLL_BLOCK_SELECT true
 #define MAX_MESSAGES 4
 #define DB_PATH "craft.db"
 #ifdef __EMSCRIPTEN__
-#define USE_CACHE 0
+#define USE_CACHE false
 #else
-#define USE_CACHE 1
+#define USE_CACHE true
 #endif
 #define DAY_LENGTH 600
-#define INVERT_MOUSE 0
+#define INVERT_MOUSE false
 #define PLAYER_NAME_DISTANCE 96 // Maximum distance to display a player's name at
 
 // rendering options
-#define SHOW_LIGHTS 1
-#define SHOW_PLANTS 1
-#define SHOW_CLOUDS 1
-#define SHOW_TREES 1
+#define SHOW_LIGHTS true
+#define SHOW_PLANTS true
+#define SHOW_CLOUDS true
+#define SHOW_TREES true
 #define SHOW_ITEM true
 #define SHOW_CROSSHAIRS true
 #define SHOW_WIREFRAME true

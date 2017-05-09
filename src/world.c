@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "config.h"
 #include "noise.h"
 #include "world.h"
