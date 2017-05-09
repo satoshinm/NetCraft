@@ -2782,8 +2782,8 @@ void handle_movement(double dt) {
     float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
     if (!g->typing) {
-        int jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) || touch_jump;
-        int crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH);
+        bool jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) != GLFW_RELEASE || touch_jump;
+        bool crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH) != GLFW_RELEASE;
 
         joystick_apply_buttons(&jumping, &crouching);
 

@@ -1,5 +1,6 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include "joy.h"
 #include "config.h"
@@ -20,7 +21,7 @@ static struct {
     const unsigned char *digitalButton;
 } gamepad_state;
 
-int is_gamepad_connected() {
+bool is_gamepad_connected() {
     return gamepad_connected != -1;
 }
 
@@ -185,17 +186,17 @@ void joystick_apply_look(double *mx, double *my, double px, double py) {
     }
 }
 
-void joystick_apply_buttons(int *jumping, int *crouching) {
+void joystick_apply_buttons(bool *jumping, bool *crouching) {
     if (gamepad_connected == -1) return;
 
     if (gamepad_state.digitalButton_count > GAMEPAD_A &&
-        gamepad_state.digitalButton[GAMEPAD_A]) *jumping = 1;
+        gamepad_state.digitalButton[GAMEPAD_A]) *jumping = true;
 
     if (gamepad_state.digitalButton_count > GAMEPAD_DPAD_UP &&
-        gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) *jumping = 1;
+        gamepad_state.digitalButton[GAMEPAD_DPAD_UP]) *jumping = true;
 
     if (gamepad_state.digitalButton_count > GAMEPAD_DPAD_DOWN &&
-        gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) *crouching = 1;
+        gamepad_state.digitalButton[GAMEPAD_DPAD_DOWN]) *crouching = true;
 }
 
 
