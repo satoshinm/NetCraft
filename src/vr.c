@@ -178,6 +178,7 @@ void init_vr(GLFWwindow *window) {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
     glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, texture);
     glfwGetFramebufferSize(window, &width, &height);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
