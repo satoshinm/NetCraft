@@ -10,21 +10,24 @@ static bool holding_build_button = false;
 static int mining_x = 0;
 static int mining_y = 0;
 static int mining_z = 0;
+static int mining_face = 0;
 
 static int target_x = 0;
 static int target_y = 0;
 static int target_z = 0;
+static int target_face = 0;
 static int target_w = 0;
 
 extern void on_mine();
 extern void on_build();
-extern int get_targeted_block(int *hx, int *hy, int *hz);
+extern int get_targeted_block(int *hx, int *hy, int *hz, int *face);
 
 // Get cached mining target (fast)
-int mining_get_target(int *hx, int *hy, int *hz) {
+int mining_get_target(int *hx, int *hy, int *hz, int *face) {
     *hx = target_x;
     *hy = target_y;
     *hz = target_z;
+    *face = target_face;
     return target_w;
 }
 
@@ -35,7 +38,7 @@ void mining_stop() {
 
 void mining_tick() {
     // Retarget block every tick
-    target_w = get_targeted_block(&target_x, &target_y, &target_z);
+    target_w = get_targeted_block(&target_x, &target_y, &target_z, &target_face);
 
     if (holding_mine_button) {
         if (target_x != mining_x || target_y != mining_y || target_z != mining_z) {
@@ -61,7 +64,7 @@ void mining_tick() {
 void mining_start() {
     holding_mine_button = true;
 
-    (void) get_targeted_block(&mining_x, &mining_y, &mining_z);
+    (void) get_targeted_block(&mining_x, &mining_y, &mining_z, &mining_face);
 }
 
 
