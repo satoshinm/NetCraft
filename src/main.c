@@ -31,6 +31,7 @@
 #include "vr.h"
 #include "joy.h"
 #include "touch.h"
+#include "fullscreen.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -146,13 +147,6 @@ typedef struct {
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
     int width;
     int height;
-    int window_width;
-    int window_height;
-    int window_xpos;
-    int window_ypos;
-    GLFWmonitor *fullscreen_monitor;
-    int fullscreen_width;
-    int fullscreen_height;
     int observe1;
     int observe2;
     bool flying;
@@ -2239,7 +2233,6 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
-void fullscreen_toggle();
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     bool control = (mods & GLFW_MOD_CONTROL) != 0;
     if (window == NULL) window = g->window;
@@ -2493,152 +2486,6 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 }
 
 
-#ifdef __EMSCRIPTEN__
-EM_BOOL on_canvassize_changed(int eventType, const void *reserved, void *userData) {
-    // Resize window to match canvas size (as browser is resized).
-    int w = 0;
-    int h = 0;
-    int isFullscreen = 0;
-    emscripten_get_canvas_size(&w, &h, &isFullscreen);
-
-    double cssW, cssH;
-    emscripten_get_element_css_size(0, &cssW, &cssH);
-
-    glfwSetWindowSize(g->window, w, h);
-
-    int fb_w, fb_h;
-    glfwGetFramebufferSize(g->window, &fb_w, &fb_h);
-
-    // http://www.glfw.org/docs/latest/window.html#window_size
-    // "Note
-    // Do not pass the window size to glViewport or other pixel-based OpenGL calls.
-    // The window size is in screen coordinates, not pixels. Use the framebuffer
-    // size, which is in pixels, for pixel-based calls."
-    int w_w, w_h;
-    glfwGetWindowSize(g->window, &w_w, &w_h);
-    //printf("Canvas resized: WebGL RTT size: %dx%d, framebuffer: %dx%d, window: %dx%d, canvas CSS size: %02gx%02g\n", w, h, fb_w, fb_h, w_w, w_h, cssW, cssH);
-
-
-    return EM_FALSE;
-}
-
-// Emscripten's "soft fullscreen" = maximizes the canvas in the browser client area, wanted to toggle soft/hard fullscreen
-void maximize_canvas() {
-    EmscriptenFullscreenStrategy strategy = {
-        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
-        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
-        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT, // or EMSCRIPTEN_FULLSCREEN_FILTERING_NEAREST
-        .canvasResizedCallback = on_canvassize_changed,
-        .canvasResizedCallbackUserData = NULL
-    };
-
-    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
-
-    on_canvassize_changed(0, NULL, NULL);
-}
-#endif
-
-#ifdef USE_EM_FULLSCREEN
-EM_BOOL fullscreen_change_callback(int eventType, const EmscriptenFullscreenChangeEvent *event, void *userData) {
-    printf("fullscreen_change_callback, isFullscreen=%d\n", event->isFullscreen);
-
-    if (!event->isFullscreen) {
-        // Go back to windowed mode with full-sized <canvas>, when user escapes out (instead of F11)
-        maximize_canvas();
-    }
-
-    return EM_TRUE;
-}
-
-bool is_fullscreen() {
-    EmscriptenFullscreenChangeEvent fsce;
-
-    emscripten_get_fullscreen_status(&fsce);
-    return fsce.isFullscreen != 0;
-}
-
-void fullscreen_exit() {
-    printf("Exiting fullscreen...\n");
-    emscripten_exit_fullscreen();
-
-    printf("Maximizing to canvas...\n");
-    maximize_canvas();
-}
-
-void fullscreen_enter() {
-    emscripten_exit_soft_fullscreen();
-
-    // Workaround https://github.com/kripken/emscripten/issues/5124#issuecomment-292849872
-    // Force JSEvents.canPerformEventHandlerRequests() in library_html5.js to be true
-    // For some reason it is not set even though we are in an event handler and it works
-    EM_ASM(JSEvents.inEventHandler = true);
-    EM_ASM(JSEvents.currentEventHandler = {allowsDeferredCalls:true});
-
-    // Enter fullscreen
-    /* this returns 1=EMSCRIPTEN_RESULT_DEFERRED if EM_TRUE is given to defer
-     * or -2=EMSCRIPTEN_RESULT_FAILED_NOT_DEFERRED if EM_FALSE
-     * but the EM_ASM() JS works immediately?
-     */
-    EmscriptenFullscreenStrategy strategy = {
-        .scaleMode = EMSCRIPTEN_FULLSCREEN_SCALE_STRETCH,
-        .canvasResolutionScaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF,
-        .filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT,
-        .canvasResizedCallback = on_canvassize_changed,
-        .canvasResizedCallbackUserData = NULL
-    };
-    EMSCRIPTEN_RESULT ret = emscripten_request_fullscreen_strategy(NULL, EM_FALSE, &strategy);
-    printf("emscripten_request_fullscreen_strategy = %d\n", ret);
-    //EM_ASM(Module.requestFullscreen(1, 1));
-}
-
-#else
-bool is_fullscreen() {
-    return glfwGetWindowMonitor(g->window) != NULL;
-}
-
-void fullscreen_exit() {
-    glfwSetWindowMonitor(g->window, NULL, g->window_xpos, g->window_ypos, g->window_width, g->window_height, GLFW_DONT_CARE);
-}
-
-void fullscreen_enter() {
-    glfwGetWindowPos(g->window, &g->window_xpos, &g->window_ypos);
-    glfwGetWindowSize(g->window, &g->window_width, &g->window_height);
-    glfwSetWindowMonitor(g->window, g->fullscreen_monitor, 0, 0, g->fullscreen_width, g->fullscreen_height, GLFW_DONT_CARE);
-}
-
-#endif
-
-void fullscreen_toggle() {
-    if (is_fullscreen()) {
-        fullscreen_exit();
-    } else {
-        fullscreen_enter();
-    }
-}
-
-void on_window_size(GLFWwindow* window, int width, int height) {
-#ifdef __EMSCRIPTEN__
-    static int inFullscreen = 0;
-    static int wasFullscreen = 0;
-
-    int isInFullscreen = EM_ASM_INT_V(return !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement));
-    if (isInFullscreen && !wasFullscreen) {
-        printf("Successfully transitioned to fullscreen mode!\n");
-        wasFullscreen = isInFullscreen;
-
-        // Set canvas size to full screen, all the pixels
-        EM_ASM("Browser.setCanvasSize(screen.width, screen.height)");
-    }
-
-    if (wasFullscreen && !isInFullscreen) {
-        wasFullscreen = isInFullscreen;
-        maximize_canvas();
-    }
-#endif
-
-    vr_update_viewport(width, height);
-}
-
 void on_file_drop(GLFWwindow *window, int count, const char **paths) {
     for (int i = 0; i < count; ++i) {
         const char *path = paths[i];
@@ -2660,40 +2507,11 @@ void on_file_drop(GLFWwindow *window, int count, const char **paths) {
 }
 
 
-void init_fullscreen_monitor_dimensions() {
-#ifndef USE_EM_FULLSCREEN
-    int mode_count;
-    g->fullscreen_monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode *mode = glfwGetVideoMode(g->fullscreen_monitor);
-    if (mode->width == 1920 && mode->height == 1080 && mode->refreshRate == 75) {
-        g->fullscreen_width = mode->width;
-        g->fullscreen_height= mode->height;
-        // This is the native mode for Oculus Rift DK2, even though it isn't the
-        // "highest" (last) resolution (which is 1600x2560), it is the native and
-        // what we want and need for correct 90 degree rotation.
-        printf("Using current video mode for fullscreen: %d x %d @ %d Hz\n", mode->width, mode->height, mode->refreshRate);
-    } else {
-        const GLFWvidmode *modes = glfwGetVideoModes(g->fullscreen_monitor, &mode_count);
-        g->fullscreen_width = modes[mode_count - 1].width;
-        g->fullscreen_height= modes[mode_count - 1].height;
-    }
-
-    GLFWwindow *test_window = glfwCreateWindow(
-        g->fullscreen_width, g->fullscreen_height, "Craft", NULL, NULL);
-    int scale = get_scale_factor(test_window);
-    glfwDestroyWindow(test_window);
-    g->fullscreen_width /= scale;
-    g->fullscreen_height /= scale;
-#else
-    emscripten_set_fullscreenchange_callback(NULL, NULL, EM_TRUE, fullscreen_change_callback);
-#endif
-}
-
 void create_window() {
-    init_fullscreen_monitor_dimensions();
-
     g->window = glfwCreateWindow(
         WINDOW_WIDTH, WINDOW_HEIGHT, "Craft", NULL, NULL);
+
+    init_fullscreen_monitor_dimensions(g->window);
 
     if (FULLSCREEN) {
         fullscreen_toggle();
@@ -2996,7 +2814,6 @@ int main(int argc, char **argv) {
 
     glfwMakeContextCurrent(g->window);
     glfwSetInputMode(g->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetWindowSizeCallback(g->window, on_window_size);
     glfwSetDropCallback(g->window, on_file_drop);
     glfwSetKeyCallback(g->window, on_key);
     glfwSetCharCallback(g->window, on_char);
@@ -3027,10 +2844,6 @@ int main(int argc, char **argv) {
     glLogicOp(GL_INVERT);
 #endif
     glClearColor(0, 0, 0, 1);
-
-#ifdef __EMSCRIPTEN__
-    maximize_canvas();
-#endif
 
     // LOAD TEXTURES //
     load_block_texture("textures/texture.png");
