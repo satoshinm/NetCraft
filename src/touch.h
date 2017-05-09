@@ -1,6 +1,6 @@
 
-extern int touch_forward;
-extern int touch_jump;
+extern bool touch_forward;
+extern bool touch_jump;
 
 extern long touch_active;
 extern long touch_clientX;
