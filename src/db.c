@@ -1,10 +1,11 @@
 #include <string.h>
+#include <stdbool.h>
 #include "db.h"
 #include "ring.h"
 #include "sqlite3.h"
 #include "tinycthread.h"
 
-static int db_enabled = 0;
+static bool db_enabled = 0;
 
 static sqlite3 *db;
 static sqlite3_stmt *insert_block_stmt;
@@ -25,14 +26,14 @@ static cnd_t cnd;
 static mtx_t load_mtx;
 
 void db_enable() {
-    db_enabled = 1;
+    db_enabled = true;
 }
 
 void db_disable() {
-    db_enabled = 0;
+    db_enabled = false;
 }
 
-int get_db_enabled() {
+bool get_db_enabled() {
     return db_enabled;
 }
 
@@ -223,17 +224,17 @@ void db_auth_select_none() {
         NULL, NULL, NULL);
 }
 
-int db_auth_get(
+bool db_auth_get(
     char *username,
     char *identity_token, int identity_token_length)
 {
     if (!db_enabled) {
-        return 0;
+        return false;
     }
     static const char *query =
         "select token from auth.identity_token "
         "where username = ?;";
-    int result = 0;
+    bool result = false;
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
     sqlite3_bind_text(stmt, 1, username, -1, NULL);
@@ -241,23 +242,23 @@ int db_auth_get(
         const char *a = (const char *)sqlite3_column_text(stmt, 0);
         strncpy(identity_token, a, identity_token_length - 1);
         identity_token[identity_token_length - 1] = '\0';
-        result = 1;
+        result = true;
     }
     sqlite3_finalize(stmt);
     return result;
 }
 
-int db_auth_get_selected(
+bool db_auth_get_selected(
     char *username, int username_length,
     char *identity_token, int identity_token_length)
 {
     if (!db_enabled) {
-        return 0;
+        return false;
     }
     static const char *query =
         "select username, token from auth.identity_token "
         "where selected = 1;";
-    int result = 0;
+    bool result = false;
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
     if (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -267,7 +268,7 @@ int db_auth_get_selected(
         username[username_length - 1] = '\0';
         strncpy(identity_token, b, identity_token_length - 1);
         identity_token[identity_token_length - 1] = '\0';
-        result = 1;
+        result = true;
     }
     sqlite3_finalize(stmt);
     return result;
@@ -291,13 +292,13 @@ void db_save_state(float x, float y, float z, float rx, float ry) {
     sqlite3_finalize(stmt);
 }
 
-int db_load_state(float *x, float *y, float *z, float *rx, float *ry) {
+bool db_load_state(float *x, float *y, float *z, float *rx, float *ry) {
     if (!db_enabled) {
-        return 0;
+        return false;
     }
     static const char *query =
         "select x, y, z, rx, ry from state;";
-    int result = 0;
+    bool result = false;
     sqlite3_stmt *stmt;
     sqlite3_prepare_v2(db, query, -1, &stmt, NULL);
     if (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -306,7 +307,7 @@ int db_load_state(float *x, float *y, float *z, float *rx, float *ry) {
         *z = sqlite3_column_double(stmt, 2);
         *rx = sqlite3_column_double(stmt, 3);
         *ry = sqlite3_column_double(stmt, 4);
-        result = 1;
+        result = true;
     }
     sqlite3_finalize(stmt);
     return result;

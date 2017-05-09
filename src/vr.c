@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include "matrix.h"
 #include "util.h"
@@ -42,7 +43,7 @@ static GLfloat scaleIn[2];
 
 static GLuint quad_vertexbuffer;
 
-static int skipBarrelDistortion;
+static bool skipBarrelDistortion = false;
 
 struct {
     GLuint program;
@@ -124,7 +125,7 @@ void init_vr(GLFWwindow *window) {
     chromaAbParameter[3] = 0.0;
 
     worldFactor = 1;
-    skipBarrelDistortion = 0;
+    skipBarrelDistortion = false;
 
 
     // Compute aspect ratio and FOV

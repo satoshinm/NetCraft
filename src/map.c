@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include "map.h"
 
@@ -42,7 +43,7 @@ void map_copy(Map *dst, Map *src) {
     memcpy(dst->data, src->data, (dst->mask + 1) * sizeof(MapEntry));
 }
 
-int map_set(Map *map, int x, int y, int z, int w) {
+bool map_set(Map *map, int x, int y, int z, int w) {
     unsigned int index = hash(x, y, z) & map->mask;
     x -= map->dx;
     y -= map->dy;
@@ -60,7 +61,7 @@ int map_set(Map *map, int x, int y, int z, int w) {
     if (overwrite) {
         if (entry->e.w != w) {
             entry->e.w = w;
-            return 1;
+            return true;
         }
     }
     else if (w) {
@@ -72,9 +73,9 @@ int map_set(Map *map, int x, int y, int z, int w) {
         if (map->size * 2 > map->mask) {
             map_grow(map);
         }
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 int map_get(Map *map, int x, int y, int z) {

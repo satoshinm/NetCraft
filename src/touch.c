@@ -1,9 +1,10 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <stdbool.h>
 #include "mining.h"
 
-int touch_forward = 0;
-int touch_jump = 0;
+bool touch_forward = false;
+bool touch_jump = false;
 
 long touch_active = 0;
 long touch_clientX = 0;
@@ -18,7 +19,7 @@ void init_touch_callbacks(GLFWwindow *w) {}
 #include <emscripten/html5.h>
 
 static double touch_activated_at = 0;
-static int touch_just_activated = 0;
+static bool touch_just_activated = false;
 
 extern void set_just_clicked();
 
@@ -27,11 +28,11 @@ static EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEve
         // Another finger was touched when one was already touching.
         if (touchEvent->numTouches == 2) {
             // 2-finger = move forward
-            touch_forward = 1;
-            touch_jump = 0;
+            touch_forward = true;
+            touch_jump = false;
         } else if (touchEvent->numTouches == 3) {
             // 3-finger = jump
-            touch_jump = 1;
+            touch_jump = true;
         }
         // TODO: support other interesting gestures
         return EM_TRUE;
@@ -39,7 +40,7 @@ static EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEve
 
     touch_active = touchEvent->touches[0].identifier;
     touch_activated_at = glfwGetTime();
-    touch_just_activated = 1;
+    touch_just_activated = true;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     return EM_TRUE;
 }
@@ -47,7 +48,7 @@ static EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEve
 static EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     if (touch_just_activated) {
         set_just_clicked(); // ignore next movement, since two datapoints are needed to move
-        touch_just_activated = 0;
+        touch_just_activated = false;
     }
     touch_clientX = touchEvent->touches[0].clientX;
     touch_clientY = touchEvent->touches[0].clientY;
@@ -56,11 +57,11 @@ static EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEven
 
 static EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     if (touchEvent->numTouches <= 2) {
-        touch_forward = 0;
+        touch_forward = false;
     }
 
     if (touchEvent->numTouches <= 3) {
-        touch_jump = 0;
+        touch_jump = false;
     }
 
     for (int i = 0; i < touchEvent->numTouches; ++i) {

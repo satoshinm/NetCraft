@@ -1,10 +1,11 @@
+#include <stdbool.h>
 #include "mining.h"
 #include "item.h"
 
 static int mining_progress = 0;
-static int holding_mine_button = 0;
+static bool holding_mine_button = false;
 static int building_progress = 0;
-static int holding_build_button = 0;
+static bool holding_build_button = false;
 
 static int mining_x = 0;
 static int mining_y = 0;
@@ -28,8 +29,8 @@ int mining_get_target(int *hx, int *hy, int *hz) {
 }
 
 void mining_stop() {
-    holding_mine_button = 0;
-    mining_progress = 0;
+    holding_mine_button = false;
+    mining_progress = false;
 }
 
 void mining_tick() {
@@ -58,14 +59,14 @@ void mining_tick() {
 }
 
 void mining_start() {
-    holding_mine_button = 1;
+    holding_mine_button = true;
 
     (void) get_targeted_block(&mining_x, &mining_y, &mining_z);
 }
 
 
 void building_stop() {
-    holding_build_button = 0;
+    holding_build_button = false;
     building_progress = 0;
 }
 
@@ -82,6 +83,6 @@ void building_tick() {
 }
 
 void building_start() {
-    holding_build_button = 1;
+    holding_build_button = true;
     building_progress = BLOCK_BUILD_TIME; // place first instantly
 }

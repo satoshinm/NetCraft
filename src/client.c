@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 #include "client.h"
@@ -21,8 +22,8 @@
 #define QUEUE_SIZE 1048576
 #define RECV_SIZE 4096
 
-static int client_enabled = 0;
-static int running = 0;
+static bool client_enabled = false;
+static bool running = 0;
 static int sd = 0;
 static int bytes_sent = 0;
 static int bytes_received = 0;
@@ -32,14 +33,14 @@ static thrd_t recv_thread;
 static mtx_t mutex;
 
 void client_enable() {
-    client_enabled = 1;
+    client_enabled = true;
 }
 
 void client_disable() {
-    client_enabled = 0;
+    client_enabled = false;
 }
 
-int get_client_enabled() {
+bool get_client_enabled() {
     return client_enabled;
 }
 
@@ -296,7 +297,7 @@ void client_start() {
     if (!client_enabled) {
         return;
     }
-    running = 1;
+    running = true;
     queue = (char *)calloc(QUEUE_SIZE, sizeof(char));
     qsize = 0;
 #ifndef __EMSCRIPTEN__ // emscripten gets async message callbacks instead, no receiver thread
@@ -312,7 +313,7 @@ void client_stop() {
     if (!client_enabled) {
         return;
     }
-    running = 0;
+    running = false;
     close(sd);
     // if (thrd_join(recv_thread, NULL) != thrd_success) {
     //     perror("thrd_join");
