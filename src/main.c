@@ -685,7 +685,7 @@ int hit_test(
 int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
     State *s = &player->state;
     int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
-    if (1||is_obstacle(w)) {
+    if (is_obstacle(w)) {
         int hx, hy, hz;
         hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
         int dx = hx - *x;
