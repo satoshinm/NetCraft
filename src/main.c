@@ -682,7 +682,7 @@ int hit_test(
     return result;
 }
 
-int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
+bool hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
     State *s = &player->state;
     int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
     if (is_obstacle(w)) {
@@ -692,16 +692,16 @@ int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
         int dy = hy - *y;
         int dz = hz - *z;
         if (dx == -1 && dy == 0 && dz == 0) {
-            *face = 0; return w;
+            *face = 0; return true;
         }
         if (dx == 1 && dy == 0 && dz == 0) {
-            *face = 1; return w;
+            *face = 1; return true;
         }
         if (dx == 0 && dy == 0 && dz == -1) {
-            *face = 2; return w;
+            *face = 2; return true;
         }
         if (dx == 0 && dy == 0 && dz == 1) {
-            *face = 3; return w;
+            *face = 3; return true;
         }
         if (dx == 0 && dy == 1 && dz == 0) {
             int degrees = roundf(DEGREES(atan2f(s->x - hx, s->z - hz)));
@@ -709,10 +709,10 @@ int hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
                 degrees += 360;
             }
             int top = ((degrees + 45) / 90) % 4;
-            *face = 4 + top; return w;
+            *face = 4 + top; return true;
         }
     }
-    return 0;
+    return false;
 }
 
 bool collide(int height, float *x, float *y, float *z) {
