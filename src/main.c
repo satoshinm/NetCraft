@@ -698,13 +698,9 @@ int hit_test_normal(Player *player, int *x, int *y, int *z, int *nx, int *ny, in
 
 bool hit_test_face_rotation(Player *player, int *x, int *y, int *z, int *face, int *rotation) {
     State *s = &player->state;
-    int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
+    int dx, dy, dz;
+    int w = hit_test_normal(g->players, x, y, z, &dx, &dy, &dz);
     if (is_obstacle(w)) {
-        int hx, hy, hz;
-        hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
-        int dx = hx - *x;
-        int dy = hy - *y;
-        int dz = hz - *z;
         *rotation = 0;
         if (dx == -1 && dy == 0 && dz == 0) {
             *face = 0; return true;
@@ -719,7 +715,7 @@ bool hit_test_face_rotation(Player *player, int *x, int *y, int *z, int *face, i
             *face = 3; return true;
         }
         if (dx == 0 && dy == 1 && dz == 0) {
-            int degrees = roundf(DEGREES(atan2f(s->x - hx, s->z - hz)));
+            int degrees = roundf(DEGREES(atan2f(s->x - dx - *x, s->z - dz - *z)));
             if (degrees < 0) {
                 degrees += 360;
             }
