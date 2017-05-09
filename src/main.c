@@ -696,7 +696,7 @@ int hit_test_normal(Player *player, int *x, int *y, int *z, int *nx, int *ny, in
     return w;
 }
 
-bool hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
+bool hit_test_face_rotation(Player *player, int *x, int *y, int *z, int *face, int *rotation) {
     State *s = &player->state;
     int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
     if (is_obstacle(w)) {
@@ -705,6 +705,7 @@ bool hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
         int dx = hx - *x;
         int dy = hy - *y;
         int dz = hz - *z;
+        *rotation = 0;
         if (dx == -1 && dy == 0 && dz == 0) {
             *face = 0; return true;
         }
@@ -722,8 +723,9 @@ bool hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
             if (degrees < 0) {
                 degrees += 360;
             }
-            int top = ((degrees + 45) / 90) % 4;
-            *face = 4 + top; return true;
+            *rotation = ((degrees + 45) / 90) % 4;
+            *face = 4;
+            return true;
         }
     }
     return false;
@@ -1711,8 +1713,8 @@ void render_sign(Attrib *attrib, Player *player) {
     if (!g->typing || g->typing_buffer[0] != CRAFT_KEY_SIGN) {
         return;
     }
-    int x, y, z, face;
-    if (!hit_test_face(player, &x, &y, &z, &face)) {
+    int x, y, z, face, rotation;
+    if (!hit_test_face_rotation(player, &x, &y, &z, &face, &rotation)) {
         return;
     }
     State *s = &player->state;
@@ -1728,7 +1730,7 @@ void render_sign(Attrib *attrib, Player *player) {
     strncpy(text, g->typing_buffer + 1, MAX_SIGN_LENGTH);
     text[MAX_SIGN_LENGTH - 1] = '\0';
     GLfloat *data = malloc_faces(5, strlen(text));
-    int length = _gen_sign_buffer(data, x, y, z, face, text);
+    int length = _gen_sign_buffer(data, x, y, z, face + rotation, text);
     GLuint buffer = gen_faces(5, length, data);
     draw_sign(attrib, buffer, length);
     del_buffer(buffer);
@@ -2318,9 +2320,9 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
                 g->typing = false;
                 if (g->typing_buffer[0] == CRAFT_KEY_SIGN) {
                     Player *player = g->players;
-                    int x, y, z, face;
-                    if (hit_test_face(player, &x, &y, &z, &face)) {
-                        set_sign(x, y, z, face, g->typing_buffer + 1);
+                    int x, y, z, face, rotation;
+                    if (hit_test_face_rotation(player, &x, &y, &z, &face, &rotation)) {
+                        set_sign(x, y, z, face + rotation, g->typing_buffer + 1);
                     }
                 }
                 else if (g->typing_buffer[0] == '/') {
