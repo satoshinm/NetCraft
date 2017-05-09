@@ -682,6 +682,20 @@ int hit_test(
     return result;
 }
 
+int hit_test_normal(Player *player, int *x, int *y, int *z, int *nx, int *ny, int *nz) {
+    State *s = &player->state;
+    int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
+    if (!w) return 0;
+
+    int hx, hy, hz;
+    hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+    *nx = hx - *x;
+    *ny = hy - *y;
+    *nz = hz - *z;
+
+    return w;
+}
+
 bool hit_test_face(Player *player, int *x, int *y, int *z, int *face) {
     State *s = &player->state;
     int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
@@ -2178,13 +2192,13 @@ void on_light() {
     }
 }
 
-int get_targeted_block(int *hx, int *hy, int *hz, int *face) {
-    return hit_test_face(g->players, hx, hy, hz, face);
+int get_targeted_block(int *x, int *y, int *z, int *nx, int *ny, int *nz) {
+    return hit_test_normal(g->players, x, y, z, nx, ny, nz);
 }
 
 void on_mine() {
-    int hx, hy, hz, face;
-    int hw = get_targeted_block(&hx, &hy, &hz, &face);
+    int hx, hy, hz, nx, ny, nz;
+    int hw = get_targeted_block(&hx, &hy, &hz, &nx, &ny, &nz);
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
         record_block(hx, hy, hz, 0);
@@ -3186,11 +3200,15 @@ void render_scene() {
                 hour = hour ? hour : 12;
 
                 // Targeted block information
-                int hx, hy, hz, hw, face;
-                hw = mining_get_target(&hx, &hy, &hz, &face);
+                int hx, hy, hz, hw, nx, ny, nz;
+                hw = mining_get_target(&hx, &hy, &hz, &nx, &ny, &nz);
                 char block_info[256] = {0};
                 if (hw) snprintf(block_info, 256,
-                        "{%d, %d, %d, %d} #%d %s", hx, hy, hz, face, hw, item_names[hw]);
+                        "{%d, %d, %d} %c%c%c #%d %s", hx, hy, hz,
+                        nx ? (nx > 0 ? '+' : '-') : '0',
+                        ny ? (ny > 0 ? '+' : '-') : '0',
+                        nz ? (nz > 0 ? '+' : '-') : '0',
+                        hw, item_names[hw]);
 
                 snprintf(
                     text_buffer, 1024,

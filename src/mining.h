@@ -1,4 +1,4 @@
-int mining_get_target(int *hx, int *hy, int *hz, int *face);
+int mining_get_target(int *x, int *y, int *z, int *nx, int *ny, int *nz);
 void mining_stop();
 void mining_tick();
 void mining_start();
