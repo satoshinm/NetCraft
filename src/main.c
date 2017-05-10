@@ -714,13 +714,16 @@ bool hit_test_face_rotation(Player *player, int *x, int *y, int *z, int *face, i
         if (dx == 0 && dy == 0 && dz == 1) {
             *face = 3; return true;
         }
-        if (dx == 0 && dy == 1 && dz == 0) {
+        if (dx == 0 && dz == 0) {
+            if (dy == 1) *face = 4;
+            else if (dy == -1) *face = 5;
+            else return false;
+
             int degrees = roundf(DEGREES(atan2f(s->x - dx - *x, s->z - dz - *z)));
             if (degrees < 0) {
                 degrees += 360;
             }
             *rotation = ((degrees + 45) / 90) % 4;
-            *face = 4;
             return true;
         }
     }
@@ -785,16 +788,18 @@ bool player_intersects_block(
 }
 
 int _gen_sign_buffer(
-    GLfloat *data, float x, float y, float z, int face, const char *text)
+    GLfloat *data, float x, float y, float z, int face, int rotation, const char *text)
 {
     static const int glyph_dx[8] = {0, 0, -1, 1, 1, 0, -1, 0};
     static const int glyph_dz[8] = {1, -1, 0, 0, 0, -1, 0, 1};
     static const int line_dx[8] = {0, 0, 0, 0, 0, 1, 0, -1};
     static const int line_dy[8] = {-1, -1, -1, -1, 0, 0, 0, 0};
     static const int line_dz[8] = {0, 0, 0, 0, 1, 0, -1, 0};
-    if (face < 0 || face >= 8) {
+    if (face < 0 || face >= 5) {
+        // TODO: support writing on bottom of a block (face 5)
         return 0;
     }
+    if (face == 4) face += rotation;
     int count = 0;
     float max_width = 64;
     float line_height = 1.25;
@@ -863,7 +868,7 @@ void gen_sign_buffer(Chunk *chunk) {
     for (int i = 0; i < signs->size; i++) {
         Sign *e = signs->data + i;
         faces += _gen_sign_buffer(
-            data + faces * 30, e->x, e->y, e->z, e->face, e->text);
+            data + faces * 30, e->x, e->y, e->z, e->face, e->rotation, e->text);
     }
 
     del_buffer(chunk->sign_buffer);
@@ -1513,7 +1518,7 @@ void unset_sign_face(int x, int y, int z, int face) {
 }
 
 void _set_sign(
-    int p, int q, int x, int y, int z, int face, const char *text, bool dirty)
+    int p, int q, int x, int y, int z, int face, int rotation, const char *text, bool dirty)
 {
     if (strlen(text) == 0) {
         unset_sign_face(x, y, z, face);
@@ -1522,18 +1527,18 @@ void _set_sign(
     Chunk *chunk = find_chunk(p, q);
     if (chunk) {
         SignList *signs = &chunk->signs;
-        sign_list_add(signs, x, y, z, face, text);
+        sign_list_add(signs, x, y, z, face, rotation, text);
         if (dirty) {
             chunk->dirty = true;
         }
     }
-    db_insert_sign(p, q, x, y, z, face, text);
+    db_insert_sign(p, q, x, y, z, face + rotation, text);
 }
 
-void set_sign(int x, int y, int z, int face, const char *text) {
+void set_sign(int x, int y, int z, int face, int rotation, const char *text) {
     int p = chunked(x);
     int q = chunked(z);
-    _set_sign(p, q, x, y, z, face, text, true);
+    _set_sign(p, q, x, y, z, face, rotation, text, true);
     client_sign(x, y, z, face, text);
 }
 
@@ -1726,7 +1731,7 @@ void render_sign(Attrib *attrib, Player *player) {
     strncpy(text, g->typing_buffer + 1, MAX_SIGN_LENGTH);
     text[MAX_SIGN_LENGTH - 1] = '\0';
     GLfloat *data = malloc_faces(5, strlen(text));
-    int length = _gen_sign_buffer(data, x, y, z, face + rotation, text);
+    int length = _gen_sign_buffer(data, x, y, z, face, rotation, text);
     GLuint buffer = gen_faces(5, length, data);
     draw_sign(attrib, buffer, length);
     del_buffer(buffer);
@@ -2318,7 +2323,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
                     Player *player = g->players;
                     int x, y, z, face, rotation;
                     if (hit_test_face_rotation(player, &x, &y, &z, &face, &rotation)) {
-                        set_sign(x, y, z, face + rotation, g->typing_buffer + 1);
+                        set_sign(x, y, z, face, rotation, g->typing_buffer + 1);
                     }
                 }
                 else if (g->typing_buffer[0] == '/') {
@@ -2757,7 +2762,13 @@ void parse_buffer(char *buffer) {
         if (sscanf(line, format,
             &bp, &bq, &bx, &by, &bz, &face, text) >= 6)
         {
-            _set_sign(bp, bq, bx, by, bz, face, text, 0);
+            int rotation = 0;
+            if (face >= 4) {
+                // 4-8 encodes 90 degree rotation multiple on top face
+                rotation = face - 4;
+                face = 4;
+            }
+            _set_sign(bp, bq, bx, by, bz, face, rotation, text, 0);
         }
         line = tokenize(NULL, "\n", &key);
     }
