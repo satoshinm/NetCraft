@@ -2214,13 +2214,13 @@ void on_light() {
     }
 }
 
-int get_targeted_block(int *x, int *y, int *z, int *nx, int *ny, int *nz) {
-    return hit_test_normal(g->players, x, y, z, nx, ny, nz);
+int get_targeted_block(int *x, int *y, int *z, int *face) {
+    return hit_test_face(g->players, x, y, z, face, NULL, NULL, NULL);
 }
 
 void on_mine() {
-    int hx, hy, hz, nx, ny, nz;
-    int hw = get_targeted_block(&hx, &hy, &hz, &nx, &ny, &nz);
+    int hx, hy, hz, face;
+    int hw = get_targeted_block(&hx, &hy, &hz, &face);
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
         record_block(hx, hy, hz, 0);
@@ -3228,14 +3228,12 @@ void render_scene() {
                 hour = hour ? hour : 12;
 
                 // Targeted block information
-                int hx, hy, hz, hw, nx, ny, nz;
-                hw = mining_get_target(&hx, &hy, &hz, &nx, &ny, &nz);
+                int hx, hy, hz, hw, face;
+                hw = mining_get_target(&hx, &hy, &hz, &face);
                 char block_info[256] = {0};
                 if (hw) snprintf(block_info, 256,
-                        "{%d, %d, %d} %c%c%c #%d %s", hx, hy, hz,
-                        nx ? (nx > 0 ? '+' : '-') : '0',
-                        ny ? (ny > 0 ? '+' : '-') : '0',
-                        nz ? (nz > 0 ? '+' : '-') : '0',
+                        "{%d, %d, %d, %d} #%d %s", hx, hy, hz,
+                        face,
                         hw, item_names[hw]);
 
                 snprintf(
