@@ -682,25 +682,17 @@ int hit_test(
     return result;
 }
 
-int hit_test_normal(Player *player, int *x, int *y, int *z, int *nx, int *ny, int *nz) {
+int hit_test_face(Player *player, int *x, int *y, int *z, int *face, int *nx, int *ny, int *nz) {
     State *s = &player->state;
+    int dx, dy, dz;
     int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
     if (!w) return 0;
 
     int hx, hy, hz;
     hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
-    *nx = hx - *x;
-    *ny = hy - *y;
-    *nz = hz - *z;
-
-    return w;
-}
-
-int hit_test_face(Player *player, int *x, int *y, int *z, int *face, int *nx, int *ny, int *nz) {
-    State *s = &player->state;
-    int dx, dy, dz;
-    int w = hit_test_normal(g->players, x, y, z, &dx, &dy, &dz);
-    if (!w) return 0;
+    dx = hx - *x;
+    dy = hy - *y;
+    dz = hz - *z;
 
     if (nx) *nx = dx;
     if (ny) *ny = dy;
