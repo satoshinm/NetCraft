@@ -696,36 +696,55 @@ int hit_test_normal(Player *player, int *x, int *y, int *z, int *nx, int *ny, in
     return w;
 }
 
-bool hit_test_face_rotation(Player *player, int *x, int *y, int *z, int *face, int *rotation) {
+int hit_test_face(Player *player, int *x, int *y, int *z, int *face, int *nx, int *ny, int *nz) {
     State *s = &player->state;
     int dx, dy, dz;
     int w = hit_test_normal(g->players, x, y, z, &dx, &dy, &dz);
-    if (is_obstacle(w)) {
-        *rotation = 0;
-        if (dx == -1 && dy == 0 && dz == 0) {
-            *face = 0; return true;
-        }
-        if (dx == 1 && dy == 0 && dz == 0) {
-            *face = 1; return true;
-        }
-        if (dx == 0 && dy == 0 && dz == -1) {
-            *face = 2; return true;
-        }
-        if (dx == 0 && dy == 0 && dz == 1) {
-            *face = 3; return true;
-        }
-        if (dx == 0 && dz == 0) {
-            if (dy == 1) *face = 4;
-            else if (dy == -1) *face = 5;
-            else return false;
+    if (!w) return 0;
 
+    if (nx) *nx = dx;
+    if (ny) *ny = dy;
+    if (nz) *nz = dz;
+
+    if (dx == -1 && dy == 0 && dz == 0) {
+        *face = 0; return w;
+    }
+    if (dx == 1 && dy == 0 && dz == 0) {
+        *face = 1; return w;
+    }
+    if (dx == 0 && dy == 0 && dz == -1) {
+        *face = 2; return w;
+    }
+    if (dx == 0 && dy == 0 && dz == 1) {
+        *face = 3; return w;
+    }
+    if (dx == 0 && dy == 1 && dz == 0) {
+        *face = 4; return w;
+    }
+    if (dx == 0 && dy == -1 && dz == 0) {
+        *face = 5; return w;
+    }
+
+    return 0;
+}
+
+bool hit_test_face_rotation(Player *player, int *x, int *y, int *z, int *face, int *rotation) {
+    State *s = &player->state;
+    int dx, dy, dz;
+    int w = hit_test_face(player, x, y, z, face, &dx, &dy, &dz);
+
+    if (is_obstacle(w)) {
+        if (*face == 4 || *face == 5) {
+            // Sign text on top (or bottom) should be rotated to face towards player writing it
             int degrees = roundf(DEGREES(atan2f(s->x - dx - *x, s->z - dz - *z)));
             if (degrees < 0) {
                 degrees += 360;
             }
             *rotation = ((degrees + 45) / 90) % 4;
-            return true;
+        } else {
+            *rotation = 0;
         }
+        return true;
     }
     return false;
 }
