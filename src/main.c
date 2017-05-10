@@ -14,6 +14,7 @@
 #include <string.h>
 #include <time.h>
 #include <libgen.h>
+#include <unistd.h>
 #include "auth.h"
 #include "client.h"
 #include "config.h"
@@ -2528,6 +2529,11 @@ void on_file_drop(GLFWwindow *window, int count, const char **paths) {
         } else {
             load_block_texture(paths[i]);
         }
+#ifdef __EMSCRIPTEN__
+        // Emscripten copies the contents of the dropped file into the
+        // in-browser filesystem. Delete after usage to free up memory.
+        unlink(path);
+#endif
     }
 }
 
