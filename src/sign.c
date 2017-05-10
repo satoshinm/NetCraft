@@ -32,7 +32,7 @@ void _sign_list_add(SignList *list, Sign *sign) {
 }
 
 void sign_list_add(
-    SignList *list, int x, int y, int z, int face, const char *text)
+    SignList *list, int x, int y, int z, int face, int rotation, const char *text)
 {
     sign_list_remove(list, x, y, z, face);
     Sign sign;
@@ -40,6 +40,7 @@ void sign_list_add(
     sign.y = y;
     sign.z = z;
     sign.face = face;
+    sign.rotation = rotation;
     strncpy(sign.text, text, MAX_SIGN_LENGTH);
     sign.text[MAX_SIGN_LENGTH - 1] = '\0';
     _sign_list_add(list, &sign);
