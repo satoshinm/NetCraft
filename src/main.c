@@ -690,30 +690,26 @@ int hit_test_face(Player *player, int *x, int *y, int *z, int *face, int *nx, in
 
     int hx, hy, hz;
     hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
-    dx = hx - *x;
-    dy = hy - *y;
-    dz = hz - *z;
+    *nx = hx - *x;
+    *ny = hy - *y;
+    *nz = hz - *z;
 
-    if (nx) *nx = dx;
-    if (ny) *ny = dy;
-    if (nz) *nz = dz;
-
-    if (dx == -1 && dy == 0 && dz == 0) {
+    if (*nx == -1 && *ny == 0 && *nz == 0) {
         *face = 0; return w;
     }
-    if (dx == 1 && dy == 0 && dz == 0) {
+    if (*nx == 1 && *ny == 0 && *nz == 0) {
         *face = 1; return w;
     }
-    if (dx == 0 && dy == 0 && dz == -1) {
+    if (*nx == 0 && *ny == 0 && *nz == -1) {
         *face = 2; return w;
     }
-    if (dx == 0 && dy == 0 && dz == 1) {
+    if (*nx == 0 && *ny == 0 && *nz == 1) {
         *face = 3; return w;
     }
-    if (dx == 0 && dy == 1 && dz == 0) {
+    if (*nx == 0 && *ny == 1 && *nz == 0) {
         *face = 4; return w;
     }
-    if (dx == 0 && dy == -1 && dz == 0) {
+    if (*nx == 0 && *ny == -1 && *nz == 0) {
         *face = 5; return w;
     }
 
@@ -725,6 +721,7 @@ bool hit_test_face_rotation(Player *player, int *x, int *y, int *z, int *face, i
     int dx, dy, dz;
     int w = hit_test_face(player, x, y, z, face, &dx, &dy, &dz);
 
+    // Only allowed to write signs on solid obstacle blocks
     if (is_obstacle(w)) {
         if (*face == 4 || *face == 5) {
             // Sign text on top (or bottom) should be rotated to face towards player writing it
@@ -2207,7 +2204,8 @@ void on_light() {
 }
 
 int get_targeted_block(int *x, int *y, int *z, int *face) {
-    return hit_test_face(g->players, x, y, z, face, NULL, NULL, NULL);
+    int nx, ny, nz;
+    return hit_test_face(g->players, x, y, z, face, &nx, &ny, &nz);
 }
 
 void on_mine() {
