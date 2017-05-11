@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include "mining.h"
 #include "item.h"
 
@@ -49,14 +50,23 @@ void mining_tick() {
             return;
         }
 
-        if (mining_progress == is_hardness(target_w)) {
+        if (!target_w) return;
+
+        int hardness = is_hardness(target_w);
+
+        float percent;
+        if (hardness == 0) percent = 100.0;
+        else percent = (float)mining_progress / hardness * 100;
+        //printf("%2.0f%%\n", percent);
+        // TODO: block break indicator
+
+        if (mining_progress == hardness) {
             mining_progress = 0;
             on_mine();
             return;
         }
 
         mining_progress++;
-        // TODO: block break indicator
     }
 }
 
