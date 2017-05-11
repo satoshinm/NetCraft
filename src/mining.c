@@ -21,6 +21,8 @@ static int target_w = 0;
 extern void on_mine();
 extern void on_build();
 extern int get_targeted_block(int *x, int *y, int *z, int *face);
+extern void set_sign(int x, int y, int z, int face, int rotation, const char *text);
+extern void unset_sign(int x, int y, int z);
 
 // Get cached mining target (fast)
 int mining_get_target(int *x, int *y, int *z, int *face) {
@@ -34,6 +36,8 @@ int mining_get_target(int *x, int *y, int *z, int *face) {
 void mining_stop() {
     holding_mine_button = false;
     mining_progress = false;
+
+    unset_sign(mining_x, mining_y, mining_z);
 }
 
 void mining_tick() {
@@ -54,11 +58,14 @@ void mining_tick() {
 
         int hardness = is_hardness(target_w);
 
+        // Block break indicator
         float percent;
         if (hardness == 0) percent = 100.0;
         else percent = (float)mining_progress / hardness * 100;
-        //printf("%2.0f%%\n", percent);
-        // TODO: block break indicator
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%2.0f%%\n", percent);
+        // TODO: replace with texture
+        set_sign(target_x, target_y, target_z, target_face, 0, buf);
 
         if (mining_progress == hardness) {
             mining_progress = 0;
