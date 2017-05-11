@@ -33,11 +33,22 @@ int mining_get_target(int *x, int *y, int *z, int *face) {
     return target_w;
 }
 
+static void set_breaking_indicator(float percent) {
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%2.0f%%\n", percent);
+    // TODO: replace with texture
+    set_sign(target_x, target_y, target_z, target_face, 0, buf);
+}
+
+static void clear_breaking_indicator() {
+    unset_sign(mining_x, mining_y, mining_z);
+}
+
 void mining_stop() {
     holding_mine_button = false;
     mining_progress = false;
 
-    unset_sign(mining_x, mining_y, mining_z);
+    clear_breaking_indicator();
 }
 
 void mining_tick() {
@@ -46,6 +57,8 @@ void mining_tick() {
 
     if (holding_mine_button) {
         if (target_x != mining_x || target_y != mining_y || target_z != mining_z) {
+            clear_breaking_indicator();
+
             mining_x = target_x;
             mining_y = target_y;
             mining_z = target_z;
@@ -62,10 +75,7 @@ void mining_tick() {
         float percent;
         if (hardness == 0) percent = 100.0;
         else percent = (float)mining_progress / hardness * 100;
-        char buf[16];
-        snprintf(buf, sizeof(buf), "%2.0f%%\n", percent);
-        // TODO: replace with texture
-        set_sign(target_x, target_y, target_z, target_face, 0, buf);
+        set_breaking_indicator(percent);
 
         if (mining_progress == hardness) {
             mining_progress = 0;
