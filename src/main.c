@@ -1784,8 +1784,8 @@ void render_wireframe(Attrib *attrib, Player *player) {
     set_matrix_3d(
         matrix, g->width, g->height,
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
-    int hx = -1, hy = -1, hz = -1;
-    int hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
+    int hx = -1, hy = -1, hz = -1, face = -1;
+    int hw = mining_get_target(&hx, &hy, &hz, &face);
     if (is_obstacle(hw)) {
         glUseProgram(attrib->program);
         glLineWidth(1);
