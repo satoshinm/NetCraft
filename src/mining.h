@@ -11,3 +11,5 @@ void building_start();
 
 extern void on_mine();
 extern void on_build();
+
+extern int mining_stage;

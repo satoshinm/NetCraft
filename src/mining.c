@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include "mining.h"
@@ -11,6 +12,7 @@ static bool holding_build_button = false;
 static int mining_x = 0;
 static int mining_y = 0;
 static int mining_z = 0;
+int mining_stage = 0;
 
 static int target_x = 0;
 static int target_y = 0;
@@ -76,10 +78,8 @@ void mining_tick() {
         int hardness = is_hardness(target_w);
 
         // Block break indicator
-        float percent;
-        if (hardness == 0) percent = 100.0;
-        else percent = (float)mining_progress / hardness * 100;
-        set_breaking_indicator(percent);
+        if (hardness == 0) mining_stage = 9;
+        else mining_stage = (int)roundf((float)mining_progress / hardness * 9);
 
         if (mining_progress == hardness) {
             mining_progress = 0;

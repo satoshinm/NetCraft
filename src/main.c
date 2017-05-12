@@ -1835,10 +1835,10 @@ void render_cover(Attrib *attrib, Player *player) {
 
     int hx, hy, hz, face;
     int w = mining_get_target(&hx, &hy, &hz, &face);
-    w += 1; // TODO: change to render block break texture, for now using next block
-    w = blocks[w][0];
+    // textures 64 - 73 are block break stages 0 to 9
+    w = 64 + mining_stage;
 
-    GLuint buffer = gen_cube_buffer_faces(hx, hy, hz, 0.53, w, w, w, w, w, w);
+    GLuint buffer = gen_cube_buffer_faces(hx, hy, hz, 0.501, w, w, w, w, w, w);
     draw_cube(attrib, buffer);
     del_buffer(buffer);
 }
