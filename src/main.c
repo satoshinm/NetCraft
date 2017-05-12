@@ -277,6 +277,7 @@ GLuint gen_sky_buffer() {
     return gen_buffer(sizeof(data), data);
 }
 
+// Generate a cube buffer textured with block type w
 GLuint gen_cube_buffer(float x, float y, float z, float n, int w) {
     GLfloat *data = malloc_faces(10, 6);
     float ao[6][4] = {0};
@@ -289,6 +290,25 @@ GLuint gen_cube_buffer(float x, float y, float z, float n, int w) {
         {0.5, 0.5, 0.5, 0.5}
     };
     make_cube(data, ao, light, 1, 1, 1, 1, 1, 1, x, y, z, n, w);
+    return gen_faces(10, 6, data);
+}
+
+// Generate a cube buffer textured with given texture indices on each face
+GLuint gen_cube_buffer_faces(float x, float y, float z, float n,
+    int wleft, int wright, int wtop, int wbottom, int wfront, int wback) {
+    GLfloat *data = malloc_faces(10, 6);
+    float ao[6][4] = {0};
+    float light[6][4] = {
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5}
+    };
+    make_cube_faces(data, ao, light, 1, 1, 1, 1, 1, 1,
+        wleft, wright, wtop, wbottom, wfront, wback,
+        x, y, z, n);
     return gen_faces(10, 6, data);
 }
 
@@ -1816,8 +1836,9 @@ void render_cover(Attrib *attrib, Player *player) {
     int hx, hy, hz, face;
     int w = mining_get_target(&hx, &hy, &hz, &face);
     w += 1; // TODO: change to render block break texture, for now using next block
+    w = blocks[w][0];
 
-    GLuint buffer = gen_cube_buffer(hx, hy, hz, 0.53, w);
+    GLuint buffer = gen_cube_buffer_faces(hx, hy, hz, 0.53, w, w, w, w, w, w);
     draw_cube(attrib, buffer);
     del_buffer(buffer);
 }
