@@ -294,7 +294,9 @@ int is_hardness(int w) {
             return 8;
 
         case STONE:
+            return 100;
         case BRICK:
+            return 1000;
         case CEMENT:
         case COBBLE:
         case LIGHT_STONE:
