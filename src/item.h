@@ -71,6 +71,6 @@ bool is_obstacle(int w);
 bool is_transparent(int w);
 bool is_destructable(int w);
 int is_illuminated(int w);
-int is_hardness(int w);
+float is_hardness(int w);
 
 #endif

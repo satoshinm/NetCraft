@@ -51,7 +51,8 @@ void mining_tick() {
 
         if (!target_w) return;
 
-        int hardness = is_hardness(target_w);
+        // Scale by FPS
+        int hardness = (int)(is_hardness(target_w) * 60);
 
         // Block break indicator
         if (hardness == 0) mining_stage = 9;
