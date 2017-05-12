@@ -23,29 +23,15 @@ int target_w = 0;
 extern void on_mine();
 extern void on_build();
 extern int get_targeted_block(int *x, int *y, int *z, int *face);
-extern void set_sign(int x, int y, int z, int face, int rotation, const char *text);
-extern void unset_sign(int x, int y, int z);
 
 bool is_mining() {
     return holding_mine_button && target_w != 0;
 }
 
-static void set_breaking_indicator(float percent) {
-    char buf[16];
-    snprintf(buf, sizeof(buf), "%2.0f%%\n", percent);
-    // TODO: replace with texture
-    set_sign(target_x, target_y, target_z, target_face, 0, buf);
-}
-
-static void clear_breaking_indicator() {
-    unset_sign(mining_x, mining_y, mining_z);
-}
-
 void mining_stop() {
     holding_mine_button = false;
     mining_progress = false;
-
-    clear_breaking_indicator();
+    mining_stage = 0;
 }
 
 void mining_tick() {
@@ -54,13 +40,12 @@ void mining_tick() {
 
     if (holding_mine_button) {
         if (target_x != mining_x || target_y != mining_y || target_z != mining_z) {
-            clear_breaking_indicator();
-
             mining_x = target_x;
             mining_y = target_y;
             mining_z = target_z;
 
             mining_progress = 0;
+            mining_stage = 0;
             return;
         }
 
