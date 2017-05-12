@@ -1802,6 +1802,23 @@ void render_wireframe(Attrib *attrib, Player *player) {
     }
 }
 
+void render_cover(Attrib *attrib, Player *player) {
+    State *s = &player->state;
+    float matrix[16];
+    set_matrix_3d(
+        matrix, g->width, g->height,
+        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
+    int hx = -1, hy = -1, hz = -1, face = -1;
+    int hw = mining_get_target(&hx, &hy, &hz, &face);
+
+    glUseProgram(attrib->program);
+    glLineWidth(10);
+    glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
+    GLuint wireframe_buffer = gen_wireframe_buffer(hx, hy, hz, 0.53);
+    draw_lines(attrib, wireframe_buffer, 3, 24);
+    del_buffer(wireframe_buffer);
+}
+
 void render_crosshairs(Attrib *attrib) {
     float matrix[16];
     set_matrix_2d(matrix, g->width, g->height);
@@ -3187,6 +3204,10 @@ void render_scene() {
             render_players(&block_attrib, player);
             if (SHOW_WIREFRAME && g->show_ui) {
                 render_wireframe(&line_attrib, player);
+            }
+
+            if (is_mining()) {
+                render_cover(&line_attrib, player);
             }
 
             // RENDER HUD //
