@@ -1803,20 +1803,23 @@ void render_wireframe(Attrib *attrib, Player *player) {
 }
 
 void render_cover(Attrib *attrib, Player *player) {
-    State *s = &player->state;
     float matrix[16];
+    State *s = &player->state;
     set_matrix_3d(
         matrix, g->width, g->height,
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
-    int hx = -1, hy = -1, hz = -1, face = -1;
-    int hw = mining_get_target(&hx, &hy, &hz, &face);
-
     glUseProgram(attrib->program);
-    glLineWidth(10);
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
-    GLuint wireframe_buffer = gen_wireframe_buffer(hx, hy, hz, 0.53);
-    draw_lines(attrib, wireframe_buffer, 3, 24);
-    del_buffer(wireframe_buffer);
+    glUniform1i(attrib->sampler, 0);
+    glUniform1f(attrib->timer, time_of_day());
+
+    int hx, hy, hz, face;
+    int w = mining_get_target(&hx, &hy, &hz, &face);
+    w += 1; // TODO: change to render block break texture, for now using next block
+
+    GLuint buffer = gen_cube_buffer(hx, hy, hz, 0.53, w);
+    draw_cube(attrib, buffer);
+    del_buffer(buffer);
 }
 
 void render_crosshairs(Attrib *attrib) {
@@ -3207,7 +3210,7 @@ void render_scene() {
             }
 
             if (is_mining()) {
-                render_cover(&line_attrib, player);
+                render_cover(&block_attrib, player);
             }
 
             // RENDER HUD //
