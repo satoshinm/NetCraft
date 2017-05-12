@@ -59,6 +59,7 @@ void mining_tick() {
 
         if (mining_progress == hardness) {
             mining_progress = 0;
+            mining_stage = 0;
             on_mine();
             return;
         }
