@@ -33,6 +33,10 @@ int mining_get_target(int *x, int *y, int *z, int *face) {
     return target_w;
 }
 
+bool is_mining() {
+    return holding_mine_button && target_w != 0;
+}
+
 static void set_breaking_indicator(float percent) {
     char buf[16];
     snprintf(buf, sizeof(buf), "%2.0f%%\n", percent);
