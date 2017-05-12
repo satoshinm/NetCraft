@@ -277,6 +277,7 @@ GLuint gen_sky_buffer() {
     return gen_buffer(sizeof(data), data);
 }
 
+// Generate a cube buffer textured with block type w
 GLuint gen_cube_buffer(float x, float y, float z, float n, int w) {
     GLfloat *data = malloc_faces(10, 6);
     float ao[6][4] = {0};
@@ -289,6 +290,25 @@ GLuint gen_cube_buffer(float x, float y, float z, float n, int w) {
         {0.5, 0.5, 0.5, 0.5}
     };
     make_cube(data, ao, light, 1, 1, 1, 1, 1, 1, x, y, z, n, w);
+    return gen_faces(10, 6, data);
+}
+
+// Generate a cube buffer textured with given texture indices on each face
+GLuint gen_cube_buffer_faces(float x, float y, float z, float n,
+    int wleft, int wright, int wtop, int wbottom, int wfront, int wback) {
+    GLfloat *data = malloc_faces(10, 6);
+    float ao[6][4] = {0};
+    float light[6][4] = {
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5},
+        {0.5, 0.5, 0.5, 0.5}
+    };
+    make_cube_faces(data, ao, light, 1, 1, 1, 1, 1, 1,
+        wleft, wright, wtop, wbottom, wfront, wback,
+        x, y, z, n);
     return gen_faces(10, 6, data);
 }
 
@@ -1784,22 +1804,39 @@ void render_wireframe(Attrib *attrib, Player *player) {
     set_matrix_3d(
         matrix, g->width, g->height,
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
-    int hx = -1, hy = -1, hz = -1;
-    int hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
-    if (is_obstacle(hw)) {
+    if (is_obstacle(target_w)) {
         glUseProgram(attrib->program);
         glLineWidth(1);
 #ifndef __EMSCRIPTEN__
         glEnable(GL_COLOR_LOGIC_OP);
 #endif
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
-        GLuint wireframe_buffer = gen_wireframe_buffer(hx, hy, hz, 0.53);
+        GLuint wireframe_buffer = gen_wireframe_buffer(target_x, target_y, target_z, 0.53);
         draw_lines(attrib, wireframe_buffer, 3, 24);
         del_buffer(wireframe_buffer);
 #ifndef __EMSCRIPTEN__
         glDisable(GL_COLOR_LOGIC_OP);
 #endif
     }
+}
+
+void render_cover(Attrib *attrib, Player *player) {
+    float matrix[16];
+    State *s = &player->state;
+    set_matrix_3d(
+        matrix, g->width, g->height,
+        s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
+    glUseProgram(attrib->program);
+    glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
+    glUniform1i(attrib->sampler, 0);
+    glUniform1f(attrib->timer, time_of_day());
+
+    // textures 64 - 73 are block break stages 0 to 9
+    int w = 64 + mining_stage;
+
+    GLuint buffer = gen_cube_buffer_faces(target_x, target_y, target_z, 0.501, w, w, w, w, w, w);
+    draw_cube(attrib, buffer);
+    del_buffer(buffer);
 }
 
 void render_crosshairs(Attrib *attrib) {
@@ -3189,6 +3226,10 @@ void render_scene() {
                 render_wireframe(&line_attrib, player);
             }
 
+            if (is_mining()) {
+                render_cover(&block_attrib, player);
+            }
+
             // RENDER HUD //
             glClear(GL_DEPTH_BUFFER_BIT);
             if (SHOW_CROSSHAIRS && g->show_ui) {
@@ -3224,13 +3265,11 @@ void render_scene() {
                 hour = hour ? hour : 12;
 
                 // Targeted block information
-                int hx, hy, hz, hw, face;
-                hw = mining_get_target(&hx, &hy, &hz, &face);
                 char block_info[256] = {0};
-                if (hw) snprintf(block_info, 256,
-                        "{%d, %d, %d, %d} #%d %s", hx, hy, hz,
-                        face,
-                        hw, item_names[hw]);
+                if (target_w) snprintf(block_info, 256,
+                        "{%d, %d, %d, %d} #%d %s",
+                        target_x, target_y, target_z, target_face, target_w,
+                        item_names[target_w]);
 
                 snprintf(
                     text_buffer, 1024,
