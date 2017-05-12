@@ -13,3 +13,8 @@ extern void on_mine();
 extern void on_build();
 
 extern int mining_stage;
+extern int target_x;
+extern int target_y;
+extern int target_z;
+extern int target_face;
+extern int target_w;

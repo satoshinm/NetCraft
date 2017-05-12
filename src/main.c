@@ -1804,16 +1804,14 @@ void render_wireframe(Attrib *attrib, Player *player) {
     set_matrix_3d(
         matrix, g->width, g->height,
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
-    int hx = -1, hy = -1, hz = -1, face = -1;
-    int hw = mining_get_target(&hx, &hy, &hz, &face);
-    if (is_obstacle(hw)) {
+    if (is_obstacle(target_w)) {
         glUseProgram(attrib->program);
         glLineWidth(1);
 #ifndef __EMSCRIPTEN__
         glEnable(GL_COLOR_LOGIC_OP);
 #endif
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
-        GLuint wireframe_buffer = gen_wireframe_buffer(hx, hy, hz, 0.53);
+        GLuint wireframe_buffer = gen_wireframe_buffer(target_x, target_y, target_z, 0.53);
         draw_lines(attrib, wireframe_buffer, 3, 24);
         del_buffer(wireframe_buffer);
 #ifndef __EMSCRIPTEN__
@@ -1833,12 +1831,10 @@ void render_cover(Attrib *attrib, Player *player) {
     glUniform1i(attrib->sampler, 0);
     glUniform1f(attrib->timer, time_of_day());
 
-    int hx, hy, hz, face;
-    int w = mining_get_target(&hx, &hy, &hz, &face);
     // textures 64 - 73 are block break stages 0 to 9
-    w = 64 + mining_stage;
+    int w = 64 + mining_stage;
 
-    GLuint buffer = gen_cube_buffer_faces(hx, hy, hz, 0.501, w, w, w, w, w, w);
+    GLuint buffer = gen_cube_buffer_faces(target_x, target_y, target_z, 0.501, w, w, w, w, w, w);
     draw_cube(attrib, buffer);
     del_buffer(buffer);
 }
@@ -3269,13 +3265,11 @@ void render_scene() {
                 hour = hour ? hour : 12;
 
                 // Targeted block information
-                int hx, hy, hz, hw, face;
-                hw = mining_get_target(&hx, &hy, &hz, &face);
                 char block_info[256] = {0};
-                if (hw) snprintf(block_info, 256,
-                        "{%d, %d, %d, %d} #%d %s", hx, hy, hz,
-                        face,
-                        hw, item_names[hw]);
+                if (target_w) snprintf(block_info, 256,
+                        "{%d, %d, %d, %d} #%d %s",
+                        target_x, target_y, target_z, target_face, target_w,
+                        item_names[target_w]);
 
                 snprintf(
                     text_buffer, 1024,

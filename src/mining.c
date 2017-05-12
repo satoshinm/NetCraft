@@ -14,26 +14,17 @@ static int mining_y = 0;
 static int mining_z = 0;
 int mining_stage = 0;
 
-static int target_x = 0;
-static int target_y = 0;
-static int target_z = 0;
-static int target_face = 0;
-static int target_w = 0;
+int target_x = 0;
+int target_y = 0;
+int target_z = 0;
+int target_face = 0;
+int target_w = 0;
 
 extern void on_mine();
 extern void on_build();
 extern int get_targeted_block(int *x, int *y, int *z, int *face);
 extern void set_sign(int x, int y, int z, int face, int rotation, const char *text);
 extern void unset_sign(int x, int y, int z);
-
-// Get cached mining target (fast)
-int mining_get_target(int *x, int *y, int *z, int *face) {
-    *x = target_x;
-    *y = target_y;
-    *z = target_z;
-    *face = target_face;
-    return target_w;
-}
 
 bool is_mining() {
     return holding_mine_button && target_w != 0;
