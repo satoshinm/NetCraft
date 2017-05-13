@@ -192,6 +192,7 @@ Mouse:
 - Ctrl + Right Click to toggle a block as a light source.
 - Middle Click to change the current block selection to the targeted block.
 - Scrollwheel to cycle through the block types, or zoom in orthogonal mode.
+- Drag-and-drop files onto the canvas to change the texture.png.
 
 Keyboard:
 
@@ -218,7 +219,6 @@ Keyboard:
 - Shift-F4 to toggle barrel distortion effect.
 - F3 to toggle debug info text.
 - F1 to toggle all user interface elements.
-- Drop files onto the canvas to change the texture.png.
 
 Joystick:
 
@@ -302,6 +302,9 @@ Text is rendered using a bitmap atlas. Each character is rendered onto two trian
 “Modern” OpenGL is used - no deprecated, fixed-function pipeline functions are used. Vertex buffer objects are used for position, normal and texture coordinates. Vertex and fragment shaders are used for rendering. Matrix manipulation functions are in matrix.c for translation, rotation, perspective, orthographic, etc. matrices. The 3D models are made up of very simple primitives - mostly cubes and rectangles. These models are generated in code in cube.c.
 
 Transparency in glass blocks and plants (plants don’t take up the full rectangular shape of their triangle primitives) is implemented by discarding magenta-colored pixels in the fragment shader.
+
+Block textures are based on the Pixeludi Pack by Wojtek Mroczek, Creative Commons CC-BY-SA, 2011,
+as in [TrueCraft](https://github.com/SirCmpwn/TrueCraft/).
 
 #### Database
 
