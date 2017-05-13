@@ -1835,7 +1835,10 @@ void render_cover(Attrib *attrib, Player *player) {
     int w = 64 + mining_stage;
 
     GLuint buffer = gen_cube_buffer_faces(target_x, target_y, target_z, 0.501, w, w, w, w, w, w);
+    glEnable(GL_BLEND);
+    glBlendFuncSeparate(GL_DST_COLOR, GL_SRC_COLOR, GL_DST_ALPHA, GL_SRC_ALPHA);
     draw_cube(attrib, buffer);
+    glDisable(GL_BLEND);
     del_buffer(buffer);
 }
 
