@@ -1829,8 +1829,7 @@ void render_cover(Attrib *attrib, Player *player) {
     glUseProgram(attrib->program);
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
 
-    // textures 64 - 73 are block break stages 0 to 9
-    int w = 64 + mining_stage;
+    int w = RC(4, 0) + mining_stage;
 
     GLuint buffer = gen_cube_buffer_faces(target_x, target_y, target_z, 0.501, w, w, w, w, w, w);
     glEnable(GL_BLEND);

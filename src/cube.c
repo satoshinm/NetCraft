@@ -52,17 +52,17 @@ void make_cube_faces(
         {0, 2, 1, 2, 3, 1}
     };
     float *d = data;
-    float s = 0.0625;
-    float a = 0 + 1 / 2048.0;
-    float b = s - 1 / 2048.0;
+    float s = 1.0 / 32;
+    float a = 0 + 1 / (32 * 16 * 8.0);
+    float b = s - 1 / (32 * 16 * 8.0);
     int faces[6] = {left, right, top, bottom, front, back};
     int tiles[6] = {wleft, wright, wtop, wbottom, wfront, wback};
     for (int i = 0; i < 6; i++) {
         if (faces[i] == 0) {
             continue;
         }
-        float du = (tiles[i] % 16) * s;
-        float dv = (tiles[i] / 16) * s;
+        float du = (tiles[i] % 32) * s;
+        float dv = (tiles[i] / 32) * s;
         int flip = ao[i][0] + ao[i][3] > ao[i][1] + ao[i][2];
         for (int v = 0; v < 6; v++) {
             int j = flip ? flipped[i][v] : indices[i][v];
@@ -130,8 +130,8 @@ void make_plant(
     float s = 0.0625;
     float a = 0;
     float b = s;
-    float du = (plants[w] % 16) * s;
-    float dv = (plants[w] / 16) * s;
+    float du = (plants[w] % 32) * s;
+    float dv = (plants[w] / 32) * s;
     for (int i = 0; i < 4; i++) {
         for (int v = 0; v < 6; v++) {
             int j = indices[i][v];
@@ -174,7 +174,7 @@ void make_player(
     make_cube_faces(
         data, ao, light,
         1, 1, 1, 1, 1, 1,
-        226, 224, 241, 209, 225, 227,
+        RC(14, 2), RC(14, 0), RC(15, 1), RC(13, 1), RC(14, 1), RC(14, 3),
         0, 0, 0, 0.4);
     float ma[16];
     float mb[16];

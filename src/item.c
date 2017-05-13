@@ -131,7 +131,6 @@ const char *item_names[] = {
 
 const int item_count = sizeof(items) / sizeof(int);
 
-#define RC(row, col) (row * 16 + col)
 const int blocks[256][6] = {
     // w => (front, back, left, right, top, bottom) tiles
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 0 - empty
@@ -204,13 +203,13 @@ const int blocks[256][6] = {
 const int plants[256] = {
     // w => tile
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0 - 16
-    48, // 17 - tall grass
-    49, // 18 - yellow flower
-    50, // 19 - red flower
-    51, // 20 - purple flower
-    52, // 21 - sun flower
-    53, // 22 - white flower
-    54, // 23 - blue flower
+    RC( 3, 0), // 17 - tall grass
+    RC( 3, 1), // 18 - yellow flower
+    RC( 3, 2), // 19 - red flower
+    RC( 3, 3), // 20 - purple flower
+    RC( 3, 4), // 21 - sun flower
+    RC( 3, 5), // 22 - white flower
+    RC( 3, 6), // 23 - blue flower
 };
 
 bool is_plant(int w) {
