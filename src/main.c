@@ -1828,8 +1828,6 @@ void render_cover(Attrib *attrib, Player *player) {
         s->x, s->y, s->z, s->rx, s->ry, g->fov, g->ortho, g->ortho_zoom, g->render_radius);
     glUseProgram(attrib->program);
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
-    glUniform1i(attrib->sampler, 0);
-    glUniform1f(attrib->timer, time_of_day());
 
     // textures 64 - 73 are block break stages 0 to 9
     int w = 64 + mining_stage;
