@@ -85,12 +85,12 @@ void make_cube(
     int left, int right, int top, int bottom, int front, int back,
     float x, float y, float z, float n, int w)
 {
-    int wleft = blocks[w][0];
-    int wright = blocks[w][1];
-    int wtop = blocks[w][2];
-    int wbottom = blocks[w][3];
-    int wfront = blocks[w][4];
-    int wback = blocks[w][5];
+    int wfront = blocks[w][0];
+    int wback = blocks[w][1];
+    int wleft = blocks[w][2];
+    int wright = blocks[w][3];
+    int wtop = blocks[w][4];
+    int wbottom = blocks[w][5];
     make_cube_faces(
         data, ao, light,
         left, right, top, bottom, front, back,
