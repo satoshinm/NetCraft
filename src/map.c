@@ -3,6 +3,9 @@
 #include <string.h>
 #include "map.h"
 
+#ifdef __clang__
+__attribute__((no_sanitize("undefined")))
+#endif
 int hash_int(int key) {
     key = ~key + (key << 15);
     key = key ^ (key >> 12);

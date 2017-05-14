@@ -2818,9 +2818,10 @@ void parse_buffer(char *buffer) {
         {
             int rotation = 0;
             if (face >= 4) {
-                // 4-8 encodes 90 degree rotation multiple on top face
+                // 4-7 encodes 90 degree rotation multiple on top face
                 rotation = face - 4;
                 face = 4;
+                if (rotation > 3) rotation = 3;
             }
             _set_sign(bp, bq, bx, by, bz, face, rotation, text, 0);
         }

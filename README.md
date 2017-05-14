@@ -145,6 +145,9 @@ terminal.
     make
     ./craft
 
+To enable additional compiler debug settings, run cmake with:
+
+    cmake -DDEBUG=1 ..
 
 #### Client
 

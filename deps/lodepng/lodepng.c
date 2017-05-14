@@ -325,7 +325,10 @@ static void string_set(char** out, const char* in)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 
-unsigned lodepng_read32bitInt(const unsigned char* buffer)
+#ifdef __clang__
+__attribute__((no_sanitize("shift")))
+#endif
+unsigned int lodepng_read32bitInt(const unsigned char* buffer)
 {
   return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
 }
