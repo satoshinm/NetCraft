@@ -21,10 +21,10 @@
 #define TALL_GRASS 17
 #define YELLOW_FLOWER 18
 #define RED_FLOWER 19
-#define PURPLE_FLOWER 20
-#define SUN_FLOWER 21
-#define WHITE_FLOWER 22
-#define BLUE_FLOWER 23
+#define SAPLING 20
+#define RED_MUSHROOM 21
+#define BROWN_MUSHROOM 22
+#define DEADBUSH 23
 
 #define COLOR_00 32
 #define COLOR_01 33

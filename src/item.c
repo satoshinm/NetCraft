@@ -22,10 +22,10 @@ const int items[] = {
     TALL_GRASS,
     YELLOW_FLOWER,
     RED_FLOWER,
-    PURPLE_FLOWER,
-    SUN_FLOWER,
-    WHITE_FLOWER,
-    BLUE_FLOWER,
+    SAPLING,
+    RED_MUSHROOM,
+    BROWN_MUSHROOM,
+    DEADBUSH,
     COLOR_00,
     COLOR_01,
     COLOR_02,
@@ -62,30 +62,30 @@ const int items[] = {
 };
 
 const char *item_names[] = {
-    "EMPTY",
-    "GRASS",
-    "SAND",
-    "STONE",
-    "BRICK",
-    "WOOD",
-    "CEMENT",
-    "DIRT",
-    "PLANK",
-    "SNOW",
-    "GLASS",
-    "COBBLE",
-    "LIGHT_STONE",
-    "DARK_STONE",
-    "CHEST",
-    "LEAVES",
-    "CLOUD",
-    "TALL_GRASS",
-    "YELLOW_FLOWER",
-    "RED_FLOWER",
-    "PURPLE_FLOWER",
-    "SUN_FLOWER",
-    "WHITE_FLOWER",
-    "BLUE_FLOWER",
+    "Empty",
+    "Grass",
+    "Sand",
+    "Stone",
+    "Brick",
+    "Wood",
+    "Cement",
+    "Dirt",
+    "Plank",
+    "Snow",
+    "Glass",
+    "Cobble",
+    "Light Stone",
+    "Dark Stone",
+    "Chest",
+    "Leaves",
+    "Cloud",
+    "Tall Grass",
+    "Yellow Flower",
+    "Red Flower",
+    "Sapling",
+    "Red Mushroom",
+    "Brown Mushroom",
+    "Deadbush",
     "x24",
     "x25",
     "x26",
@@ -94,6 +94,7 @@ const char *item_names[] = {
     "x29",
     "x30",
     "x31",
+    // TODO: name colored blocks
     "COLOR_00",
     "COLOR_01",
     "COLOR_02",
@@ -126,7 +127,18 @@ const char *item_names[] = {
     "COLOR_29",
     "COLOR_30",
     "COLOR_31",
-    "GLOWING_STONE",
+    "Glowstone",
+    "Bedrock",
+    "Gravel",
+    "Iron Block",
+    "Gold Block",
+    "Diamond Block",
+    "Gold Ore",
+    "Iron Ore",
+    "Coal Ore",
+    "Lapis Lazuli Ore",
+    "Lapis Lazuli Block",
+    "Sandstone",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -197,7 +209,18 @@ const int blocks[256][6] = {
     {RC(12,13), RC(12,13), RC(12,13), RC(12,13), RC(12,13), RC(12,13)}, // 61
     {RC(12,14), RC(12,14), RC(12,14), RC(12,14), RC(12,14), RC(12,14)}, // 62
     {RC(12,15), RC(12,15), RC(12,15), RC(12,15), RC(12,15), RC(12,15)}, // 63
-    {RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9)}, // 64
+    {RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9)}, // 64 - glowing stone
+    {RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1)}, // 65 - bedrock
+    {RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3)}, // 66 - gravel
+    {RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6)}, // 67 - iron block
+    {RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7)}, // 68 - gold block
+    {RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8)}, // 69 - diamond block
+    {RC(13, 0), RC(13, 0), RC(13, 0), RC(13, 0), RC(13, 0), RC(13, 0)}, // 70 - gold ore
+    {RC(13, 1), RC(13, 1), RC(13, 1), RC(13, 1), RC(13, 1), RC(13, 1)}, // 71 - iron ore
+    {RC(13, 2), RC(13, 2), RC(13, 2), RC(13, 2), RC(13, 2), RC(13, 2)}, // 72 - coal ore
+    {RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0)}, // 73 - lapis ore
+    {RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0)}, // 74 - lapis block
+    {RC( 3, 0), RC( 3, 0), RC( 3, 0), RC( 3, 0), RC( 4, 0), RC( 2, 0)}, // 75 - sandstone
 };
 
 const int plants[256] = {
@@ -206,10 +229,10 @@ const int plants[256] = {
     RC(13, 7), // 17 - tall grass
     RC(15,13), // 18 - yellow flower
     RC(15,12), // 19 - red flower
-    RC( 3, 3), // 20 - purple flower
-    RC( 3, 4), // 21 - sun flower
-    RC( 3, 5), // 22 - white flower
-    RC( 3, 6), // 23 - blue flower
+    RC(15,15), // 20 - sapling
+    RC(14,12), // 21 - red mushroom
+    RC(14,13), // 22 - brown mushroom
+    RC( 9,15), // 23 - deadbush
 };
 
 bool is_plant(int w) {
@@ -217,10 +240,10 @@ bool is_plant(int w) {
         case TALL_GRASS:
         case YELLOW_FLOWER:
         case RED_FLOWER:
-        case PURPLE_FLOWER:
-        case SUN_FLOWER:
-        case WHITE_FLOWER:
-        case BLUE_FLOWER:
+        case SAPLING:
+        case RED_MUSHROOM:
+        case BROWN_MUSHROOM:
+        case DEADBUSH:
             return true;
         default:
             return false;
