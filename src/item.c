@@ -132,6 +132,11 @@ const char *item_names[] = {
     "IRON_BLOCK",
     "GOLD_BLOCK",
     "DIAMOND_BLOCK",
+    "GOLD_ORE",
+    "IRON_ORE",
+    "COAL_ORE",
+    "LAPIS_ORE",
+    "LAPIS_BLOCK",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -208,6 +213,11 @@ const int blocks[256][6] = {
     {RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6)}, // 67 - iron block
     {RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7)}, // 68 - gold block
     {RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8)}, // 69 - diamond block
+    {RC(13, 0), RC(13, 0), RC(13, 0), RC(13, 0), RC(13, 0), RC(13, 0)}, // 70 - gold ore
+    {RC(13, 1), RC(13, 1), RC(13, 1), RC(13, 1), RC(13, 1), RC(13, 1)}, // 71 - iron ore
+    {RC(13, 2), RC(13, 2), RC(13, 2), RC(13, 2), RC(13, 2), RC(13, 2)}, // 72 - coal ore
+    {RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0)}, // 73 - lapis ore
+    {RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0)}, // 74 - lapis block
 };
 
 const int plants[256] = {
