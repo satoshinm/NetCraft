@@ -191,10 +191,21 @@ void load_block_texture(const char *path) {
     int stride2 = sizeof(char) * width2 * 4;
     for (int i = 0; i < height2; i++) {
         for (int j = 0; j < width2; j++) {
-            data[i * stride + (j * 4 + 0)] = data2[i * stride2 + (j * 4 + 0)];
-            data[i * stride + (j * 4 + 1)] = data2[i * stride2 + (j * 4 + 1)];
-            data[i * stride + (j * 4 + 2)] = data2[i * stride2 + (j * 4 + 2)];
-            data[i * stride + (j * 4 + 3)] = data2[i * stride2 + (j * 4 + 3)];
+            unsigned char r = data2[i * stride2 + (j * 4 + 0)];;
+            unsigned char g = data2[i * stride2 + (j * 4 + 1)];;
+            unsigned char b = data2[i * stride2 + (j * 4 + 2)];;
+            unsigned char a = data2[i * stride2 + (j * 4 + 3)];;
+
+            if (a == 0) {
+                r = 255;
+                g = 0;
+                b = 255;
+            }
+
+            data[i * stride + (j * 4 + 0)] = r;
+            data[i * stride + (j * 4 + 1)] = g;
+            data[i * stride + (j * 4 + 2)] = b;
+            data[i * stride + (j * 4 + 3)] = a;
         }
     }
 
