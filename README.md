@@ -220,6 +220,7 @@ Keyboard:
 - F11 to toggle fullscreen/windowed mode.
 - F4 to toggle VR side-by-side stereo rendering.
 - Shift-F4 to toggle barrel distortion effect.
+- F2 to take a screenshot on the next scene render.
 - F3 to toggle debug info text.
 - F1 to toggle all user interface elements.
 

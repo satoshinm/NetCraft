@@ -171,6 +171,7 @@ typedef struct {
     bool show_info_text;
     bool show_ui;
     bool show_vr;
+    bool take_screenshot;
 } Model;
 
 static Model model;
@@ -2355,6 +2356,9 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             if (g->show_vr) init_vr(g->window);
         }
     }
+    if (key == CRAFT_KEY_SCREENSHOT) {
+        g->take_screenshot = true;
+    }
     if (key == GLFW_KEY_ENTER) {
         if (g->typing) {
             if (mods & GLFW_MOD_SHIFT) {
@@ -2878,6 +2882,7 @@ void reset_model() {
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = true;
     g->show_vr = false;
+    g->take_screenshot = false;
 }
 
 void one_iter();
@@ -3214,6 +3219,13 @@ void one_iter() {
             } else {
                 glViewport(0, 0, g->width, g->height);
                 render_scene();
+            }
+
+            if (g->take_screenshot) {
+#ifdef __EMSCRIPTEN__
+                EM_ASM(window.open(document.getElementsByTagName("canvas")[0].toDataURL()));
+                g->take_screenshot = false;
+#endif
             }
 
             // SWAP AND POLL //
