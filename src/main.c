@@ -2549,6 +2549,7 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 }
 
 
+#include "miniz.h"
 void on_file_drop(GLFWwindow *window, int count, const char **paths) {
     for (int i = 0; i < count; ++i) {
         const char *path = paths[i];
@@ -2556,6 +2557,8 @@ void on_file_drop(GLFWwindow *window, int count, const char **paths) {
         printf("dropped file %s\n", path);
 
         char *base = basename((char *)path);
+        char *ext = strrchr(base, '.');
+        if (!ext) ext = "";
 
         if (strcmp(base, "font.png") == 0) {
             load_font_texture(path);
@@ -2565,8 +2568,33 @@ void on_file_drop(GLFWwindow *window, int count, const char **paths) {
             load_sign_texture(path);
         } else if (strcmp(base, "texture.png") == 0) {
             load_main_texture(paths[i]);
-        } else {
+        } else if (strcmp(base, "terrain.png") == 0 || strcmp(ext, ".png") == 0) {
             load_block_texture(paths[i]);
+        } else if (strcmp(ext, ".zip") == 0) {
+            mz_zip_archive zip_archive;
+            mz_bool status = mz_zip_reader_init_file(&zip_archive, path, 0);
+            if (!status) {
+                printf("failed to init zip file: %s\n", path);
+                return;
+            }
+
+            printf("num files: %d\n", (int)mz_zip_reader_get_num_files(&zip_archive));
+
+            status = mz_zip_reader_extract_file_to_file(&zip_archive, "terrain.png", "/tmp/terrain.png", 0);
+            if (!status) {
+                printf("failed to extract terrain.png, is this a compatible texture pack? %s\n", path);
+                mz_zip_end(&zip_archive);
+                return;
+            }
+
+            printf("found terrain.png in zip, loading\n");
+            load_block_texture("/tmp/terrain.png");
+            // TODO: load other textures
+            // TODO: support "resource pack" format
+
+            mz_zip_end(&zip_archive);
+        } else {
+            printf("unknown file type (%s) dropped: %s\n", ext, path);
         }
 #ifdef __EMSCRIPTEN__
         // Emscripten copies the contents of the dropped file into the
