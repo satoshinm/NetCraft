@@ -22,11 +22,10 @@ jobs:
                   wget https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz
                   tar xf emsdk-portable.tar.gz -C ~
                   ~/emsdk-portable/emsdk update
-                  ~/emsdk-portable/emsdk install latest
-                  ~/emsdk-portable/emsdk activate latest
+                  ~/emsdk-portable/emsdk install sdk-1.37.12-64bit
+                  ~/emsdk-portable/emsdk activate sdk-1.37.12-64bit
                   source ~/emsdk-portable/emsdk_env.sh
-                  patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.9+netcraftfixes.patch
-                  cp deps/glfw/include/GLFW/glfw3.h $EMSCRIPTEN/system/include/GLFW/glfw3.h
+                  patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.12+netcraftfixes.patch
                   mkdir release-build-js
                   (cd release-build-js && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ..)
                   mkdir wasm-build
