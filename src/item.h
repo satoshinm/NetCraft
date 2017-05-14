@@ -60,6 +60,8 @@
 #define COLOR_31 63
 #define GLOWING_STONE 64
 
+#define RC(row, col) (row * 32 + col)
+
 extern const int items[];
 extern const char* item_names[];
 extern const int item_count;

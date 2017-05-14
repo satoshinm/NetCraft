@@ -1829,8 +1829,7 @@ void render_cover(Attrib *attrib, Player *player) {
     glUseProgram(attrib->program);
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
 
-    // textures 64 - 73 are block break stages 0 to 9
-    int w = 64 + mining_stage;
+    int w = RC(0, 0) + mining_stage;
 
     GLuint buffer = gen_cube_buffer_faces(target_x, target_y, target_z, 0.501, w, w, w, w, w, w);
     glEnable(GL_BLEND);
@@ -2564,6 +2563,8 @@ void on_file_drop(GLFWwindow *window, int count, const char **paths) {
             load_sky_texture(path);
         } else if (strcmp(base, "sign.png") == 0) {
             load_sign_texture(path);
+        } else if (strcmp(base, "texture.png") == 0) {
+            load_main_texture(paths[i]);
         } else {
             load_block_texture(paths[i]);
         }
@@ -2921,7 +2922,7 @@ int main(int argc, char **argv) {
     glClearColor(0, 0, 0, 1);
 
     // LOAD TEXTURES //
-    load_block_texture("textures/texture.png");
+    load_main_texture("textures/texture.png");
     load_font_texture("textures/font.png");
     load_sky_texture("textures/sky.png");
     load_sign_texture("textures/sign.png");
