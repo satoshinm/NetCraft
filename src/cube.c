@@ -127,7 +127,7 @@ void make_plant(
         {0, 3, 1, 0, 2, 3}
     };
     float *d = data;
-    float s = 0.0625;
+    float s = 1.0 / 32;
     float a = 0;
     float b = s;
     float du = (plants[w] % 32) * s;
