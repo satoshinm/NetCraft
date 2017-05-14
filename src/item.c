@@ -127,6 +127,11 @@ const char *item_names[] = {
     "COLOR_30",
     "COLOR_31",
     "GLOWING_STONE",
+    "BEDROCK",
+    "GRAVEL",
+    "IRON_BLOCK",
+    "GOLD_BLOCK",
+    "DIAMOND_BLOCK",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -197,7 +202,12 @@ const int blocks[256][6] = {
     {RC(12,13), RC(12,13), RC(12,13), RC(12,13), RC(12,13), RC(12,13)}, // 61
     {RC(12,14), RC(12,14), RC(12,14), RC(12,14), RC(12,14), RC(12,14)}, // 62
     {RC(12,15), RC(12,15), RC(12,15), RC(12,15), RC(12,15), RC(12,15)}, // 63
-    {RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9)}, // 64
+    {RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9)}, // 64 - glowing stone
+    {RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1)}, // 65 - bedrock
+    {RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3)}, // 66 - gravel
+    {RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6)}, // 67 - iron block
+    {RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7), RC(14, 7)}, // 68 - gold block
+    {RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8), RC(14, 8)}, // 69 - diamond block
 };
 
 const int plants[256] = {
