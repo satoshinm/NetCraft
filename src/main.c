@@ -3223,8 +3223,14 @@ void one_iter() {
 
             if (g->take_screenshot) {
 #ifdef __EMSCRIPTEN__
-                EM_ASM(window.open(document.getElementsByTagName("canvas")[0].toDataURL()));
                 g->take_screenshot = false;
+                EM_ASM(
+                    var url = document.getElementsByTagName("canvas")[0].toDataURL();
+                    var a = document.createElement("a");
+                    a.setAttribute("download", "screenshot.png");
+                    a.setAttribute("href", url);
+                    a.click();
+                );
 #endif
             }
 
