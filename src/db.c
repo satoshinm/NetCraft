@@ -452,9 +452,10 @@ void db_load_signs(SignList *list, int p, int q) {
         int face = sqlite3_column_int(load_signs_stmt, 3);
         int rotation = 0;
         if (face >= 4) {
-            // 4-8 encodes 90 degree rotation multiple on top face
+            // 4-7 encodes 90 degree rotation multiple on top face
             rotation = face - 4;
             face = 4;
+            if (rotation > 3) rotation = 3;
         }
         const char *text = (const char *)sqlite3_column_text(
             load_signs_stmt, 4);
