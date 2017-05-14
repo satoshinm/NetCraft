@@ -31,6 +31,7 @@ else ()
 endif ()
 
 add_definitions(-std=c99 -O3)
+add_definitions(-DLODEPNG_NO_COMPILE_ZLIB)
 
 if ($ENV{CIRCLECI})
     add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")

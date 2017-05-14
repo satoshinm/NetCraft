@@ -2203,11 +2203,18 @@ static unsigned zlib_compress(unsigned char** out, size_t* outsize, const unsign
 #else /*no LODEPNG_COMPILE_ZLIB*/
 
 #ifdef LODEPNG_COMPILE_DECODER
+#include "miniz.h"
 static unsigned zlib_decompress(unsigned char** out, size_t* outsize, const unsigned char* in,
                                 size_t insize, const LodePNGDecompressSettings* settings)
 {
-  if (!settings->custom_zlib) return 87; /*no custom zlib function provided */
-  return settings->custom_zlib(out, outsize, in, insize, settings);
+  int rc = mz_uncompress(*out, (mz_ulong *)outsize, in, (mz_ulong)insize);
+  if (rc == Z_OK) return 0;
+  else {
+      printf("mz_uncompress failed: %d\n", rc);
+      return rc;
+  }
+  //if (!settings->custom_zlib) return 87; /*no custom zlib function provided */
+  //return settings->custom_zlib(out, outsize, in, insize, settings);
 }
 #endif /*LODEPNG_COMPILE_DECODER*/
 #ifdef LODEPNG_COMPILE_ENCODER
