@@ -35,6 +35,11 @@ if ($ENV{CIRCLECI})
     add_definitions(-DBUILD_COMMIT="$ENV{CIRCLE_SHA1}")
 endif()
 
+if (DEBUG)
+    add_definitions("-fsanitize=address -fsanitize=undefined -g")
+    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS "-fsanitize=address -fsanitize=undefined -g")
+endif ()
+
 if (EMSCRIPTEN)
     add_definitions(-DNO_CRAFT_AUTH)
 
