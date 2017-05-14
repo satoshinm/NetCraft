@@ -174,7 +174,8 @@ void make_player(
     make_cube_faces(
         data, ao, light,
         1, 1, 1, 1, 1, 1,
-        RC(18, 2), RC(18, 0), RC(18, 1), RC(16, 1), RC(18, 1), RC(18, 3),
+        // wleft, wright, wtop, wbottom, wfront, wback,
+        RC(18, 2), RC(18, 0), RC(19, 1), RC(16, 1), RC(18, 1), RC(18, 3),
         0, 0, 0, 0.4);
     float ma[16];
     float mb[16];
