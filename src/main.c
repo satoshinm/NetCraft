@@ -2563,6 +2563,8 @@ void on_file_drop(GLFWwindow *window, int count, const char **paths) {
             load_sky_texture(path);
         } else if (strcmp(base, "sign.png") == 0) {
             load_sign_texture(path);
+        } else if (strcmp(base, "texture.png") == 0) {
+            load_main_texture(paths[i]);
         } else {
             load_block_texture(paths[i]);
         }
@@ -2920,7 +2922,7 @@ int main(int argc, char **argv) {
     glClearColor(0, 0, 0, 1);
 
     // LOAD TEXTURES //
-    load_block_texture("textures/texture.png");
+    load_main_texture("textures/texture.png");
     load_font_texture("textures/font.png");
     load_sky_texture("textures/sky.png");
     load_sign_texture("textures/sign.png");

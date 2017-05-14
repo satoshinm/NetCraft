@@ -148,7 +148,7 @@ void load_png_texture(const char *file_name) {
     free(data);
 }
 
-void load_block_texture(const char *path) {
+void load_main_texture(const char *path) {
     GLuint texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0);
@@ -156,6 +156,51 @@ void load_block_texture(const char *path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     load_png_texture(path);
+}
+
+// Load a 256x256 block texture into the lower-left corner of the main texture
+void load_block_texture(const char *path) {
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    unsigned int error;
+    unsigned char *data;
+    unsigned int width, height;
+    // First load the original texture
+    error = lodepng_decode32_file(&data, &width, &height, "textures/texture.png");
+    if (error) {
+        fprintf(stderr, "load_block_texture_128 %s failed, error %u: %s\n", "textures/texture.png", error, lodepng_error_text(error));
+        exit(1);
+    }
+    flip_image_vertical(data, width, height);
+
+    unsigned char *data2;
+    unsigned int width2, height2;
+    error = lodepng_decode32_file(&data2, &width2, &height2, path);
+    if (error) {
+        fprintf(stderr, "load_block_texture_128 %s failed, error %u: %s\n", path, error, lodepng_error_text(error));
+        exit(1);
+    }
+    flip_image_vertical(data2, width2, height2);
+
+    int stride = sizeof(char) * width * 4;
+    int stride2 = sizeof(char) * width2 * 4;
+    for (int i = 0; i < height2; i++) {
+        for (int j = 0; j < width2; j++) {
+            data[i * stride + (j * 4 + 0)] = data2[i * stride2 + (j * 4 + 0)];
+            data[i * stride + (j * 4 + 1)] = data2[i * stride2 + (j * 4 + 1)];
+            data[i * stride + (j * 4 + 2)] = data2[i * stride2 + (j * 4 + 2)];
+            data[i * stride + (j * 4 + 3)] = data2[i * stride2 + (j * 4 + 3)];
+        }
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+        GL_UNSIGNED_BYTE, data);
+    free(data);
 }
 
 void load_font_texture(const char *path) {
