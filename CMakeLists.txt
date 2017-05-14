@@ -10,6 +10,7 @@ if (EMSCRIPTEN)
         ${SOURCE_FILES}
         #deps/glew/src/glew.c
         deps/lodepng/lodepng.c
+        deps/miniz/miniz.c
         deps/noise/noise.c
         deps/sqlite/sqlite3.c
         deps/tinycthread/tinycthread.c)
@@ -23,6 +24,7 @@ else ()
         ${SOURCE_FILES}
         deps/glew/src/glew.c
         deps/lodepng/lodepng.c
+        deps/miniz/miniz.c
         deps/noise/noise.c
         deps/sqlite/sqlite3.c
         deps/tinycthread/tinycthread.c)
@@ -65,6 +67,7 @@ if (NOT EMSCRIPTEN)
 endif ()
 
 include_directories(deps/lodepng)
+include_directories(deps/miniz)
 include_directories(deps/noise)
 include_directories(deps/sqlite)
 include_directories(deps/tinycthread)
