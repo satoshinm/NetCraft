@@ -22,10 +22,10 @@ const int items[] = {
     TALL_GRASS,
     YELLOW_FLOWER,
     RED_FLOWER,
-    PURPLE_FLOWER,
-    SUN_FLOWER,
-    WHITE_FLOWER,
-    BLUE_FLOWER,
+    SAPLING,
+    RED_MUSHROOM,
+    BROWN_MUSHROOM,
+    DEADBUSH,
     COLOR_00,
     COLOR_01,
     COLOR_02,
@@ -82,10 +82,10 @@ const char *item_names[] = {
     "TALL_GRASS",
     "YELLOW_FLOWER",
     "RED_FLOWER",
-    "PURPLE_FLOWER",
-    "SUN_FLOWER",
-    "WHITE_FLOWER",
-    "BLUE_FLOWER",
+    "SAPLING",
+    "RED_MUSHROOM",
+    "BROWN_MUSHROOM",
+    "DEADBUSH",
     "x24",
     "x25",
     "x26",
@@ -216,10 +216,10 @@ const int plants[256] = {
     RC(13, 7), // 17 - tall grass
     RC(15,13), // 18 - yellow flower
     RC(15,12), // 19 - red flower
-    RC( 3, 3), // 20 - purple flower
-    RC( 3, 4), // 21 - sun flower
-    RC( 3, 5), // 22 - white flower
-    RC( 3, 6), // 23 - blue flower
+    RC(15,15), // 20 - sapling
+    RC(14,12), // 21 - red mushroom
+    RC(14,13), // 22 - brown mushroom
+    RC( 9,15), // 23 - deadbush
 };
 
 bool is_plant(int w) {
@@ -227,10 +227,10 @@ bool is_plant(int w) {
         case TALL_GRASS:
         case YELLOW_FLOWER:
         case RED_FLOWER:
-        case PURPLE_FLOWER:
-        case SUN_FLOWER:
-        case WHITE_FLOWER:
-        case BLUE_FLOWER:
+        case SAPLING:
+        case RED_MUSHROOM:
+        case BROWN_MUSHROOM:
+        case DEADBUSH:
             return true;
         default:
             return false;
