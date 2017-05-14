@@ -3227,7 +3227,8 @@ void one_iter() {
                 EM_ASM(
                     var url = document.getElementsByTagName("canvas")[0].toDataURL();
                     var a = document.createElement("a");
-                    a.setAttribute("download", "screenshot.png");
+                    var timestamp = new Date();
+                    a.setAttribute("download", "screenshot-netcraft-" + timestamp + ".png");
                     a.setAttribute("href", url);
                     a.click();
                 );
