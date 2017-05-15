@@ -50,6 +50,7 @@ void mining_tick() {
         }
 
         if (!target_w) return;
+        if (!isfinite(is_hardness(target_w))) return;
 
         // Scale by FPS
         int hardness = (int)(is_hardness(target_w) * 60);

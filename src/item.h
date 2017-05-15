@@ -59,6 +59,17 @@
 #define COLOR_30 62
 #define COLOR_31 63
 #define GLOWING_STONE 64
+#define BEDROCK 65
+#define GRAVEL 66
+#define IRON_BLOCK 67
+#define GOLD_BLOCK 68
+#define DIAMOND_BLOCK 69
+#define GOLD_ORE 70
+#define IRON_ORE 71
+#define COAL_ORE 72
+#define LAPIS_ORE 73
+#define LAPIS_BLOCK 74
+#define SANDSTONE 75
 
 #define RC(row, col) (row * 32 + col)
 

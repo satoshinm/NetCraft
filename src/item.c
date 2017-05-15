@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdbool.h>
 #include "item.h"
 #include "util.h"
@@ -325,6 +326,8 @@ float is_hardness(int w) {
         case LIGHT_STONE:
         case DARK_STONE:
             return 7.0;
+        case BEDROCK:
+            return INFINITY;
 
         default:
             return 1.0;
