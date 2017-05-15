@@ -325,7 +325,10 @@ static void string_set(char** out, const char* in)
 
 /* ////////////////////////////////////////////////////////////////////////// */
 
-unsigned lodepng_read32bitInt(const unsigned char* buffer)
+#ifdef __clang__
+__attribute__((no_sanitize("shift")))
+#endif
+unsigned int lodepng_read32bitInt(const unsigned char* buffer)
 {
   return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
 }
@@ -2200,11 +2203,18 @@ static unsigned zlib_compress(unsigned char** out, size_t* outsize, const unsign
 #else /*no LODEPNG_COMPILE_ZLIB*/
 
 #ifdef LODEPNG_COMPILE_DECODER
+#include "miniz.h"
 static unsigned zlib_decompress(unsigned char** out, size_t* outsize, const unsigned char* in,
                                 size_t insize, const LodePNGDecompressSettings* settings)
 {
-  if (!settings->custom_zlib) return 87; /*no custom zlib function provided */
-  return settings->custom_zlib(out, outsize, in, insize, settings);
+  int rc = mz_uncompress(*out, (mz_ulong *)outsize, in, (mz_ulong)insize);
+  if (rc == Z_OK) return 0;
+  else {
+      printf("mz_uncompress failed: %d\n", rc);
+      return rc;
+  }
+  //if (!settings->custom_zlib) return 87; /*no custom zlib function provided */
+  //return settings->custom_zlib(out, outsize, in, insize, settings);
 }
 #endif /*LODEPNG_COMPILE_DECODER*/
 #ifdef LODEPNG_COMPILE_ENCODER

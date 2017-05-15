@@ -21,10 +21,10 @@
 #define TALL_GRASS 17
 #define YELLOW_FLOWER 18
 #define RED_FLOWER 19
-#define PURPLE_FLOWER 20
-#define SUN_FLOWER 21
-#define WHITE_FLOWER 22
-#define BLUE_FLOWER 23
+#define SAPLING 20
+#define RED_MUSHROOM 21
+#define BROWN_MUSHROOM 22
+#define DEADBUSH 23
 
 #define COLOR_00 32
 #define COLOR_01 33
@@ -59,6 +59,19 @@
 #define COLOR_30 62
 #define COLOR_31 63
 #define GLOWING_STONE 64
+#define BEDROCK 65
+#define GRAVEL 66
+#define IRON_BLOCK 67
+#define GOLD_BLOCK 68
+#define DIAMOND_BLOCK 69
+#define GOLD_ORE 70
+#define IRON_ORE 71
+#define COAL_ORE 72
+#define LAPIS_ORE 73
+#define LAPIS_BLOCK 74
+#define SANDSTONE 75
+
+#define RC(row, col) (row * 32 + col)
 
 extern const int items[];
 extern const char* item_names[];
@@ -66,11 +79,11 @@ extern const int item_count;
 extern const int blocks[256][6];
 extern const int plants[256];
 
-int is_plant(int w);
-int is_obstacle(int w);
-int is_transparent(int w);
-int is_destructable(int w);
+bool is_plant(int w);
+bool is_obstacle(int w);
+bool is_transparent(int w);
+bool is_destructable(int w);
 int is_illuminated(int w);
-int is_hardness(int w);
+float is_hardness(int w);
 
 #endif

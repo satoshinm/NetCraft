@@ -10,6 +10,7 @@ if (EMSCRIPTEN)
         ${SOURCE_FILES}
         #deps/glew/src/glew.c
         deps/lodepng/lodepng.c
+        deps/miniz/miniz.c
         deps/noise/noise.c
         deps/sqlite/sqlite3.c
         deps/tinycthread/tinycthread.c)
@@ -23,17 +24,24 @@ else ()
         ${SOURCE_FILES}
         deps/glew/src/glew.c
         deps/lodepng/lodepng.c
+        deps/miniz/miniz.c
         deps/noise/noise.c
         deps/sqlite/sqlite3.c
         deps/tinycthread/tinycthread.c)
 endif ()
 
 add_definitions(-std=c99 -O3)
+add_definitions(-DLODEPNG_NO_COMPILE_ZLIB)
 
 if ($ENV{CIRCLECI})
     add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")
     add_definitions(-DBUILD_COMMIT="$ENV{CIRCLE_SHA1}")
 endif()
+
+if (DEBUG)
+    add_definitions("-fsanitize=address -fsanitize=undefined -g")
+    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS "-fsanitize=address -fsanitize=undefined -g")
+endif ()
 
 if (EMSCRIPTEN)
     add_definitions(-DNO_CRAFT_AUTH)
@@ -65,6 +73,7 @@ if (NOT EMSCRIPTEN)
 endif ()
 
 include_directories(deps/lodepng)
+include_directories(deps/miniz)
 include_directories(deps/noise)
 include_directories(deps/sqlite)
 include_directories(deps/tinycthread)

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include "ring.h"
 
@@ -13,11 +14,11 @@ void ring_free(Ring *ring) {
     free(ring->data);
 }
 
-int ring_empty(Ring *ring) {
+bool ring_empty(Ring *ring) {
     return ring->start == ring->end;
 }
 
-int ring_full(Ring *ring) {
+bool ring_full(Ring *ring) {
     return ring->start == (ring->end + 1) % ring->capacity;
 }
 
@@ -98,12 +99,12 @@ void ring_put_exit(Ring *ring) {
     ring_put(ring, &entry);
 }
 
-int ring_get(Ring *ring, RingEntry *entry) {
+bool ring_get(Ring *ring, RingEntry *entry) {
     if (ring_empty(ring)) {
-        return 0;
+        return false;
     }
     RingEntry *e = ring->data + ring->start;
     memcpy(entry, e, sizeof(RingEntry));
     ring->start = (ring->start + 1) % ring->capacity;
-    return 1;
+    return true;
 }

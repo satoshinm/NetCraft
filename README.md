@@ -145,6 +145,9 @@ terminal.
     make
     ./craft
 
+To enable additional compiler debug settings, run cmake with:
+
+    cmake -DDEBUG=1 ..
 
 #### Client
 
@@ -192,6 +195,7 @@ Mouse:
 - Ctrl + Right Click to toggle a block as a light source.
 - Middle Click to change the current block selection to the targeted block.
 - Scrollwheel to cycle through the block types, or zoom in orthogonal mode.
+- Drag-and-drop files onto the canvas to change the texture.png.
 
 Keyboard:
 
@@ -216,9 +220,9 @@ Keyboard:
 - F11 to toggle fullscreen/windowed mode.
 - F4 to toggle VR side-by-side stereo rendering.
 - Shift-F4 to toggle barrel distortion effect.
+- F2 to take a screenshot on the next scene render.
 - F3 to toggle debug info text.
 - F1 to toggle all user interface elements.
-- Drop files onto the canvas to change the texture.png.
 
 Joystick:
 
@@ -303,6 +307,9 @@ Text is rendered using a bitmap atlas. Each character is rendered onto two trian
 
 Transparency in glass blocks and plants (plants don’t take up the full rectangular shape of their triangle primitives) is implemented by discarding magenta-colored pixels in the fragment shader.
 
+Block textures are based on the Pixeludi Pack by Wojtek Mroczek, Creative Commons CC-BY-SA, 2011,
+as in [TrueCraft](https://github.com/SirCmpwn/TrueCraft/).
+
 #### Database
 
 User changes to the world are stored in a sqlite database. Only the delta is stored, so the default world is generated and then the user changes are applied on top when loading.
@@ -343,6 +350,7 @@ http://0fps.wordpress.com/2013/07/03/ambient-occlusion-for-minecraft-like-worlds
 * GLFW is used for cross-platform window management.
 * CURL is used for HTTPS / SSL POST for the authentication process.
 * lodepng is used for loading PNG textures.
+* miniz is used for writing PNG screenshots and loading zip archives.
 * sqlite3 is used for saving the blocks added / removed by the user.
 * tinycthread is used for cross-platform threading.
 * emscripten is used for compiling to the web platform.

@@ -3,8 +3,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "lodepng.h"
+#include "miniz.h"
 #include "matrix.h"
 #include "util.h"
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 int rand_int(int n) {
     int result;
@@ -148,7 +152,7 @@ void load_png_texture(const char *file_name) {
     free(data);
 }
 
-void load_block_texture(const char *path) {
+void load_main_texture(const char *path) {
     GLuint texture;
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0);
@@ -156,6 +160,62 @@ void load_block_texture(const char *path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     load_png_texture(path);
+}
+
+// Load a 256x256 block texture into the lower-left corner of the main texture
+void load_block_texture(const char *path) {
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    unsigned int error;
+    unsigned char *data;
+    unsigned int width, height;
+    // First load the original texture
+    error = lodepng_decode32_file(&data, &width, &height, "textures/texture.png");
+    if (error) {
+        fprintf(stderr, "load_block_texture_128 %s failed, error %u: %s\n", "textures/texture.png", error, lodepng_error_text(error));
+        exit(1);
+    }
+    flip_image_vertical(data, width, height);
+
+    unsigned char *data2;
+    unsigned int width2, height2;
+    error = lodepng_decode32_file(&data2, &width2, &height2, path);
+    if (error) {
+        fprintf(stderr, "load_block_texture_128 %s failed, error %u: %s\n", path, error, lodepng_error_text(error));
+        exit(1);
+    }
+    flip_image_vertical(data2, width2, height2);
+
+    int stride = sizeof(char) * width * 4;
+    int stride2 = sizeof(char) * width2 * 4;
+    for (int i = 0; i < height2; i++) {
+        for (int j = 0; j < width2; j++) {
+            unsigned char r = data2[i * stride2 + (j * 4 + 0)];;
+            unsigned char g = data2[i * stride2 + (j * 4 + 1)];;
+            unsigned char b = data2[i * stride2 + (j * 4 + 2)];;
+            unsigned char a = data2[i * stride2 + (j * 4 + 3)];;
+
+            if (a == 0) {
+                r = 255;
+                g = 0;
+                b = 255;
+            }
+
+            data[i * stride + (j * 4 + 0)] = r;
+            data[i * stride + (j * 4 + 1)] = g;
+            data[i * stride + (j * 4 + 2)] = b;
+            data[i * stride + (j * 4 + 3)] = a;
+        }
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+        GL_UNSIGNED_BYTE, data);
+    free(data);
 }
 
 void load_font_texture(const char *path) {
@@ -264,4 +324,54 @@ int wrap(const char *input, int max_width, char *output, int max_length) {
     }
     free(text);
     return line_number;
+}
+
+void screenshot(int width, int height) {
+#ifdef __EMSCRIPTEN__
+    EM_ASM(
+        var url = document.getElementsByTagName("canvas")[0].toDataURL();
+        var a = document.createElement("a");
+        var timestamp = new Date().toISOString();
+        a.setAttribute("download", "screenshot-netcraft-" + timestamp + ".png");
+        a.setAttribute("href", url);
+        a.click();
+    );
+#else
+    int channels = 4;
+    int size = channels * width * height;
+    GLubyte *pixels = malloc(size);
+    if (pixels) {
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        printf("read pixels to %p\n", pixels);
+
+        size_t png_size = 0;
+        int level = MZ_DEFAULT_LEVEL;
+        void *png = tdefl_write_image_to_png_file_in_memory_ex(pixels,
+                width, height, channels, &png_size, level, MZ_TRUE);
+        if (!png) {
+            printf("failed to write png of screenshot\n");
+        } else {
+            char filename[256];
+            char timestamp[32];
+            time_t now;
+            time(&now);
+            strftime(timestamp, sizeof(timestamp), "%FT%TZ", gmtime(&now));
+            snprintf(filename, sizeof(filename), "screenshot-netcraft-%s.png", timestamp);
+
+            FILE *fp = fopen(filename, "wb");
+            if (fp) {
+                size_t wrote = fwrite(png, 1, png_size, fp);
+                fclose(fp);
+                printf("Saved screenshot to %s\n", filename);
+            } else {
+                printf("failed to open %s for writing\n", filename);
+            }
+            mz_free(png);
+        }
+
+        free(pixels);
+    } else {
+        printf("malloc fail for screenshot (%d bytes)\n", size);
+    }
+#endif
 }
