@@ -172,6 +172,7 @@ typedef struct {
     bool show_ui;
     bool show_vr;
     bool take_screenshot;
+    bool noclip;
 } Model;
 
 static Model model;
@@ -2228,6 +2229,9 @@ void parse_command(const char *buffer, bool forward) {
     else if (sscanf(buffer, "/cylinder %d", &radius) == 1) {
         cylinder(&g->block0, &g->block1, radius, 0);
     }
+    else if (sscanf(buffer, "/noclip") == 0) {
+        g->noclip = !g->noclip;
+    }
     else if (forward) {
         client_talk(buffer);
     }
@@ -2748,6 +2752,7 @@ void handle_movement(double dt) {
         s->x += vx;
         s->y += vy + dy * ut;
         s->z += vz;
+        if (g->noclip) continue;
         if (collide(2, &s->x, &s->y, &s->z)) {
             dy = 0;
         }
@@ -2883,6 +2888,7 @@ void reset_model() {
     g->show_ui = true;
     g->show_vr = false;
     g->take_screenshot = false;
+    g->noclip = false;
 }
 
 void one_iter();
