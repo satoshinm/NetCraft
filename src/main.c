@@ -1911,6 +1911,24 @@ void add_message(const char *text) {
 
     g->message_view_index = g->message_index - MAX_VISIBLE_MESSAGES;
     if (g->message_view_index < 0) g->message_view_index += MAX_MESSAGES;
+
+    printf("---\n");
+    for (int i = 0; i < MAX_MESSAGES; ++i) {
+        if (g->messages[i] && *g->messages[i]) {
+            printf("%s%s %d. %s\n",
+                    (i == g->message_index ? "i" : " "),
+                    (i == g->message_view_index ? "v" : " "),
+                    i, g->messages[i]);
+        }
+    }
+    printf("---\n");
+    // SHOW_CHAT_TEXT
+    printf("Simulated console: (g->message_index=%d)\n", g->message_index);
+    for (int i = 0; i < MAX_VISIBLE_MESSAGES; i++) {
+        int index = (g->message_view_index + i) % MAX_MESSAGES;
+        //index = (index + g->message_view_index) % MAX_MESSAGES;
+        printf("LINE(i=%d, index=%d): %s\n", i, index, g->messages[index]);
+    }
 }
 
 void login() {
