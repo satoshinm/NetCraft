@@ -2352,15 +2352,17 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             }
         }
         if (key == GLFW_KEY_UP) {
+            int save = g->message_view_index;
             g->message_view_index = (g->message_view_index - 1) % MAX_MESSAGES;
             if (g->message_view_index < 0) g->message_view_index += MAX_MESSAGES;
-            if (g->message_view_index == g->message_index)
-                g->message_view_index = g->message_index + 1;
+            if (g->message_view_index == g->message_index) g->message_view_index = save;
+            if (!g->messages[g->message_view_index]) g->message_view_index = save;
         }
         if (key == GLFW_KEY_DOWN) {
+            int save = g->message_view_index;
             g->message_view_index = (g->message_view_index + 1) % MAX_MESSAGES;
-            if (g->message_view_index == g->message_index)
-                g->message_view_index = g->message_index - 1;
+            if (g->message_view_index == g->message_index) g->message_view_index = save;
+            if (!g->messages[g->message_view_index]) g->message_view_index = save;
         }
     }
     if (key == CRAFT_KEY_FULLSCREEN) { // allow GLFW_REPEAT for F11
