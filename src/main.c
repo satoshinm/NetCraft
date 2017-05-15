@@ -2344,12 +2344,19 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
         }
         return;
     }
-    if (key == GLFW_KEY_BACKSPACE) {
-        if (g->typing) {
+    if (g->typing) {
+        if (key == GLFW_KEY_BACKSPACE) {
             int n = strlen(g->typing_buffer);
             if (n > 0) {
                 g->typing_buffer[n - 1] = '\0';
             }
+        }
+        if (key == GLFW_KEY_UP) {
+            // TODO: boundaries
+            g->message_view_index = (g->message_view_index - 1) % MAX_MESSAGES;
+        }
+        if (key == GLFW_KEY_DOWN) {
+            g->message_view_index = (g->message_view_index + 1) % MAX_MESSAGES;
         }
     }
     if (key == CRAFT_KEY_FULLSCREEN) { // allow GLFW_REPEAT for F11
