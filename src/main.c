@@ -3222,8 +3222,8 @@ void one_iter() {
             }
 
             if (g->take_screenshot) {
-#ifdef __EMSCRIPTEN__
                 g->take_screenshot = false;
+#ifdef __EMSCRIPTEN__
                 EM_ASM(
                     var url = document.getElementsByTagName("canvas")[0].toDataURL();
                     var a = document.createElement("a");
@@ -3232,6 +3232,37 @@ void one_iter() {
                     a.setAttribute("href", url);
                     a.click();
                 );
+#else
+                int channels = 4;
+                int size = channels * g->width * g->height;
+                GLubyte *pixels = malloc(size);
+                if (pixels) {
+                    glReadPixels(0, 0, g->width, g->height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+                    printf("read pixels to %p\n", pixels);
+
+                    size_t png_size = 0;
+                    int level = MZ_DEFAULT_LEVEL;
+                    void *png = tdefl_write_image_to_png_file_in_memory_ex(pixels,
+                            g->width, g->height, channels, &png_size, level, MZ_FALSE);
+                    if (!png) {
+                        printf("failed to write png of screenshot\n");
+                    } else {
+                        char *filename = "screenshot-netcraft.png";
+                        FILE *fp = fopen(filename, "wb");
+                        if (fp) {
+                            size_t wrote = fwrite(png, 1, png_size, fp);
+                            fclose(fp);
+                            printf("Saved screenshot to %s\n", filename);
+                        } else {
+                            printf("failed to open %s for writing\n", filename);
+                        }
+                        mz_free(png);
+                    }
+
+                    free(pixels);
+                } else {
+                    printf("malloc fail for screenshot (%d bytes)\n", size);
+                }
 #endif
             }
 
