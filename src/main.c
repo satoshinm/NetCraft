@@ -3227,7 +3227,7 @@ void one_iter() {
                 EM_ASM(
                     var url = document.getElementsByTagName("canvas")[0].toDataURL();
                     var a = document.createElement("a");
-                    var timestamp = new Date();
+                    var timestamp = new Date().toISOString();
                     a.setAttribute("download", "screenshot-netcraft-" + timestamp + ".png");
                     a.setAttribute("href", url);
                     a.click();
@@ -3247,7 +3247,13 @@ void one_iter() {
                     if (!png) {
                         printf("failed to write png of screenshot\n");
                     } else {
-                        char *filename = "screenshot-netcraft.png";
+                        char filename[256];
+                        char timestamp[32];
+                        time_t now;
+                        time(&now);
+                        strftime(timestamp, sizeof(timestamp), "%FT%TZ", gmtime(&now));
+                        snprintf(filename, sizeof(filename), "screenshot-netcraft-%s.png", timestamp);
+
                         FILE *fp = fopen(filename, "wb");
                         if (fp) {
                             size_t wrote = fwrite(png, 1, png_size, fp);
