@@ -3243,7 +3243,7 @@ void one_iter() {
                     size_t png_size = 0;
                     int level = MZ_DEFAULT_LEVEL;
                     void *png = tdefl_write_image_to_png_file_in_memory_ex(pixels,
-                            g->width, g->height, channels, &png_size, level, MZ_FALSE);
+                            g->width, g->height, channels, &png_size, level, MZ_TRUE);
                     if (!png) {
                         printf("failed to write png of screenshot\n");
                     } else {
