@@ -47,5 +47,6 @@ char *tokenize(char *str, const char *delim, char **key);
 int char_width(char input);
 int string_width(const char *input);
 int wrap(const char *input, int max_width, char *output, int max_length);
+void screenshot(int width, int height);
 
 #endif

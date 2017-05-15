@@ -220,6 +220,7 @@ Keyboard:
 - F11 to toggle fullscreen/windowed mode.
 - F4 to toggle VR side-by-side stereo rendering.
 - Shift-F4 to toggle barrel distortion effect.
+- F2 to take a screenshot on the next scene render.
 - F3 to toggle debug info text.
 - F1 to toggle all user interface elements.
 
@@ -349,6 +350,7 @@ http://0fps.wordpress.com/2013/07/03/ambient-occlusion-for-minecraft-like-worlds
 * GLFW is used for cross-platform window management.
 * CURL is used for HTTPS / SSL POST for the authentication process.
 * lodepng is used for loading PNG textures.
+* miniz is used for writing PNG screenshots and loading zip archives.
 * sqlite3 is used for saving the blocks added / removed by the user.
 * tinycthread is used for cross-platform threading.
 * emscripten is used for compiling to the web platform.
