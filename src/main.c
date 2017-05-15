@@ -153,6 +153,7 @@ typedef struct {
     bool just_clicked;
     char typing_buffer[MAX_TEXT_LENGTH];
     int message_index;
+    int message_view_index;
     char messages[MAX_MESSAGES][MAX_TEXT_LENGTH];
     int width;
     int height;
@@ -1907,6 +1908,9 @@ void add_message(const char *text) {
     snprintf(
         g->messages[g->message_index], MAX_TEXT_LENGTH, "%s", text);
     g->message_index = (g->message_index + 1) % MAX_MESSAGES;
+
+    g->message_view_index = g->message_index - MAX_VISIBLE_MESSAGES;
+    if (g->message_view_index < 0) g->message_view_index += MAX_MESSAGES;
 }
 
 void login() {
@@ -2898,6 +2902,7 @@ void reset_model() {
     g->just_clicked = false;
     memset(g->messages, 0, sizeof(char) * MAX_MESSAGES * MAX_TEXT_LENGTH);
     g->message_index = 0;
+    g->message_view_index = 0;
     g->day_length = DAY_LENGTH;
     glfwSetTime(g->day_length / 3.0);
     g->time_changed = true;
@@ -3358,8 +3363,8 @@ void render_scene() {
         ty -= ts * 2;
     }
     if (SHOW_CHAT_TEXT && g->show_ui) {
-        for (int i = 0; i < MAX_MESSAGES; i++) {
-            int index = (g->message_index + i) % MAX_MESSAGES;
+        for (int i = 0; i < MAX_VISIBLE_MESSAGES; i++) {
+            int index = (g->message_view_index + i) % MAX_MESSAGES;
             if (strlen(g->messages[index])) {
                 render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts,
                     g->messages[index]);
