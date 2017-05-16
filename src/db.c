@@ -1,3 +1,4 @@
+#ifndef __EMSCRIPTEN__
 #include <string.h>
 #include <stdbool.h>
 #include "db.h"
@@ -549,3 +550,4 @@ int db_worker_run(void *arg) {
     }
     return 0;
 }
+#endif

@@ -8,11 +8,9 @@ if (EMSCRIPTEN)
     add_executable(
         craft
         ${SOURCE_FILES}
-        #deps/glew/src/glew.c
         deps/lodepng/lodepng.c
         deps/miniz/miniz.c
         deps/noise/noise.c
-        deps/sqlite/sqlite3.c
         deps/tinycthread/tinycthread.c)
     # Generate HTML file wrapper in addition to .js
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
@@ -70,12 +68,12 @@ if (NOT EMSCRIPTEN)
     add_subdirectory(deps/glfw)
     include_directories(deps/glew/include)
     include_directories(deps/glfw/include)
+    include_directories(deps/sqlite)
 endif ()
 
 include_directories(deps/lodepng)
 include_directories(deps/miniz)
 include_directories(deps/noise)
-include_directories(deps/sqlite)
 include_directories(deps/tinycthread)
 
 if(MINGW OR MSVC)
