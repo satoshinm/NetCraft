@@ -3070,7 +3070,7 @@ int main(int argc, char **argv) {
 void main_inited();
 
 void client_opened(int fd, void *userData) {
-    fprintf(stderr, "client_opened: %d %p\n", fd, userData);
+    add_message("Connected to server");
     client_start();
     client_version(1);
     login();
@@ -3082,9 +3082,9 @@ void client_closed(int fd, void *userData) {
 }
 
 void client_socket_error(int fd, int err, const char *msg, void *userData) {
-    fprintf(stderr, "client_socket_error: fd=%d, err=%d, msg=%s, userData=%p\n", fd, err, msg, userData);
-    add_message("WebSocket error occurred:");
-    add_message(msg);
+    char buf[256];
+    snprintf(buf, sizeof(buf), "WebSocket error occurred: %d %s", err, msg);
+    add_message(buf);
     // TODO: handle error
 }
 
