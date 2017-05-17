@@ -131,6 +131,13 @@ typedef struct {
 
 
 typedef struct {
+    bool running;
+    bool shutdown;
+    bool initialized;
+    double last_commit;
+    double last_update;
+    double previous_iter_timestamp;
+    FPS fps;
     GLFWwindow *window;
     Worker workers[WORKERS];
     Chunk chunks[MAX_CHUNKS];
@@ -2867,6 +2874,10 @@ void parse_buffer(char *buffer) {
 }
 
 void reset_model() {
+    g->last_commit = glfwGetTime();
+    g->last_update = glfwGetTime();
+    g->previous_iter_timestamp = glfwGetTime();
+    memset(&g->fps, 0, sizeof(g->fps));
     memset(g->chunks, 0, sizeof(Chunk) * MAX_CHUNKS);
     g->chunk_count = 0;
     memset(g->players, 0, sizeof(Player) * MAX_PLAYERS);
@@ -2894,20 +2905,12 @@ void reset_model() {
 void one_iter();
 void main_init(void *);
 void main_shutdown();
-// TODO: move to g? or?
-static FPS fps = {0, 0, 0};
-static double last_commit;
-static double last_update;
-static double previous;
-static State *s;
-static Player *me;
+
 static Attrib block_attrib = {0};
 static Attrib line_attrib = {0};
 static Attrib text_attrib = {0};
 static Attrib sky_attrib = {0};
 static GLuint sky_buffer;
-static bool g_running;
-static bool g_inner_break;
 
 
 int main(int argc, char **argv) {
@@ -3038,18 +3041,20 @@ int main(int argc, char **argv) {
     }
 
     // OUTER LOOP //
-    g_running = true;
+    g->running = true;
+    g->shutdown = false;
+    g->initialized = false;
 #ifdef __EMSCRIPTEN__
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
-    //main_shutdown(); // called in one_iter() if g_inner_break
+    //main_shutdown(); // called in one_iter() if g->shutdown
 #else
-    while (g_running) {
+    while (g->running) {
         main_init(NULL);
-        g_inner_break = false;
+        g->shutdown = false;
         while (1) {
             one_iter();
-            if (g_inner_break) break;
+            if (g->shutdown) break;
         }
         main_shutdown();
     }
@@ -3084,169 +3089,175 @@ void client_socket_error(int fd, int err, const char *msg, void *userData) {
 }
 
 void main_init(void *unused) {
-        // DATABASE INITIALIZATION //
-        if (g->mode == MODE_OFFLINE || USE_CACHE) {
-            db_enable();
-            if (db_init(g->db_path)) {
-                fprintf(stderr, "fatal error: db_init failed!\n");
-                exit(-1);
-            }
-            if (g->mode == MODE_ONLINE) {
-                // TODO: support proper caching of signs (handle deletions)
-                db_delete_all_signs();
-            }
+    // DATABASE INITIALIZATION //
+    if (g->mode == MODE_OFFLINE || USE_CACHE) {
+        db_enable();
+        if (db_init(g->db_path)) {
+            fprintf(stderr, "fatal error: db_init failed!\n");
+            exit(-1);
         }
-
-        // CLIENT INITIALIZATION //
         if (g->mode == MODE_ONLINE) {
-            client_enable();
-#ifdef __EMSCRIPTEN__
-            emscripten_set_socket_error_callback("error", client_socket_error);
-            emscripten_set_socket_open_callback("open", client_opened);
-            emscripten_set_socket_message_callback(parse_buffer, client_message);
-            emscripten_set_socket_close_callback("close", client_closed);
-            client_connect(g->server_addr, g->server_port);
-#else
-            client_connect(g->server_addr, g->server_port);
-            client_opened(-1, NULL);
-#endif
-        } else {
-            main_inited();
+            // TODO: support proper caching of signs (handle deletions)
+            db_delete_all_signs();
         }
+    }
+
+    // LOCAL VARIABLES //
+    reset_model();
+    sky_buffer = gen_sky_buffer();
+
+    // CLIENT INITIALIZATION //
+    if (g->mode == MODE_ONLINE) {
+        client_enable();
+#ifdef __EMSCRIPTEN__
+        emscripten_set_socket_error_callback("error", client_socket_error);
+        emscripten_set_socket_open_callback("open", client_opened);
+        emscripten_set_socket_message_callback(parse_buffer, client_message);
+        emscripten_set_socket_close_callback("close", client_closed);
+        client_connect(g->server_addr, g->server_port);
+#else
+        client_connect(g->server_addr, g->server_port);
+        client_opened(-1, NULL);
+#endif
+    } else {
+        main_inited();
+    }
 }
 
 void main_inited() {
-        // LOCAL VARIABLES //
-        reset_model();
-        //FPS fps = {0, 0, 0};
-        last_commit = glfwGetTime();
-        last_update = glfwGetTime();
-        sky_buffer = gen_sky_buffer();
+    // LOCAL VARIABLES //
+    reset_model();
 
-        me = g->players;
-        s = &g->players->state;
-        me->id = 0;
-        me->name[0] = '\0';
-        me->buffer = 0;
-        g->player_count = 1;
+    Player *me = g->players;
+    State *s = &g->players->state;
+    me->id = 0;
+    me->name[0] = '\0';
+    me->buffer = 0;
+    g->player_count = 1;
 
-        // LOAD STATE FROM DATABASE //
-        int loaded = db_load_state(&s->x, &s->y, &s->z, &s->rx, &s->ry);
-        force_chunks(me);
-        if (!loaded) {
-            s->y = highest_block(s->x, s->z) + 2;
-        }
+    // LOAD STATE FROM DATABASE //
+    int loaded = db_load_state(&s->x, &s->y, &s->z, &s->rx, &s->ry);
+    force_chunks(me);
+    if (!loaded) {
+        s->y = highest_block(s->x, s->z) + 2;
+    }
 
-        // BEGIN MAIN LOOP //
-        previous = glfwGetTime();
+    // BEGIN MAIN LOOP //
+    g->previous_iter_timestamp = glfwGetTime();
+    g->initialized = true;
 }
 
 void main_shutdown() {
-        // SHUTDOWN //
-        db_save_state(s->x, s->y, s->z, s->rx, s->ry);
-        db_close();
-        db_disable();
-        client_stop();
-        client_disable();
-        del_buffer(sky_buffer);
-        delete_all_chunks();
-        delete_all_players();
+    // SHUTDOWN //
+    Player *me = g->players;
+    State *s = &g->players->state;
+
+    db_save_state(s->x, s->y, s->z, s->rx, s->ry);
+    db_close();
+    db_disable();
+    client_stop();
+    client_disable();
+    del_buffer(sky_buffer);
+    delete_all_chunks();
+    delete_all_players();
 }
 
 void render_scene();
 void one_iter() {
+    Player *me = g->players;
+    State *s = &g->players->state;
+
     glfwSwapInterval(VSYNC);
 
-            // FRAME RATE //
-            if (g->time_changed) {
-                g->time_changed = false;
-                last_commit = glfwGetTime();
-                last_update = glfwGetTime();
-                memset(&fps, 0, sizeof(fps));
-            }
-            update_fps(&fps);
-            double now = glfwGetTime();
-            double dt = now - previous;
-            dt = MIN(dt, 0.2);
-            dt = MAX(dt, 0.0);
-            previous = now;
+    // FRAME RATE //
+    if (g->time_changed) {
+        g->time_changed = false;
+        g->last_commit = glfwGetTime();
+        g->last_update = glfwGetTime();
+        memset(&g->fps, 0, sizeof(g->fps));
+    }
+    update_fps(&g->fps);
+    double now = glfwGetTime();
+    double dt = now - g->previous_iter_timestamp;
+    dt = MIN(dt, 0.2);
+    dt = MAX(dt, 0.0);
+    g->previous_iter_timestamp = now;
 
-            // HANDLE MOUSE INPUT //
-            handle_mouse_input();
+    // HANDLE MOUSE INPUT //
+    handle_mouse_input();
 
-            mining_tick();
-            building_tick();
+    mining_tick();
+    building_tick();
 
-            handle_gamepad_input();
+    handle_gamepad_input();
 
-            // HANDLE MOVEMENT //
-            handle_movement(dt);
+    // HANDLE MOVEMENT //
+    handle_movement(dt);
 
 #ifndef __EMSCRIPTEN__ // emscripten uses the client_message callback instead
-            // HANDLE DATA FROM SERVER //
-            char *buffer = client_recv();
-            if (buffer) {
-                parse_buffer(buffer);
-                free(buffer);
-            }
+    // HANDLE DATA FROM SERVER //
+    char *buffer = client_recv();
+    if (buffer) {
+        parse_buffer(buffer);
+        free(buffer);
+    }
 #endif
+    // FLUSH DATABASE //
+    if (now - g->last_commit > COMMIT_INTERVAL) {
+        g->last_commit = now;
+        db_commit();
+    }
 
-            // FLUSH DATABASE //
-            if (now - last_commit > COMMIT_INTERVAL) {
-                last_commit = now;
-                db_commit();
-            }
+    // SEND POSITION TO SERVER //
+    if (now - g->last_update > 0.1) {
+        g->last_update = now;
+        client_position(s->x, s->y, s->z, s->rx, s->ry);
+    }
 
-            // SEND POSITION TO SERVER //
-            if (now - last_update > 0.1) {
-                last_update = now;
-                client_position(s->x, s->y, s->z, s->rx, s->ry);
-            }
+    // PREPARE TO RENDER //
+    g->observe1 = g->observe1 % g->player_count;
+    g->observe2 = g->observe2 % g->player_count;
+    delete_chunks();
+    del_buffer(me->buffer);
+    me->buffer = gen_player_buffer(s->x, s->y, s->z, s->rx, s->ry);
+    for (int i = 1; i < g->player_count; i++) {
+        interpolate_player(g->players + i);
+    }
 
-            // PREPARE TO RENDER //
-            g->observe1 = g->observe1 % g->player_count;
-            g->observe2 = g->observe2 % g->player_count;
-            delete_chunks();
-            del_buffer(me->buffer);
-            me->buffer = gen_player_buffer(s->x, s->y, s->z, s->rx, s->ry);
-            for (int i = 1; i < g->player_count; i++) {
-                interpolate_player(g->players + i);
-            }
+    // WINDOW SIZE AND SCALE //
+    g->scale = get_scale_factor(g->window);
+    glfwGetFramebufferSize(g->window, &g->width, &g->height);
 
-            // WINDOW SIZE AND SCALE //
-            g->scale = get_scale_factor(g->window);
-            glfwGetFramebufferSize(g->window, &g->width, &g->height);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
 
-            glClear(GL_COLOR_BUFFER_BIT);
-            glClear(GL_DEPTH_BUFFER_BIT);
+    if (g->show_vr) {
+        vr_render();
+    } else {
+        glViewport(0, 0, g->width, g->height);
+        render_scene();
+    }
 
-            if (g->show_vr) {
-                vr_render();
-            } else {
-                glViewport(0, 0, g->width, g->height);
-                render_scene();
-            }
+    if (g->take_screenshot) {
+        g->take_screenshot = false;
+        screenshot(g->width, g->height);
+    }
 
-            if (g->take_screenshot) {
-                g->take_screenshot = false;
-                screenshot(g->width, g->height);
-            }
-
-            // SWAP AND POLL //
-            glfwSwapBuffers(g->window);
-            glfwPollEvents();
-            if (glfwWindowShouldClose(g->window)) {
-                g_running = false;
-                g_inner_break = true;
-            }
-            if (g->mode_changed) {
-                g->mode_changed = false;
-                g_inner_break = true;
-            }
+    // SWAP AND POLL //
+    glfwSwapBuffers(g->window);
+    glfwPollEvents();
+    if (glfwWindowShouldClose(g->window)) {
+        g->running = false;
+        g->shutdown = true;
+    }
+    if (g->mode_changed) {
+        g->mode_changed = false;
+        g->shutdown = true;
+    }
 
 #ifdef __EMSCRIPTEN__
-    if (g_inner_break) {
-        g_inner_break = false;
+    if (g->shutdown) {
+        g->shutdown = false;
         main_shutdown();
         emscripten_cancel_main_loop();
         emscripten_push_main_loop_blocker(main_init, NULL);
@@ -3256,140 +3267,144 @@ void one_iter() {
 }
 
 void translate_camera_x_offset(float h) {
+    Player *me = g->players;
+
     me->state.x += h;
 }
 
 void render_scene() {
-            Player *player = g->players + g->observe1;
+    Player *player = g->players + g->observe1;
+    Player *me = g->players;
+    State *s = &g->players->state;
 
-            // RENDER 3-D SCENE //
-            render_sky(&sky_attrib, player, sky_buffer);
-            glClear(GL_DEPTH_BUFFER_BIT);
-            int face_count = render_chunks(&block_attrib, player);
-            render_signs(&text_attrib, player);
-            render_sign(&text_attrib, player);
-            render_players(&block_attrib, player);
-            if (SHOW_WIREFRAME && g->show_ui) {
-                render_wireframe(&line_attrib, player);
-            }
+    // RENDER 3-D SCENE //
+    render_sky(&sky_attrib, player, sky_buffer);
+    if (!g->initialized) return;
 
-            if (is_mining()) {
-                render_cover(&block_attrib, player);
-            }
+    glClear(GL_DEPTH_BUFFER_BIT);
+    int face_count = render_chunks(&block_attrib, player);
+    render_signs(&text_attrib, player);
+    render_sign(&text_attrib, player);
+    render_players(&block_attrib, player);
+    if (SHOW_WIREFRAME && g->show_ui) {
+        render_wireframe(&line_attrib, player);
+    }
 
-            // RENDER HUD //
-            glClear(GL_DEPTH_BUFFER_BIT);
-            if (SHOW_CROSSHAIRS && g->show_ui) {
-                render_crosshairs(&line_attrib);
-            }
-            if (SHOW_ITEM && g->show_ui) {
-                render_item(&block_attrib);
-            }
+    if (is_mining()) {
+        render_cover(&block_attrib, player);
+    }
 
-            // RENDER TEXT //
-            char text_buffer[1024];
-            float ts = 12 * g->scale;
-            float tx = ts / 2;
-            float ty = g->height - ts;
-            if (g->show_info_text && g->show_ui) {
-                snprintf(
-                   text_buffer, 1024,
-                   "NetCraft "
+    // RENDER HUD //
+    glClear(GL_DEPTH_BUFFER_BIT);
+    if (SHOW_CROSSHAIRS && g->show_ui) {
+        render_crosshairs(&line_attrib);
+    }
+    if (SHOW_ITEM && g->show_ui) {
+        render_item(&block_attrib);
+    }
+
+    // RENDER TEXT //
+    char text_buffer[1024];
+    float ts = 12 * g->scale;
+    float tx = ts / 2;
+    float ty = g->height - ts;
+    if (g->show_info_text && g->show_ui) {
+        snprintf(
+           text_buffer, 1024,
+           "NetCraft "
 #ifdef BUILD_NUM
-                   "build #" BUILD_NUM " "
+           "build #" BUILD_NUM " "
 #endif
 #ifdef BUILD_COMMIT
-                   BUILD_COMMIT " "
+           BUILD_COMMIT " "
 #endif
-                   __DATE__
-                   );
-                render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
+           __DATE__
+           );
+        render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
+        ty -= ts * 2;
+
+        int hour = time_of_day() * 24;
+        char am_pm = hour < 12 ? 'a' : 'p';
+        hour = hour % 12;
+        hour = hour ? hour : 12;
+
+        // Targeted block information
+        char block_info[256] = {0};
+        if (target_w) snprintf(block_info, 256,
+                "{%d, %d, %d, %d} #%d %s",
+                target_x, target_y, target_z, target_face, target_w,
+                item_names[target_w]);
+
+        snprintf(
+            text_buffer, 1024,
+            "(%d, %d) (%.2f, %.2f, %.2f) [%d, %d, %d] %d%cm %dfps %s",
+            chunked(s->x), chunked(s->z), s->x, s->y, s->z,
+            g->player_count, g->chunk_count,
+            face_count * 2, hour, am_pm, g->fps.fps,
+            block_info);
+        render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
+        ty -= ts * 2;
+    }
+    if (SHOW_CHAT_TEXT && g->show_ui) {
+        for (int i = 0; i < MAX_MESSAGES; i++) {
+            int index = (g->message_index + i) % MAX_MESSAGES;
+            if (strlen(g->messages[index])) {
+                render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts,
+                    g->messages[index]);
                 ty -= ts * 2;
-
-                int hour = time_of_day() * 24;
-                char am_pm = hour < 12 ? 'a' : 'p';
-                hour = hour % 12;
-                hour = hour ? hour : 12;
-
-                // Targeted block information
-                char block_info[256] = {0};
-                if (target_w) snprintf(block_info, 256,
-                        "{%d, %d, %d, %d} #%d %s",
-                        target_x, target_y, target_z, target_face, target_w,
-                        item_names[target_w]);
-
-                snprintf(
-                    text_buffer, 1024,
-                    "(%d, %d) (%.2f, %.2f, %.2f) [%d, %d, %d] %d%cm %dfps %s",
-                    chunked(s->x), chunked(s->z), s->x, s->y, s->z,
-                    g->player_count, g->chunk_count,
-                    face_count * 2, hour, am_pm, fps.fps,
-                    block_info);
-                render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
-                ty -= ts * 2;
             }
-            if (SHOW_CHAT_TEXT && g->show_ui) {
-                for (int i = 0; i < MAX_MESSAGES; i++) {
-                    int index = (g->message_index + i) % MAX_MESSAGES;
-                    if (strlen(g->messages[index])) {
-                        render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts,
-                            g->messages[index]);
-                        ty -= ts * 2;
-                    }
-                }
-            }
-            if (g->typing) {
-                snprintf(text_buffer, 1024, "> %s", g->typing_buffer);
-                render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
-                //ty -= ts * 2; // unused
-            }
-            if (SHOW_PLAYER_NAMES && g->show_ui) {
-                if (player != me) {
-                    render_text(&text_attrib, ALIGN_CENTER,
-                        g->width / 2, ts, ts, player->name);
-                }
-                Player *other = player_crosshair(player);
-                if (other) {
-                    render_text(&text_attrib, ALIGN_CENTER,
-                        g->width / 2, g->height / 2 - ts - 24, ts,
-                        other->name);
-                }
-            }
+        }
+    }
+    if (g->typing) {
+        snprintf(text_buffer, 1024, "> %s", g->typing_buffer);
+        render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
+        //ty -= ts * 2; // unused
+    }
+    if (SHOW_PLAYER_NAMES && g->show_ui) {
+        if (player != me) {
+            render_text(&text_attrib, ALIGN_CENTER,
+                g->width / 2, ts, ts, player->name);
+        }
+        Player *other = player_crosshair(player);
+        if (other) {
+            render_text(&text_attrib, ALIGN_CENTER,
+                g->width / 2, g->height / 2 - ts - 24, ts,
+                other->name);
+        }
+    }
 
-            // RENDER PICTURE IN PICTURE //
-            if (g->observe2) {
-                player = g->players + g->observe2;
+    // RENDER PICTURE IN PICTURE //
+    if (g->observe2) {
+        player = g->players + g->observe2;
 
-                int pw = 256 * g->scale;
-                int ph = 256 * g->scale;
-                int offset = 32 * g->scale;
-                int pad = 3 * g->scale;
-                int sw = pw + pad * 2;
-                int sh = ph + pad * 2;
+        int pw = 256 * g->scale;
+        int ph = 256 * g->scale;
+        int offset = 32 * g->scale;
+        int pad = 3 * g->scale;
+        int sw = pw + pad * 2;
+        int sh = ph + pad * 2;
 
-                glEnable(GL_SCISSOR_TEST);
-                glScissor(g->width - sw - offset + pad, offset - pad, sw, sh);
-                glClear(GL_COLOR_BUFFER_BIT);
-                glDisable(GL_SCISSOR_TEST);
-                glClear(GL_DEPTH_BUFFER_BIT);
-                glViewport(g->width - pw - offset, offset, pw, ph);
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(g->width - sw - offset + pad, offset - pad, sw, sh);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_SCISSOR_TEST);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glViewport(g->width - pw - offset, offset, pw, ph);
 
-                g->width = pw;
-                g->height = ph;
-                g->ortho = 0;
-                g->fov = 65;
+        g->width = pw;
+        g->height = ph;
+        g->ortho = 0;
+        g->fov = 65;
 
-                render_sky(&sky_attrib, player, sky_buffer);
-                glClear(GL_DEPTH_BUFFER_BIT);
-                render_chunks(&block_attrib, player);
-                render_signs(&text_attrib, player);
-                render_players(&block_attrib, player);
-                glClear(GL_DEPTH_BUFFER_BIT);
-                if (SHOW_PLAYER_NAMES) {
-                    render_text(&text_attrib, ALIGN_CENTER,
-                        pw / 2, ts, ts, player->name);
-                }
-            }
-
+        render_sky(&sky_attrib, player, sky_buffer);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        render_chunks(&block_attrib, player);
+        render_signs(&text_attrib, player);
+        render_players(&block_attrib, player);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        if (SHOW_PLAYER_NAMES) {
+            render_text(&text_attrib, ALIGN_CENTER,
+                pw / 2, ts, ts, player->name);
+        }
+    }
 }
-
