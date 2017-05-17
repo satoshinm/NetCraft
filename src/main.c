@@ -3079,13 +3079,14 @@ void client_opened(int fd, void *userData) {
 
 void client_closed(int fd, void *userData) {
     add_message("Client closed the connection");
+    client_disable();
 }
 
 void client_socket_error(int fd, int err, const char *msg, void *userData) {
     char buf[256];
     snprintf(buf, sizeof(buf), "WebSocket error occurred: %d %s", err, msg);
     add_message(buf);
-    // TODO: handle error
+    client_disable();
 }
 
 void main_init(void *unused) {
@@ -3194,26 +3195,24 @@ void one_iter() {
     // HANDLE MOVEMENT //
     handle_movement(dt);
 
-    if (g->initialized) {
 #ifndef __EMSCRIPTEN__ // emscripten uses the client_message callback instead
-        // HANDLE DATA FROM SERVER //
-        char *buffer = client_recv();
-        if (buffer) {
-            parse_buffer(buffer);
-            free(buffer);
-        }
+    // HANDLE DATA FROM SERVER //
+    char *buffer = client_recv();
+    if (buffer) {
+        parse_buffer(buffer);
+        free(buffer);
+    }
 #endif
-        // FLUSH DATABASE //
-        if (now - g->last_commit > COMMIT_INTERVAL) {
-            g->last_commit = now;
-            db_commit();
-        }
+    // FLUSH DATABASE //
+    if (now - g->last_commit > COMMIT_INTERVAL) {
+        g->last_commit = now;
+        db_commit();
+    }
 
-        // SEND POSITION TO SERVER //
-        if (now - g->last_update > 0.1) {
-            g->last_update = now;
-            client_position(s->x, s->y, s->z, s->rx, s->ry);
-        }
+    // SEND POSITION TO SERVER //
+    if (now - g->last_update > 0.1) {
+        g->last_update = now;
+        client_position(s->x, s->y, s->z, s->rx, s->ry);
     }
 
     // PREPARE TO RENDER //
