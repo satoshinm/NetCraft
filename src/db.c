@@ -1,8 +1,8 @@
-#ifndef __EMSCRIPTEN__
 #include <string.h>
 #include <stdbool.h>
 #include "db.h"
 #include "ring.h"
+#ifndef __EMSCRIPTEN__
 #include "sqlite3.h"
 #include "tinycthread.h"
 
@@ -550,4 +550,37 @@ int db_worker_run(void *arg) {
     }
     return 0;
 }
+#else
+void db_enable() {}
+void db_disable() {}
+bool get_db_enabled() { return false; }
+int db_init(char *path) { return 0; }
+void db_close() {}
+void db_commit() {}
+void db_auth_set(char *username, char *identity_token) {}
+int db_auth_select(char *username) { return 0; }
+void db_auth_select_none() {}
+bool db_auth_get(
+    char *username,
+    char *identity_token, int identity_token_length) { return false; }
+bool db_auth_get_selected(
+    char *username, int username_length,
+    char *identity_token, int identity_token_length) { return false; }
+void db_save_state(float x, float y, float z, float rx, float ry) {}
+bool db_load_state(float *x, float *y, float *z, float *rx, float *ry) { return false; }
+void db_insert_block(int p, int q, int x, int y, int z, int w) {}
+void db_insert_light(int p, int q, int x, int y, int z, int w) {}
+void db_insert_sign(
+    int p, int q, int x, int y, int z, int face, const char *text) {}
+void db_delete_sign(int x, int y, int z, int face) {}
+void db_delete_signs(int x, int y, int z) {}
+void db_delete_all_signs() {}
+void db_load_blocks(Map *map, int p, int q) {}
+void db_load_lights(Map *map, int p, int q) {}
+void db_load_signs(SignList *list, int p, int q) {}
+int db_get_key(int p, int q) { return 0; }
+void db_set_key(int p, int q, int key) {}
+void db_worker_start() {}
+void db_worker_stop() {}
+int db_worker_run(void *arg) {}
 #endif
