@@ -3102,6 +3102,10 @@ void main_init(void *unused) {
         }
     }
 
+    // LOCAL VARIABLES //
+    reset_model();
+    sky_buffer = gen_sky_buffer();
+
     // CLIENT INITIALIZATION //
     if (g->mode == MODE_ONLINE) {
         client_enable();
@@ -3123,7 +3127,6 @@ void main_init(void *unused) {
 void main_inited() {
     // LOCAL VARIABLES //
     reset_model();
-    sky_buffer = gen_sky_buffer();
 
     Player *me = g->players;
     State *s = &g->players->state;
@@ -3161,12 +3164,6 @@ void main_shutdown() {
 
 void render_scene();
 void one_iter() {
-    if (!g->initialized) {
-        // only run after main_inited()
-        // TODO: show a loading/connecting screen? offline/local is fast, but online waits to connect
-        return;
-    }
-
     Player *me = g->players;
     State *s = &g->players->state;
 
@@ -3205,7 +3202,6 @@ void one_iter() {
         free(buffer);
     }
 #endif
-
     // FLUSH DATABASE //
     if (now - g->last_commit > COMMIT_INTERVAL) {
         g->last_commit = now;
@@ -3283,6 +3279,8 @@ void render_scene() {
 
     // RENDER 3-D SCENE //
     render_sky(&sky_attrib, player, sky_buffer);
+    if (!g->initialized) return;
+
     glClear(GL_DEPTH_BUFFER_BIT);
     int face_count = render_chunks(&block_attrib, player);
     render_signs(&text_attrib, player);
