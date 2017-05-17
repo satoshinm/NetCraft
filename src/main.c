@@ -131,6 +131,12 @@ typedef struct {
 
 
 typedef struct {
+    bool running;
+    bool shutdown;
+    double last_commit;
+    double last_update;
+    double previous_iter_timestamp;
+    FPS fps;
     GLFWwindow *window;
     Worker workers[WORKERS];
     Chunk chunks[MAX_CHUNKS];
@@ -2867,6 +2873,12 @@ void parse_buffer(char *buffer) {
 }
 
 void reset_model() {
+    g->running = false;
+    g->shutdown = false;
+    g->last_commit = glfwGetTime();
+    g->last_update = glfwGetTime();
+    g->previous_iter_timestamp = glfwGetTime();
+    memset(&g->fps, 0, sizeof(g->fps));
     memset(g->chunks, 0, sizeof(Chunk) * MAX_CHUNKS);
     g->chunk_count = 0;
     memset(g->players, 0, sizeof(Player) * MAX_PLAYERS);
@@ -2895,10 +2907,6 @@ void one_iter();
 void main_init(void *);
 void main_shutdown();
 // TODO: move to g? or?
-static FPS fps = {0, 0, 0};
-static double last_commit;
-static double last_update;
-static double previous;
 static State *s;
 static Player *me;
 static Attrib block_attrib = {0};
@@ -2906,8 +2914,6 @@ static Attrib line_attrib = {0};
 static Attrib text_attrib = {0};
 static Attrib sky_attrib = {0};
 static GLuint sky_buffer;
-static bool g_running;
-static bool g_inner_break;
 
 
 int main(int argc, char **argv) {
@@ -3038,18 +3044,18 @@ int main(int argc, char **argv) {
     }
 
     // OUTER LOOP //
-    g_running = true;
+    g->running = true;
 #ifdef __EMSCRIPTEN__
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
-    //main_shutdown(); // called in one_iter() if g_inner_break
+    //main_shutdown(); // called in one_iter() if g->shutdown
 #else
-    while (g_running) {
+    while (g->running) {
         main_init(NULL);
-        g_inner_break = false;
+        g->shutdown = false;
         while (1) {
             one_iter();
-            if (g_inner_break) break;
+            if (g->shutdown) break;
         }
         main_shutdown();
     }
@@ -3118,9 +3124,6 @@ void main_init(void *unused) {
 void main_inited() {
     // LOCAL VARIABLES //
     reset_model();
-    //FPS fps = {0, 0, 0};
-    last_commit = glfwGetTime();
-    last_update = glfwGetTime();
     sky_buffer = gen_sky_buffer();
 
     me = g->players;
@@ -3138,7 +3141,7 @@ void main_inited() {
     }
 
     // BEGIN MAIN LOOP //
-    previous = glfwGetTime();
+    g->previous_iter_timestamp = glfwGetTime();
 }
 
 void main_shutdown() {
@@ -3160,16 +3163,16 @@ void one_iter() {
     // FRAME RATE //
     if (g->time_changed) {
         g->time_changed = false;
-        last_commit = glfwGetTime();
-        last_update = glfwGetTime();
-        memset(&fps, 0, sizeof(fps));
+        g->last_commit = glfwGetTime();
+        g->last_update = glfwGetTime();
+        memset(&g->fps, 0, sizeof(g->fps));
     }
-    update_fps(&fps);
+    update_fps(&g->fps);
     double now = glfwGetTime();
-    double dt = now - previous;
+    double dt = now - g->previous_iter_timestamp;
     dt = MIN(dt, 0.2);
     dt = MAX(dt, 0.0);
-    previous = now;
+    g->previous_iter_timestamp = now;
 
     // HANDLE MOUSE INPUT //
     handle_mouse_input();
@@ -3192,14 +3195,14 @@ void one_iter() {
 #endif
 
     // FLUSH DATABASE //
-    if (now - last_commit > COMMIT_INTERVAL) {
-        last_commit = now;
+    if (now - g->last_commit > COMMIT_INTERVAL) {
+        g->last_commit = now;
         db_commit();
     }
 
     // SEND POSITION TO SERVER //
-    if (now - last_update > 0.1) {
-        last_update = now;
+    if (now - g->last_update > 0.1) {
+        g->last_update = now;
         client_position(s->x, s->y, s->z, s->rx, s->ry);
     }
 
@@ -3236,17 +3239,17 @@ void one_iter() {
     glfwSwapBuffers(g->window);
     glfwPollEvents();
     if (glfwWindowShouldClose(g->window)) {
-        g_running = false;
-        g_inner_break = true;
+        g->running = false;
+        g->shutdown = true;
     }
     if (g->mode_changed) {
         g->mode_changed = false;
-        g_inner_break = true;
+        g->shutdown = true;
     }
 
 #ifdef __EMSCRIPTEN__
-    if (g_inner_break) {
-        g_inner_break = false;
+    if (g->shutdown) {
+        g->shutdown = false;
         main_shutdown();
         emscripten_cancel_main_loop();
         emscripten_push_main_loop_blocker(main_init, NULL);
@@ -3323,7 +3326,7 @@ void render_scene() {
             "(%d, %d) (%.2f, %.2f, %.2f) [%d, %d, %d] %d%cm %dfps %s",
             chunked(s->x), chunked(s->z), s->x, s->y, s->z,
             g->player_count, g->chunk_count,
-            face_count * 2, hour, am_pm, fps.fps,
+            face_count * 2, hour, am_pm, g->fps.fps,
             block_info);
         render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
         ty -= ts * 2;
