@@ -3070,7 +3070,7 @@ int main(int argc, char **argv) {
 void main_inited();
 
 void client_opened(int fd, void *userData) {
-    fprintf(stderr, "client_opened: %d %p\n", fd, userData);
+    add_message("Connected to server");
     client_start();
     client_version(1);
     login();
@@ -3079,13 +3079,14 @@ void client_opened(int fd, void *userData) {
 
 void client_closed(int fd, void *userData) {
     add_message("Client closed the connection");
+    client_disable();
 }
 
 void client_socket_error(int fd, int err, const char *msg, void *userData) {
-    fprintf(stderr, "client_socket_error: fd=%d, err=%d, msg=%s, userData=%p\n", fd, err, msg, userData);
-    add_message("WebSocket error occurred:");
-    add_message(msg);
-    // TODO: handle error
+    char buf[256];
+    snprintf(buf, sizeof(buf), "WebSocket error occurred: %d %s", err, msg);
+    add_message(buf);
+    client_disable();
 }
 
 void main_init(void *unused) {
@@ -3109,6 +3110,9 @@ void main_init(void *unused) {
     // CLIENT INITIALIZATION //
     if (g->mode == MODE_ONLINE) {
         client_enable();
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Connecting to server %s:%d...", g->server_addr, g->server_port);
+        add_message(msg);
 #ifdef __EMSCRIPTEN__
         emscripten_set_socket_error_callback("error", client_socket_error);
         emscripten_set_socket_open_callback("open", client_opened);
@@ -3279,28 +3283,31 @@ void render_scene() {
 
     // RENDER 3-D SCENE //
     render_sky(&sky_attrib, player, sky_buffer);
-    if (!g->initialized) return;
+    int face_count;
+    if (g->initialized) {
+        glClear(GL_DEPTH_BUFFER_BIT);
+        face_count = render_chunks(&block_attrib, player);
+        render_signs(&text_attrib, player);
+        render_sign(&text_attrib, player);
+        render_players(&block_attrib, player);
+        if (SHOW_WIREFRAME && g->show_ui) {
+            render_wireframe(&line_attrib, player);
+        }
 
-    glClear(GL_DEPTH_BUFFER_BIT);
-    int face_count = render_chunks(&block_attrib, player);
-    render_signs(&text_attrib, player);
-    render_sign(&text_attrib, player);
-    render_players(&block_attrib, player);
-    if (SHOW_WIREFRAME && g->show_ui) {
-        render_wireframe(&line_attrib, player);
-    }
+        if (is_mining()) {
+            render_cover(&block_attrib, player);
+        }
 
-    if (is_mining()) {
-        render_cover(&block_attrib, player);
-    }
-
-    // RENDER HUD //
-    glClear(GL_DEPTH_BUFFER_BIT);
-    if (SHOW_CROSSHAIRS && g->show_ui) {
-        render_crosshairs(&line_attrib);
-    }
-    if (SHOW_ITEM && g->show_ui) {
-        render_item(&block_attrib);
+        // RENDER HUD //
+        glClear(GL_DEPTH_BUFFER_BIT);
+        if (SHOW_CROSSHAIRS && g->show_ui) {
+            render_crosshairs(&line_attrib);
+        }
+        if (SHOW_ITEM && g->show_ui) {
+            render_item(&block_attrib);
+        }
+    } else {
+        face_count = 0;
     }
 
     // RENDER TEXT //
@@ -3308,7 +3315,7 @@ void render_scene() {
     float ts = 12 * g->scale;
     float tx = ts / 2;
     float ty = g->height - ts;
-    if (g->show_info_text && g->show_ui) {
+    if (g->show_info_text && g->show_ui && g->initialized) {
         snprintf(
            text_buffer, 1024,
            "NetCraft "
