@@ -133,6 +133,7 @@ typedef struct {
 typedef struct {
     bool running;
     bool shutdown;
+    bool initialized;
     double last_commit;
     double last_update;
     double previous_iter_timestamp;
@@ -3042,6 +3043,7 @@ int main(int argc, char **argv) {
     // OUTER LOOP //
     g->running = true;
     g->shutdown = false;
+    g->initialized = false;
 #ifdef __EMSCRIPTEN__
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
@@ -3139,6 +3141,7 @@ void main_inited() {
 
     // BEGIN MAIN LOOP //
     g->previous_iter_timestamp = glfwGetTime();
+    g->initialized = true;
 }
 
 void main_shutdown() {
@@ -3158,6 +3161,12 @@ void main_shutdown() {
 
 void render_scene();
 void one_iter() {
+    if (!g->initialized) {
+        // only run after main_inited()
+        // TODO: show a loading/connecting screen? offline/local is fast, but online waits to connect
+        return;
+    }
+
     Player *me = g->players;
     State *s = &g->players->state;
 
