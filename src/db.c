@@ -582,5 +582,5 @@ int db_get_key(int p, int q) { return 0; }
 void db_set_key(int p, int q, int key) {}
 void db_worker_start() {}
 void db_worker_stop() {}
-int db_worker_run(void *arg) {}
+int db_worker_run(void *arg) { return 0; }
 #endif
