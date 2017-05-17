@@ -3110,6 +3110,9 @@ void main_init(void *unused) {
     // CLIENT INITIALIZATION //
     if (g->mode == MODE_ONLINE) {
         client_enable();
+        char msg[256];
+        snprintf(msg, sizeof(msg), "Connecting to server %s:%d...", g->server_addr, g->server_port);
+        add_message(msg);
 #ifdef __EMSCRIPTEN__
         emscripten_set_socket_error_callback("error", client_socket_error);
         emscripten_set_socket_open_callback("open", client_opened);
