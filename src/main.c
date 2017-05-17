@@ -3279,28 +3279,31 @@ void render_scene() {
 
     // RENDER 3-D SCENE //
     render_sky(&sky_attrib, player, sky_buffer);
-    if (!g->initialized) return;
+    int face_count;
+    if (g->initialized) {
+        glClear(GL_DEPTH_BUFFER_BIT);
+        face_count = render_chunks(&block_attrib, player);
+        render_signs(&text_attrib, player);
+        render_sign(&text_attrib, player);
+        render_players(&block_attrib, player);
+        if (SHOW_WIREFRAME && g->show_ui) {
+            render_wireframe(&line_attrib, player);
+        }
 
-    glClear(GL_DEPTH_BUFFER_BIT);
-    int face_count = render_chunks(&block_attrib, player);
-    render_signs(&text_attrib, player);
-    render_sign(&text_attrib, player);
-    render_players(&block_attrib, player);
-    if (SHOW_WIREFRAME && g->show_ui) {
-        render_wireframe(&line_attrib, player);
-    }
+        if (is_mining()) {
+            render_cover(&block_attrib, player);
+        }
 
-    if (is_mining()) {
-        render_cover(&block_attrib, player);
-    }
-
-    // RENDER HUD //
-    glClear(GL_DEPTH_BUFFER_BIT);
-    if (SHOW_CROSSHAIRS && g->show_ui) {
-        render_crosshairs(&line_attrib);
-    }
-    if (SHOW_ITEM && g->show_ui) {
-        render_item(&block_attrib);
+        // RENDER HUD //
+        glClear(GL_DEPTH_BUFFER_BIT);
+        if (SHOW_CROSSHAIRS && g->show_ui) {
+            render_crosshairs(&line_attrib);
+        }
+        if (SHOW_ITEM && g->show_ui) {
+            render_item(&block_attrib);
+        }
+    } else {
+        face_count = 0;
     }
 
     // RENDER TEXT //
