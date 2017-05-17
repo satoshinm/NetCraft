@@ -2906,9 +2906,7 @@ void reset_model() {
 void one_iter();
 void main_init(void *);
 void main_shutdown();
-// TODO: move to g? or?
-static State *s;
-static Player *me;
+
 static Attrib block_attrib = {0};
 static Attrib line_attrib = {0};
 static Attrib text_attrib = {0};
@@ -3126,8 +3124,8 @@ void main_inited() {
     reset_model();
     sky_buffer = gen_sky_buffer();
 
-    me = g->players;
-    s = &g->players->state;
+    Player *me = g->players;
+    State *s = &g->players->state;
     me->id = 0;
     me->name[0] = '\0';
     me->buffer = 0;
@@ -3146,6 +3144,9 @@ void main_inited() {
 
 void main_shutdown() {
     // SHUTDOWN //
+    Player *me = g->players;
+    State *s = &g->players->state;
+
     db_save_state(s->x, s->y, s->z, s->rx, s->ry);
     db_close();
     db_disable();
@@ -3158,6 +3159,9 @@ void main_shutdown() {
 
 void render_scene();
 void one_iter() {
+    Player *me = g->players;
+    State *s = &g->players->state;
+
     glfwSwapInterval(VSYNC);
 
     // FRAME RATE //
@@ -3259,11 +3263,15 @@ void one_iter() {
 }
 
 void translate_camera_x_offset(float h) {
+    Player *me = g->players;
+
     me->state.x += h;
 }
 
 void render_scene() {
     Player *player = g->players + g->observe1;
+    Player *me = g->players;
+    State *s = &g->players->state;
 
     // RENDER 3-D SCENE //
     render_sky(&sky_attrib, player, sky_buffer);
