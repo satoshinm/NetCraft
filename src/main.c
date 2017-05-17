@@ -3313,7 +3313,7 @@ void render_scene() {
     float ts = 12 * g->scale;
     float tx = ts / 2;
     float ty = g->height - ts;
-    if (g->show_info_text && g->show_ui) {
+    if (g->show_info_text && g->show_ui && g->initialized) {
         snprintf(
            text_buffer, 1024,
            "NetCraft "
