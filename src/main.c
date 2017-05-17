@@ -3194,24 +3194,26 @@ void one_iter() {
     // HANDLE MOVEMENT //
     handle_movement(dt);
 
+    if (g->initialized) {
 #ifndef __EMSCRIPTEN__ // emscripten uses the client_message callback instead
-    // HANDLE DATA FROM SERVER //
-    char *buffer = client_recv();
-    if (buffer) {
-        parse_buffer(buffer);
-        free(buffer);
-    }
+        // HANDLE DATA FROM SERVER //
+        char *buffer = client_recv();
+        if (buffer) {
+            parse_buffer(buffer);
+            free(buffer);
+        }
 #endif
-    // FLUSH DATABASE //
-    if (now - g->last_commit > COMMIT_INTERVAL) {
-        g->last_commit = now;
-        db_commit();
-    }
+        // FLUSH DATABASE //
+        if (now - g->last_commit > COMMIT_INTERVAL) {
+            g->last_commit = now;
+            db_commit();
+        }
 
-    // SEND POSITION TO SERVER //
-    if (now - g->last_update > 0.1) {
-        g->last_update = now;
-        client_position(s->x, s->y, s->z, s->rx, s->ry);
+        // SEND POSITION TO SERVER //
+        if (now - g->last_update > 0.1) {
+            g->last_update = now;
+            client_position(s->x, s->y, s->z, s->rx, s->ry);
+        }
     }
 
     // PREPARE TO RENDER //
