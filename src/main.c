@@ -2873,8 +2873,6 @@ void parse_buffer(char *buffer) {
 }
 
 void reset_model() {
-    g->running = false;
-    g->shutdown = false;
     g->last_commit = glfwGetTime();
     g->last_update = glfwGetTime();
     g->previous_iter_timestamp = glfwGetTime();
@@ -3043,6 +3041,7 @@ int main(int argc, char **argv) {
 
     // OUTER LOOP //
     g->running = true;
+    g->shutdown = false;
 #ifdef __EMSCRIPTEN__
     emscripten_push_main_loop_blocker(main_init, NULL); // run before main loop
     emscripten_set_main_loop(one_iter, 0, 1);
