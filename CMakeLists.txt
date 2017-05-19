@@ -79,6 +79,7 @@ include_directories(deps/tinycthread)
 set(ASSIMP_BUILD_TESTS OFF)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 add_definitions(-DASSIMP_BUILD_BOOST_WORKAROUND)
+add_definitions(-DASSIMP_BUILD_NO_OWN_ZLIB)
 add_subdirectory(deps/assimp)
 include_directories(deps/assimp)
 
