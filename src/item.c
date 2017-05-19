@@ -10,7 +10,7 @@ const int items[] = {
     STONE_BRICK,
     BRICK,
     WOOD,
-    CEMENT,
+    STONE,
     DIRT,
     PLANK,
     SNOW,
@@ -69,7 +69,7 @@ const char *item_names[] = {
     "Stone Brick",
     "Brick",
     "Wood",
-    "Cement",
+    "Stone",
     "Dirt",
     "Plank",
     "Snow",
@@ -321,7 +321,7 @@ float is_hardness(int w) {
             return 0.4;
         case STONE_BRICK:
         case BRICK:
-        case CEMENT:
+        case STONE:
         case COBBLE:
         case LIGHT_STONE:
         case DARK_STONE:

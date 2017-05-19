@@ -7,7 +7,7 @@
 #define STONE_BRICK 3
 #define BRICK 4
 #define WOOD 5
-#define CEMENT 6
+#define STONE 6
 #define DIRT 7
 #define PLANK 8
 #define SNOW 9
