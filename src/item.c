@@ -7,7 +7,7 @@ const int items[] = {
     // items the user can build
     GRASS,
     SAND,
-    STONE,
+    STONE_BRICK,
     BRICK,
     WOOD,
     CEMENT,
@@ -66,7 +66,7 @@ const char *item_names[] = {
     "Empty",
     "Grass",
     "Sand",
-    "Stone",
+    "Stone Brick",
     "Brick",
     "Wood",
     "Cement",
@@ -319,7 +319,7 @@ float is_hardness(int w) {
             return 3.0;
         case GLASS:
             return 0.4;
-        case STONE:
+        case STONE_BRICK:
         case BRICK:
         case CEMENT:
         case COBBLE:

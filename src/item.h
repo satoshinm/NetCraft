@@ -4,7 +4,7 @@
 #define EMPTY 0
 #define GRASS 1
 #define SAND 2
-#define STONE 3
+#define STONE_BRICK 3
 #define BRICK 4
 #define WOOD 5
 #define CEMENT 6
