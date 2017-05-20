@@ -98,10 +98,10 @@ const char *item_names[] = {
     "Diamond Ore",
     "Redstone Ore",
     "Bookshelf",
-    "COLOR_19",
-    "COLOR_20",
-    "COLOR_21",
-    "COLOR_22",
+    "Mossy Cobblestone",
+    "Obsidian",
+    "Workbench",
+    "Furnace",
     "COLOR_23",
     "COLOR_24",
     "COLOR_25",
@@ -180,10 +180,10 @@ const int blocks[256][6] = {
     {RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2)}, // 48 - diamond ore
     {RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3)}, // 49 - redstone ore
     {RC(13, 3), RC(13, 3), RC(13, 3), RC(13, 3), RC(15, 4), RC(15, 4)}, // 50 - bookshelf
-    {RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3)}, // 51
-    {RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1)}, // 52 - red
-    {RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5)}, // 53
-    {RC(12, 6), RC(12, 6), RC(12, 6), RC(12, 6), RC(12, 6), RC(12, 6)}, // 54
+    {RC(13, 4), RC(13, 4), RC(13, 4), RC(13, 4), RC(13, 4), RC(13, 4)}, // 51 - mossy cobblestone
+    {RC(13, 5), RC(13, 5), RC(13, 5), RC(13, 5), RC(13, 5), RC(13, 5)}, // 52 - obsidian
+    {RC(12,12), RC(12,11), RC(12,11), RC(12,11), RC(13,11), RC(12,11)}, // 53 - workbench
+    {RC(13,12), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13)}, // 54 - furnace
     {RC(12, 7), RC(12, 7), RC(12, 7), RC(12, 7), RC(12, 7), RC(12, 7)}, // 55
     {RC(12, 8), RC(12, 8), RC(12, 8), RC(12, 8), RC(12, 8), RC(12, 8)}, // 56
     {RC(12, 9), RC(12, 9), RC(12, 9), RC(12, 9), RC(12, 9), RC(12, 9)}, // 57

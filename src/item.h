@@ -44,10 +44,10 @@
 #define DIAMOND_ORE 48
 #define REDSTONE_ORE 49
 #define BOOKSHELF 50
-#define COLOR_19 51
-#define COLOR_20 52
-#define COLOR_21 53
-#define COLOR_22 54
+#define MOSSY_COBBLESTONE 51
+#define OBSIDIAN 52
+#define WORKBENCH 53
+#define FURNACE 54
 #define COLOR_23 55
 #define COLOR_24 56
 #define COLOR_25 57
