@@ -45,7 +45,7 @@ static GLuint quad_vertexbuffer;
 
 static bool skipBarrelDistortion = false;
 
-struct {
+static struct {
     GLuint program;
     GLuint position;
     GLuint normal;
