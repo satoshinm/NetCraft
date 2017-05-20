@@ -97,7 +97,7 @@ const char *item_names[] = {
     "Black Wool",
     "Diamond Ore",
     "Redstone Ore",
-    "COLOR_18",
+    "Bookshelf",
     "COLOR_19",
     "COLOR_20",
     "COLOR_21",
@@ -179,7 +179,7 @@ const int blocks[256][6] = {
     {RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1)}, // 47 - black
     {RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2)}, // 48 - diamond ore
     {RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3)}, // 49 - redstone ore
-    {RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2)}, // 50
+    {RC(13, 3), RC(13, 3), RC(13, 3), RC(13, 3), RC(15, 4), RC(15, 4)}, // 50 - bookshelf
     {RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3)}, // 51
     {RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1)}, // 52 - red
     {RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5)}, // 53

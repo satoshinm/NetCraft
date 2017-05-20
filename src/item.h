@@ -43,7 +43,7 @@
 #define WOOL_BLACK 47
 #define DIAMOND_ORE 48
 #define REDSTONE_ORE 49
-#define COLOR_18 50
+#define BOOKSHELF 50
 #define COLOR_19 51
 #define COLOR_20 52
 #define COLOR_21 53
