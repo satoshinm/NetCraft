@@ -363,7 +363,7 @@ void screenshot(int width, int height) {
             if (fp) {
                 size_t wrote = fwrite(png, 1, png_size, fp);
                 fclose(fp);
-                printf("Saved screenshot to %s\n", filename);
+                printf("Saved screenshot to %s, wrote %zu bytes\n", filename, wrote);
             } else {
                 printf("failed to open %s for writing\n", filename);
             }
