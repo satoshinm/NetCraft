@@ -344,7 +344,6 @@ void screenshot(int width, int height) {
     GLubyte *pixels = malloc(size);
     if (pixels) {
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        printf("read pixels to %p\n", pixels);
 
         size_t png_size = 0;
         int level = MZ_DEFAULT_LEVEL;
