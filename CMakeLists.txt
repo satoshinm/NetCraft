@@ -31,8 +31,7 @@ endif ()
 add_definitions(-std=c99 -O3)
 add_definitions(-DLODEPNG_NO_COMPILE_ZLIB)
 
-file(GLOB WarnCFiles src/*.c)
-set_property(SOURCE ${WarnCFiles} PROPERTY COMPILE_FLAGS "-Weverything")
+set_property(SOURCE ${SOURCE_FILES} PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedantic")
 
 if ($ENV{CIRCLECI})
     add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")
