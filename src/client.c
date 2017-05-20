@@ -254,6 +254,8 @@ void client_connect(char *hostname, int port) {
     // If ws:// or wss:// URL is given, pass it directly - this is how secure WebSockets
     // can be used, example: wss://localhost:1234/craftws. Or alternate paths.
     // Otherwise, use hostname and port, ws scheme, and /craftws path by default.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdollar-in-identifier-extension" // EM_ASM JavaScript
     EM_ASM_ARGS({
             function getString(p) {
                 var s = String(); // not '' because empty C character constant warning
@@ -283,6 +285,7 @@ void client_connect(char *hostname, int port) {
             }
             console.log('websocket url:', Module['websocket']['url']);
         }, hostname, port);
+#pragma clang diagnostic pop
 #endif
 
     if (connect(sd, (struct sockaddr *)&address, sizeof(address)) == -1) {
