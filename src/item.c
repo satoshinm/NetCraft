@@ -108,9 +108,9 @@ const char *item_names[] = {
     "Ice",
     "Clay",
     "Jukebox",
-    "COLOR_29",
-    "COLOR_30",
-    "COLOR_31",
+    "Cactus",
+    "Mycelium",
+    "Netherrack",
     "Glowstone",
     "Bedrock",
     "Gravel",
@@ -190,10 +190,10 @@ const int blocks[256][6] = {
     {RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3)}, // 58 - ice
     {RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8)}, // 59 - clay
     {RC(11,11), RC(11,11), RC(11,11), RC(11,11), RC(12,11), RC(11,11)}, // 60 - jukebox
-    {RC(12,13), RC(12,13), RC(12,13), RC(12,13), RC(12,13), RC(12,13)}, // 61
-    {RC(12,14), RC(12,14), RC(12,14), RC(12,14), RC(12,14), RC(12,14)}, // 62
-    {RC(12,15), RC(12,15), RC(12,15), RC(12,15), RC(12,15), RC(12,15)}, // 63
-    {RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9)}, // 64 - glowing stone
+    {RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 5), RC(11, 7)}, // 61 - cactus TODO: smaller model
+    {RC(11,13), RC(11,13), RC(11,13), RC(11,13), RC(11,14), RC(11,13)}, // 62 - mycelium
+    {RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7)}, // 63 - netherrack
+    {RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9)}, // 64 - glowstone
     {RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1)}, // 65 - bedrock
     {RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3)}, // 66 - gravel
     {RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6)}, // 67 - iron block

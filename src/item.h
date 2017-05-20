@@ -54,9 +54,9 @@
 #define ICE 58
 #define CLAY 59
 #define JUKEBOX 60
-#define COLOR_29 61
-#define COLOR_30 62
-#define COLOR_31 63
+#define CACTUS 61
+#define MYCELIUM 62
+#define NETHERRACK 63
 #define GLOWING_STONE 64
 #define BEDROCK 65
 #define GRAVEL 66
