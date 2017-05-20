@@ -10,7 +10,7 @@
 #include "vr.h" // vr_update_viewport
 
 static GLFWwindow *window;
-#if !USE_EM_FULLSCREEN
+#ifndef USE_EM_FULLSCREEN
 static int window_width;
 static int window_height;
 static int window_xpos;
