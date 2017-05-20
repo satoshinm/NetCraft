@@ -2902,9 +2902,9 @@ void reset_model() {
     g->noclip = false;
 }
 
-void one_iter();
+void one_iter(void);
 void main_init(void *);
-void main_shutdown();
+void main_shutdown(void);
 
 static Attrib block_attrib = {0};
 static Attrib line_attrib = {0};
@@ -3067,7 +3067,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void main_inited();
+void main_inited(void);
 
 void client_opened(int fd, void *userData) {
     add_message("Connected to server");
@@ -3166,7 +3166,7 @@ void main_shutdown() {
     delete_all_players();
 }
 
-void render_scene();
+void render_scene(void);
 void one_iter() {
     Player *me = g->players;
     State *s = &g->players->state;

@@ -26,7 +26,7 @@ typedef struct {
 } FPS;
 
 int rand_int(int n);
-double rand_double();
+double rand_double(void);
 void update_fps(FPS *fps);
 
 GLuint gen_buffer(GLsizei size, GLfloat *data);
