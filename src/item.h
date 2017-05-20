@@ -41,8 +41,8 @@
 #define WOOL_GREEN 45
 #define WOOL_RED 46
 #define WOOL_BLACK 47
-#define COLOR_16 48
-#define COLOR_17 49
+#define DIAMOND_ORE 48
+#define REDSTONE_ORE 49
 #define COLOR_18 50
 #define COLOR_19 51
 #define COLOR_20 52

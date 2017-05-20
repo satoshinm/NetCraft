@@ -95,8 +95,8 @@ const char *item_names[] = {
     "Green Wool",
     "Red Wool",
     "Black Wool",
-    "COLOR_16",
-    "COLOR_17",
+    "Diamond Ore",
+    "Redstone Ore",
     "COLOR_18",
     "COLOR_19",
     "COLOR_20",
@@ -168,7 +168,7 @@ const int blocks[256][6] = {
     {RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2)}, // 36 - yellow
     {RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2)}, // 37 - lime
     {RC( 7, 2), RC( 7, 2), RC( 7, 2), RC( 7, 2), RC( 7, 2), RC( 7, 2)}, // 38 - pink
-    {RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2)}, // 39- gray
+    {RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2)}, // 39 - gray
     {RC( 1, 1), RC( 1, 1), RC( 1, 1), RC( 1, 1), RC( 1, 1), RC( 1, 1)}, // 40 - light gray (silver)
     {RC( 2, 1), RC( 2, 1), RC( 2, 1), RC( 2, 1), RC( 2, 1), RC( 2, 1)}, // 41 - cyan
     {RC( 3, 1), RC( 3, 1), RC( 3, 1), RC( 3, 1), RC( 3, 1), RC( 3, 1)}, // 42 - purple
@@ -177,8 +177,8 @@ const int blocks[256][6] = {
     {RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1)}, // 45 - green
     {RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1)}, // 46 - red
     {RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1)}, // 47 - black
-    {RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1)}, // 48
-    {RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1)}, // 49
+    {RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2)}, // 48 - diamond ore
+    {RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3)}, // 49 - redstone ore
     {RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2)}, // 50
     {RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3)}, // 51
     {RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1)}, // 52 - red
