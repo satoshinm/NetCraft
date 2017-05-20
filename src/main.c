@@ -39,6 +39,7 @@
 #define WORKERS 4
 #define MAX_TEXT_LENGTH 256
 #define MAX_NAME_LENGTH 32
+#define MAX_NAME_LENGTH_FORMAT "31"
 #define MAX_PATH_LENGTH 256
 #define MAX_ADDR_LENGTH 256
 
@@ -2841,22 +2842,16 @@ void parse_buffer(char *buffer) {
             char *text = line + 2;
             add_message(text);
         }
-        char format[64];
-        snprintf(
-            format, sizeof(format), "N,%%d,%%%ds", MAX_NAME_LENGTH - 1);
         char name[MAX_NAME_LENGTH];
-        if (sscanf(line, format, &pid, name) == 2) {
+        if (sscanf(line, "N,%d,%" MAX_NAME_LENGTH_FORMAT "s", &pid, name) == 2) {
             Player *player = find_player(pid);
             if (player) {
                 strncpy(player->name, name, MAX_NAME_LENGTH);
             }
         }
-        snprintf(
-            format, sizeof(format),
-            "S,%%d,%%d,%%d,%%d,%%d,%%d,%%%d[^\n]", MAX_SIGN_LENGTH - 1);
         int face;
         char text[MAX_SIGN_LENGTH] = {0};
-        if (sscanf(line, format,
+        if (sscanf(line, "S,%d,%d,%d,%d,%d,%d,%" MAX_SIGN_LENGTH_FORMAT "[^\n]",
             &bp, &bq, &bx, &by, &bz, &face, text) >= 6)
         {
             int rotation = 0;
