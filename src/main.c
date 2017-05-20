@@ -289,7 +289,7 @@ GLuint gen_sky_buffer() {
 // Generate a cube buffer textured with block type w
 GLuint gen_cube_buffer(float x, float y, float z, float n, int w) {
     GLfloat *data = malloc_faces(10, 6);
-    float ao[6][4] = {0};
+    float ao[6][4] = {{0}};
     float light[6][4] = {
         {0.5, 0.5, 0.5, 0.5},
         {0.5, 0.5, 0.5, 0.5},
@@ -306,7 +306,7 @@ GLuint gen_cube_buffer(float x, float y, float z, float n, int w) {
 GLuint gen_cube_buffer_faces(float x, float y, float z, float n,
     int wleft, int wright, int wtop, int wbottom, int wfront, int wback) {
     GLfloat *data = malloc_faces(10, 6);
-    float ao[6][4] = {0};
+    float ao[6][4] = {{0}};
     float light[6][4] = {
         {0.5, 0.5, 0.5, 0.5},
         {0.5, 0.5, 0.5, 0.5},
