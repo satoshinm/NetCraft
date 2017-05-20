@@ -11,7 +11,7 @@ long touch_active = 0;
 long touch_clientX = 0;
 long touch_clientY = 0;
 
-GLFWwindow *window = NULL;
+static GLFWwindow *window = NULL;
 
 #ifndef __EMSCRIPTEN__
 void init_touch_callbacks(GLFWwindow *w) {}
