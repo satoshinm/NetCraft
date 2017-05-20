@@ -31,7 +31,7 @@ endif ()
 add_definitions(-std=c99 -O3)
 add_definitions(-DLODEPNG_NO_COMPILE_ZLIB)
 
-set_property(SOURCE ${SOURCE_FILES} PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedantic -Weverything -Wno-unused-parameter -Wno-missing-field-initializers -Wno-sign-compare -Wno-missing-prototypes -Wno-reserved-id-macro -Wno-documentation -Wno-conversion -Wno-sign-conversion -Wno-float-equal -Wno-conversion -Wno-double-promotion -Wno-padded -Wno-shadow -Wno-disabled-macro-expansion -Wno-bad-function-cast")
+set_property(SOURCE ${SOURCE_FILES} PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedantic -Weverything -Wno-unused-parameter -Wno-missing-field-initializers -Wno-sign-compare -Wno-missing-prototypes -Wno-reserved-id-macro -Wno-documentation -Wno-conversion -Wno-sign-conversion -Wno-float-equal -Wno-conversion -Wno-double-promotion -Wno-padded -Wno-shadow -Wno-disabled-macro-expansion -Wno-bad-function-cast -Wno-documentation-unknown-command -Wno-date-time -Wno-cast-qual")
 
 if ($ENV{CIRCLECI})
     add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")
