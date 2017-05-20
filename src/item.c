@@ -7,10 +7,10 @@ const int items[] = {
     // items the user can build
     GRASS,
     SAND,
-    STONE,
+    STONE_BRICK,
     BRICK,
     WOOD,
-    CEMENT,
+    STONE,
     DIRT,
     PLANK,
     SNOW,
@@ -27,38 +27,22 @@ const int items[] = {
     RED_MUSHROOM,
     BROWN_MUSHROOM,
     DEADBUSH,
-    COLOR_00,
-    COLOR_01,
-    COLOR_02,
-    COLOR_03,
-    COLOR_04,
-    COLOR_05,
-    COLOR_06,
-    COLOR_07,
-    COLOR_08,
-    COLOR_09,
-    COLOR_10,
-    COLOR_11,
-    COLOR_12,
-    COLOR_13,
-    COLOR_14,
-    COLOR_15,
-    COLOR_16,
-    COLOR_17,
-    COLOR_18,
-    COLOR_19,
-    COLOR_20,
-    COLOR_21,
-    COLOR_22,
-    COLOR_23,
-    COLOR_24,
-    COLOR_25,
-    COLOR_26,
-    COLOR_27,
-    COLOR_28,
-    COLOR_29,
-    COLOR_30,
-    COLOR_31,
+    WOOL_WHITE,
+    WOOL_ORANGE,
+    WOOL_MAGENTA,
+    WOOL_LIGHT_BLUE,
+    WOOL_YELLOW,
+    wOOL_LIME,
+    WOOL_PINK,
+    WOOL_GRAY,
+    WOOL_LIGHT_GRAY,
+    WOOL_CYAN,
+    WOOL_PURPLE,
+    WOOL_BLUE,
+    WOOL_BROWN,
+    WOOL_GREEN,
+    WOOL_RED,
+    WOOL_BLACK,
     GLOWING_STONE
 };
 
@@ -66,10 +50,10 @@ const char *item_names[] = {
     "Empty",
     "Grass",
     "Sand",
-    "Stone",
+    "Stone Brick",
     "Brick",
     "Wood",
-    "Cement",
+    "Stone",
     "Dirt",
     "Plank",
     "Snow",
@@ -95,39 +79,38 @@ const char *item_names[] = {
     "x29",
     "x30",
     "x31",
-    // TODO: name colored blocks
-    "COLOR_00",
-    "COLOR_01",
-    "COLOR_02",
-    "COLOR_03",
-    "COLOR_04",
-    "COLOR_05",
-    "COLOR_06",
-    "COLOR_07",
-    "COLOR_08",
-    "COLOR_09",
-    "COLOR_10",
-    "COLOR_11",
-    "COLOR_12",
-    "COLOR_13",
-    "COLOR_14",
-    "COLOR_15",
-    "COLOR_16",
-    "COLOR_17",
-    "COLOR_18",
-    "COLOR_19",
-    "COLOR_20",
-    "COLOR_21",
-    "COLOR_22",
-    "COLOR_23",
-    "COLOR_24",
-    "COLOR_25",
-    "COLOR_26",
-    "COLOR_27",
-    "COLOR_28",
-    "COLOR_29",
-    "COLOR_30",
-    "COLOR_31",
+    "White Wool",
+    "Orange Wool",
+    "Magenta Wool",
+    "Light Blue Wool",
+    "Yellow Wool",
+    "Lime Wool",
+    "Pink Wool",
+    "Gray Wool",
+    "Light Gray Wool",
+    "Cyan Wool",
+    "Purple Wool",
+    "Blue Wool",
+    "Brown Wool",
+    "Green Wool",
+    "Red Wool",
+    "Black Wool",
+    "Diamond Ore",
+    "Redstone Ore",
+    "Bookshelf",
+    "Mossy Cobblestone",
+    "Obsidian",
+    "Workbench",
+    "Furnace",
+    "Burning Furnace",
+    "Monster Spawner",
+    "Snow Block",
+    "Ice",
+    "Clay",
+    "Jukebox",
+    "Cactus",
+    "Mycelium",
+    "Netherrack",
     "Glowstone",
     "Bedrock",
     "Gravel",
@@ -156,7 +139,7 @@ const int blocks[256][6] = {
     {RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2)}, // 7 - dirt
     {RC(15, 4), RC(15, 4), RC(15, 4), RC(15, 4), RC(15, 4), RC(15, 4)}, // 8 - plank
     {RC(11, 4), RC(11, 4), RC(11, 4), RC(11, 4), RC( 2, 8), RC(15, 2)}, // 9 - snow
-    {RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1)}, // 10 - glass
+    {RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1)}, // 10 - glass
     {RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0)}, // 11 - cobble
     {RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11)}, // 12 - light stone
     {RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12)}, // 13 - dark stone
@@ -178,39 +161,39 @@ const int blocks[256][6] = {
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 29
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 30
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 31
-    {RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2)}, // 32 - yellow
-    {RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2)}, // 33 - green
-    {RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2)}, // 34
-    {RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3)}, // 35
-    {RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1)}, // 36 - dark green
-    {RC(11, 5), RC(11, 5), RC(11, 5), RC(11, 5), RC(11, 5), RC(11, 5)}, // 37
-    {RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 6)}, // 38
-    {RC(11, 7), RC(11, 7), RC(11, 7), RC(11, 7), RC(11, 7), RC(11, 7)}, // 39
-    {RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8)}, // 40
-    {RC(11, 9), RC(11, 9), RC(11, 9), RC(11, 9), RC(11, 9), RC(11, 9)}, // 41
-    {RC(11,10), RC(11,10), RC(11,10), RC(11,10), RC(11,10), RC(11,10)}, // 42
-    {RC(11,11), RC(11,11), RC(11,11), RC(11,11), RC(11,11), RC(11,11)}, // 43
-    {RC(11,12), RC(11,12), RC(11,12), RC(11,12), RC(11,12), RC(11,12)}, // 44
-    {RC(11,13), RC(11,13), RC(11,13), RC(11,13), RC(11,13), RC(11,13)}, // 45
-    {RC(11,14), RC(11,14), RC(11,14), RC(11,14), RC(11,14), RC(11,14)}, // 46
-    {RC(11,15), RC(11,15), RC(11,15), RC(11,15), RC(11,15), RC(11,15)}, // 47
-    {RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0)}, // 48
-    {RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1)}, // 49
-    {RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2)}, // 50
-    {RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3)}, // 51
-    {RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1)}, // 52 - red
-    {RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5), RC(12, 5)}, // 53
-    {RC(12, 6), RC(12, 6), RC(12, 6), RC(12, 6), RC(12, 6), RC(12, 6)}, // 54
-    {RC(12, 7), RC(12, 7), RC(12, 7), RC(12, 7), RC(12, 7), RC(12, 7)}, // 55
-    {RC(12, 8), RC(12, 8), RC(12, 8), RC(12, 8), RC(12, 8), RC(12, 8)}, // 56
-    {RC(12, 9), RC(12, 9), RC(12, 9), RC(12, 9), RC(12, 9), RC(12, 9)}, // 57
-    {RC(12,10), RC(12,10), RC(12,10), RC(12,10), RC(12,10), RC(12,10)}, // 58
-    {RC(12,11), RC(12,11), RC(12,11), RC(12,11), RC(12,11), RC(12,11)}, // 59
-    {RC(12,12), RC(12,12), RC(12,12), RC(12,12), RC(12,12), RC(12,12)}, // 60
-    {RC(12,13), RC(12,13), RC(12,13), RC(12,13), RC(12,13), RC(12,13)}, // 61
-    {RC(12,14), RC(12,14), RC(12,14), RC(12,14), RC(12,14), RC(12,14)}, // 62
-    {RC(12,15), RC(12,15), RC(12,15), RC(12,15), RC(12,15), RC(12,15)}, // 63
-    {RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9)}, // 64 - glowing stone
+    {RC(11, 0), RC(11, 0), RC(11, 0), RC(11, 0), RC(11, 0), RC(11, 0)}, // 32 - white
+    {RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2)}, // 33 - orange
+    {RC( 3, 2), RC( 3, 2), RC( 3, 2), RC( 3, 2), RC( 3, 2), RC( 3, 2)}, // 34 - magenta
+    {RC( 4, 2), RC( 4, 2), RC( 4, 2), RC( 4, 2), RC( 4, 2), RC( 4, 2)}, // 35 - light blue
+    {RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2), RC( 5, 2)}, // 36 - yellow
+    {RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2), RC( 6, 2)}, // 37 - lime
+    {RC( 7, 2), RC( 7, 2), RC( 7, 2), RC( 7, 2), RC( 7, 2), RC( 7, 2)}, // 38 - pink
+    {RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2), RC( 8, 2)}, // 39 - gray
+    {RC( 1, 1), RC( 1, 1), RC( 1, 1), RC( 1, 1), RC( 1, 1), RC( 1, 1)}, // 40 - light gray (silver)
+    {RC( 2, 1), RC( 2, 1), RC( 2, 1), RC( 2, 1), RC( 2, 1), RC( 2, 1)}, // 41 - cyan
+    {RC( 3, 1), RC( 3, 1), RC( 3, 1), RC( 3, 1), RC( 3, 1), RC( 3, 1)}, // 42 - purple
+    {RC( 4, 1), RC( 4, 1), RC( 4, 1), RC( 4, 1), RC( 4, 1), RC( 4, 1)}, // 43 - blue
+    {RC( 5, 1), RC( 5, 1), RC( 5, 1), RC( 5, 1), RC( 5, 1), RC( 5, 1)}, // 44 - brown
+    {RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1), RC( 6, 1)}, // 45 - green
+    {RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1), RC( 7, 1)}, // 46 - red
+    {RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1), RC( 8, 1)}, // 47 - black
+    {RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2), RC(12, 2)}, // 48 - diamond ore
+    {RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3), RC(12, 3)}, // 49 - redstone ore
+    {RC(13, 3), RC(13, 3), RC(13, 3), RC(13, 3), RC(15, 4), RC(15, 4)}, // 50 - bookshelf
+    {RC(13, 4), RC(13, 4), RC(13, 4), RC(13, 4), RC(13, 4), RC(13, 4)}, // 51 - mossy cobblestone
+    {RC(13, 5), RC(13, 5), RC(13, 5), RC(13, 5), RC(13, 5), RC(13, 5)}, // 52 - obsidian
+    {RC(12,12), RC(12,11), RC(12,11), RC(12,11), RC(13,11), RC(12,11)}, // 53 - workbench
+    {RC(13,12), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13)}, // 54 - furnace
+    {RC(12,13), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13)}, // 55 - burning furnace
+    {RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1)}, // 56 - monster spawner
+    {RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2)}, // 57 - snow block
+    {RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3)}, // 58 - ice
+    {RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8)}, // 59 - clay
+    {RC(11,11), RC(11,11), RC(11,11), RC(11,11), RC(12,11), RC(11,11)}, // 60 - jukebox
+    {RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 5), RC(11, 7)}, // 61 - cactus TODO: smaller model
+    {RC(11,13), RC(11,13), RC(11,13), RC(11,13), RC(11,14), RC(11,13)}, // 62 - mycelium
+    {RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7)}, // 63 - netherrack
+    {RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9), RC( 9, 9)}, // 64 - glowstone
     {RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1), RC(14, 1)}, // 65 - bedrock
     {RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3), RC(14, 3)}, // 66 - gravel
     {RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6), RC(14, 6)}, // 67 - iron block
@@ -319,9 +302,9 @@ float is_hardness(int w) {
             return 3.0;
         case GLASS:
             return 0.4;
-        case STONE:
+        case STONE_BRICK:
         case BRICK:
-        case CEMENT:
+        case STONE:
         case COBBLE:
         case LIGHT_STONE:
         case DARK_STONE:
