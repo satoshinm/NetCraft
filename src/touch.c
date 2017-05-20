@@ -11,14 +11,13 @@ long touch_active = 0;
 long touch_clientX = 0;
 long touch_clientY = 0;
 
-static GLFWwindow *window = NULL;
-
 #ifndef __EMSCRIPTEN__
 void init_touch_callbacks(GLFWwindow *w) {}
 
 #else
 #include <emscripten/html5.h>
 
+static GLFWwindow *window = NULL;
 static double touch_activated_at = 0;
 static bool touch_just_activated = false;
 
