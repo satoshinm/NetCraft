@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 #include "mining.h"
+#include "touch.h"
 
 bool touch_forward = false;
 bool touch_jump = false;
