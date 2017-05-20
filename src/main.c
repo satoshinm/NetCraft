@@ -3115,7 +3115,7 @@ void main_init(void *unused) {
 #ifdef __EMSCRIPTEN__
         emscripten_set_socket_error_callback("error", client_socket_error);
         emscripten_set_socket_open_callback("open", client_opened);
-        emscripten_set_socket_message_callback(parse_buffer, client_message);
+        emscripten_set_socket_message_callback((void *)parse_buffer, client_message);
         emscripten_set_socket_close_callback("close", client_closed);
         client_connect(g->server_addr, g->server_port);
 #else

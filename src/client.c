@@ -169,7 +169,7 @@ void client_message(int fd, void *userData) {
 
     buf[len] = 0;
 
-    void (*parse_buffer)(char *) = userData;
+    void (*parse_buffer)(char *) = (void (*)(char *))userData;
     parse_buffer(buf);
 }
 #else
