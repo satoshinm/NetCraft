@@ -279,7 +279,9 @@ int char_width(char input) {
         4, 7, 6, 6, 6, 6, 5, 6, 6, 2, 5, 5, 2, 9, 6, 6,
         6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 6, 4, 2, 5, 7, 0
     };
-    return lookup[input];
+    int i = (int)input;
+    if (i < 0 || i > sizeof(lookup)) return 1;
+    return lookup[i];
 }
 
 int string_width(const char *input) {
