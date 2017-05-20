@@ -26,11 +26,13 @@ static bool client_enabled = false;
 static bool running = 0;
 static int sd = 0;
 static int bytes_sent = 0;
+#ifndef __EMSCRIPTEN__
 static int bytes_received = 0;
+static mtx_t mutex;
+static thrd_t recv_thread;
+#endif
 static char *queue = 0;
 static int qsize = 0;
-static thrd_t recv_thread;
-static mtx_t mutex;
 
 void client_enable() {
     client_enabled = true;

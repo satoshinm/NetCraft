@@ -714,7 +714,6 @@ int hit_test(
 
 int hit_test_face(Player *player, int *x, int *y, int *z, int *face, int *nx, int *ny, int *nz) {
     State *s = &player->state;
-    int dx, dy, dz;
     int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
     if (!w) return 0;
 
@@ -3153,7 +3152,6 @@ void main_inited() {
 
 void main_shutdown() {
     // SHUTDOWN //
-    Player *me = g->players;
     State *s = &g->players->state;
 
     db_save_state(s->x, s->y, s->z, s->rx, s->ry);

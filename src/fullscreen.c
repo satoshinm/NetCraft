@@ -10,6 +10,7 @@
 #include "vr.h" // vr_update_viewport
 
 static GLFWwindow *window;
+#if !USE_EM_FULLSCREEN
 static int window_width;
 static int window_height;
 static int window_xpos;
@@ -17,6 +18,7 @@ static int window_ypos;
 static GLFWmonitor *fullscreen_monitor;
 static int fullscreen_width;
 static int fullscreen_height;
+#endif
 
 extern int get_scale_factor(GLFWwindow *window);
 
@@ -59,7 +61,7 @@ static void maximize_canvas() {
         .canvasResizedCallbackUserData = NULL
     };
 
-    EMSCRIPTEN_RESULT ret = emscripten_enter_soft_fullscreen("#canvas", &strategy);
+    emscripten_enter_soft_fullscreen("#canvas", &strategy);
 
     on_canvassize_changed(0, NULL, NULL);
 }
@@ -68,7 +70,6 @@ static void maximize_canvas() {
 
 void on_window_size(GLFWwindow* window, int width, int height) {
 #ifdef __EMSCRIPTEN__
-    static int inFullscreen = 0;
     static int wasFullscreen = 0;
 
     int isInFullscreen = EM_ASM_INT_V(return !!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement));
