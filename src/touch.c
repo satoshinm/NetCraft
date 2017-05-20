@@ -22,7 +22,7 @@ void init_touch_callbacks(GLFWwindow *w) {}
 static double touch_activated_at = 0;
 static bool touch_just_activated = false;
 
-extern void set_just_clicked();
+extern void set_just_clicked(void);
 
 static EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     if (touch_active) {

@@ -7,7 +7,7 @@
 #include "matrix.h"
 #include "util.h"
 
-extern void render_scene();
+extern void render_scene(void);
 extern void translate_camera_x_offset(float);
 
 static int width;
