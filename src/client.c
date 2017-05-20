@@ -17,10 +17,11 @@
 #include "tinycthread.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#else
+#define RECV_SIZE 4096
 #endif
 
 #define QUEUE_SIZE 1048576
-#define RECV_SIZE 4096
 
 static bool client_enabled = false;
 static bool running = 0;
