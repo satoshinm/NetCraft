@@ -495,7 +495,7 @@ void _db_set_key(int p, int q, int key) {
     sqlite3_step(set_key_stmt);
 }
 
-void db_worker_start(char *path) {
+void db_worker_start() {
     if (!db_enabled) {
         return;
     }
@@ -503,7 +503,7 @@ void db_worker_start(char *path) {
     mtx_init(&mtx, mtx_plain);
     mtx_init(&load_mtx, mtx_plain);
     cnd_init(&cnd);
-    thrd_create(&thrd, db_worker_run, path);
+    thrd_create(&thrd, db_worker_run, NULL);
 }
 
 void db_worker_stop() {
