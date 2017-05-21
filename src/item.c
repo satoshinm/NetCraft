@@ -267,13 +267,7 @@ bool is_transparent(int w) {
 }
 
 bool is_destructable(int w) {
-    switch (w) {
-        case EMPTY:
-        case CLOUD:
-            return false;
-        default:
-            return true;
-    }
+    return isfinite(is_hardness(w));
 }
 
 int is_illuminated(int w) {
@@ -309,6 +303,8 @@ float is_hardness(int w) {
         case LIGHT_STONE:
         case DARK_STONE:
             return 7.0;
+        case EMPTY:
+        case CLOUD:
         case BEDROCK:
             return INFINITY;
 
