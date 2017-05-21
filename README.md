@@ -46,10 +46,9 @@ See below to run from source.
 To build for the web, compiling to JavaScript, first install [Emscripten](http://emscripten.org).
 The EM SDK is the easiest to install, but to get my patch fixes you can either build from source
 using this branch: https://github.com/satoshinm/emscripten/commits/netcraft, or alternatively
-install 1.37.9 from the SDK and apply a patch:
+install 1.37.12 from the SDK and apply a patch:
 
-    patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.9+netcraftfixes.patch
-    cp deps/glfw/include/GLFW/glfw3.h $EMSCRIPTEN/system/include/GLFW/glfw3.h
+    patch -p1 -d $EMSCRIPTEN < src/emscripten-1.37.12+netcraftfixes.patch
 
 Once your Emscripten environment is setup, then run:
 
@@ -195,7 +194,7 @@ Mouse:
 - Ctrl + Right Click to toggle a block as a light source.
 - Middle Click to change the current block selection to the targeted block.
 - Scrollwheel to cycle through the block types, or zoom in orthogonal mode.
-- Drag-and-drop files onto the canvas to change the texture.png.
+- Drag-and-drop files onto the canvas to change [textures](#textures).
 
 Keyboard:
 
@@ -307,8 +306,21 @@ Text is rendered using a bitmap atlas. Each character is rendered onto two trian
 
 Transparency in glass blocks and plants (plants don’t take up the full rectangular shape of their triangle primitives) is implemented by discarding magenta-colored pixels in the fragment shader.
 
-Block textures are based on the Pixeludi Pack by Wojtek Mroczek, Creative Commons CC-BY-SA, 2011,
-as in [TrueCraft](https://github.com/SirCmpwn/TrueCraft/).
+#### Textures
+
+Textures are based on the Pixeludi Pack by Wojtek Mroczek, Creative Commons CC-BY-SA, 2011,
+as used in [TrueCraft](https://github.com/SirCmpwn/TrueCraft/).
+
+Custom textures can be loaded from the server, or by dragging-and-dropping a .zip file or .png texture atlas
+onto the game. NetCraft uses its own texture format, although there is some interoperability provided.
+To customize textures you can start with [/textures/texture.png](/textures/texture.png), or (may not work
+completely as expected), seek out an old texture pack for Minecraft 1.4.7 or earlier, such as
+[Pixeludi](https://github.com/SirCmpwn/TrueCraft/blob/7f0e3338d231b8a8f7fba35742b618a4fb3575bf/TrueCraft.Client/Content/terrain.png),
+[Piehole](http://piehole.alexvoelk.de), or
+[Sphax PureBDcraft 16x](http://bdcraft.net/purebdcraft-minecraft#older).
+Only texture atlas images are supported, in a manner somewhat compatible with [pre-1.5](http://minecraft.gamepedia.com/Texture_pack#Converting_texture_packs_to_resource_packs)
+packs. High-resolution texture packs and packs for 1.5+ or newer, including resource packs, are not supported!
+
 
 #### Database
 

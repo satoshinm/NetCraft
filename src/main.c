@@ -2564,7 +2564,6 @@ void on_mouse_button(GLFWwindow *window, int button, int action, int mods) {
 }
 
 
-#include "miniz.h"
 void on_file_drop(GLFWwindow *window, int count, const char **paths) {
     for (int i = 0; i < count; ++i) {
         const char *path = paths[i];
@@ -2586,28 +2585,7 @@ void on_file_drop(GLFWwindow *window, int count, const char **paths) {
         } else if (strcmp(base, "terrain.png") == 0 || strcmp(ext, ".png") == 0) {
             load_block_texture(paths[i]);
         } else if (strcmp(ext, ".zip") == 0) {
-            mz_zip_archive zip_archive;
-            mz_bool status = mz_zip_reader_init_file(&zip_archive, path, 0);
-            if (!status) {
-                printf("failed to init zip file: %s\n", path);
-                return;
-            }
-
-            printf("num files: %d\n", (int)mz_zip_reader_get_num_files(&zip_archive));
-
-            status = mz_zip_reader_extract_file_to_file(&zip_archive, "terrain.png", "/tmp/terrain.png", 0);
-            if (!status) {
-                printf("failed to extract terrain.png, is this a compatible texture pack? %s\n", path);
-                mz_zip_end(&zip_archive);
-                return;
-            }
-
-            printf("found terrain.png in zip, loading\n");
-            load_block_texture("/tmp/terrain.png");
-            // TODO: load other textures
-            // TODO: support "resource pack" format
-
-            mz_zip_end(&zip_archive);
+            load_zipped_textures(paths[i]);
         } else {
             printf("unknown file type (%s) dropped: %s\n", ext, path);
         }
@@ -2863,6 +2841,40 @@ void parse_buffer(char *buffer) {
             }
             _set_sign(bp, bq, bx, by, bz, face, rotation, text, 0);
         }
+#ifdef __EMSCRIPTEN__
+        char url[256] = {0};
+        if (sscanf(line, "t,%256[^\n]", url) == 1) {
+            printf("server provided texture url: %s\n", url);
+            if (strcmp(url, "-") == 0) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdollar-in-identifier-extension" // EM_ASM JavaScript
+                EM_ASM_ARGS({
+                    // Special case '-' connects back to ourselves
+                    // TODO: refactor with similar code in src/client.c
+                    var protocol = document.location.protocol + String.fromCharCode(47) + String.fromCharCode(47); // to avoid //
+                    var path = '/textures.zip';
+                    var url = protocol + document.location.host + path;
+
+                    function writeString(p, s, n) {
+                        if (s.length + 1 > n) {
+                            console.err("url is too long, ignoring: " + s);
+                            return;
+                        }
+
+                        for (var i = 0; i < s.length; ++i) {
+                            Module.HEAP8[p++] = s.charCodeAt(i);
+                        }
+                        Module.HEAP8[p++] = 0;
+                    }
+                    writeString($0, url, 256);
+                }, url);
+                printf("replaced url with: %s\n", url);
+            }
+            emscripten_async_wget(url, "/tmp/downloaded-textures.zip", load_zipped_textures, fail_load_texture);
+        }
+#pragma clang diagnostic pop
+#endif
+
         line = tokenize(NULL, "\n", &key);
     }
 }
