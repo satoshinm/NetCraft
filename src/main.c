@@ -2707,9 +2707,14 @@ void handle_movement(double dt) {
     }
     float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
+
+    bool jumping = false;
+    bool crouching = false;
+    bool sprinting = false;
     if (!g->typing) {
-        bool jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) != GLFW_RELEASE || touch_jump;
-        bool crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH) != GLFW_RELEASE;
+        jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) != GLFW_RELEASE || touch_jump;
+        crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH) != GLFW_RELEASE;
+        sprinting = glfwGetKey(g->window, CRAFT_KEY_SPRINT) != GLFW_RELEASE;
 
         joystick_apply_buttons(&jumping, &crouching);
 
@@ -2732,8 +2737,8 @@ void handle_movement(double dt) {
         }
     }
     float speed = g->flying ? 20 : 5;
-    if (glfwGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
-    if (glfwGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
+    if (sprinting) speed *= 2;
+    if (crouching && !g->flying) speed /= 2;
     int estimate = roundf(sqrtf(
         powf(vx * speed, 2) +
         powf(vy * speed + ABS(dy) * 2, 2) +
