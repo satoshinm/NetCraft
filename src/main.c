@@ -2240,7 +2240,7 @@ void parse_command(const char *buffer, bool forward) {
     else if (sscanf(buffer, "/cylinder %d", &radius) == 1) {
         cylinder(&g->block0, &g->block1, radius, 0);
     }
-    else if (sscanf(buffer, "/noclip") == 0) {
+    else if (strcmp(buffer, "/noclip") == 0) {
         g->noclip = !g->noclip;
     }
     else if (forward) {
