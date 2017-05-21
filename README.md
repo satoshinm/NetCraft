@@ -211,7 +211,7 @@ Keyboard:
 - When in orthographic mode, use the scrollwheel or '+', '-' keys to zoom in and out.
 - O to observe players in the main view.
 - P to observe players in the picture-in-picture view.
-- T to type text into chat.
+- T to type text into chat (use up/down arrow keys to scroll through history).
 - Forward slash (/) to enter a command.
 - Backquote (`) to write text on any block (signs).
 - Arrow keys emulate mouse movement.
