@@ -2312,6 +2312,7 @@ void change_ortho_zoom(double ydelta) {
     }
 }
 
+void start_typing(void);
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     bool control = (mods & GLFW_MOD_CONTROL) != 0;
     if (window == NULL) window = g->window;
@@ -2319,8 +2320,10 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
     if (action == GLFW_RELEASE) {
         if (!g->typing) {
-            if (key == GLFW_KEY_ENTER) {
+            if (key == CRAFT_KEY_MINE) {
                 mining_stop();
+            }
+            else if (key == CRAFT_KEY_BUILD) {
                 building_stop();
             }
         }
@@ -2414,13 +2417,14 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             }
         }
         else {
-            if (control) {
-                building_start();
-            }
-            else {
-                mining_start();
-            }
+            start_typing();
         }
+    }
+    if (key == CRAFT_KEY_MINE) {
+        mining_start();
+    }
+    if (key == CRAFT_KEY_BUILD) {
+        building_start();
     }
     if (control && key == 'V') {
         const char *buffer = glfwGetClipboardString(window);
@@ -2471,6 +2475,11 @@ bool is_typing() {
     return g->typing;
 }
 
+void start_typing() {
+    g->typing = true;
+    g->typing_buffer[0] = '\0';
+}
+
 void on_char(GLFWwindow *window, unsigned int u) {
     if (g->suppress_char) {
         g->suppress_char = false;
@@ -2488,16 +2497,15 @@ void on_char(GLFWwindow *window, unsigned int u) {
     }
     else {
         if (u == CRAFT_KEY_CHAT) {
-            g->typing = true;
-            g->typing_buffer[0] = '\0';
+            start_typing();
         }
         if (u == CRAFT_KEY_COMMAND) {
-            g->typing = true;
+            start_typing();
             g->typing_buffer[0] = '/';
             g->typing_buffer[1] = '\0';
         }
         if (u == CRAFT_KEY_SIGN) {
-            g->typing = true;
+            start_typing();
             g->typing_buffer[0] = CRAFT_KEY_SIGN;
             g->typing_buffer[1] = '\0';
         }
