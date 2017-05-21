@@ -6,7 +6,6 @@
 #include <string.h>
 #include "auth.h"
 
-#define MAX_POST_LENGTH 1024
 #define MAX_RESPONSE_LENGTH 1024
 
 size_t write_function(char *data, size_t size, size_t count, void *arg) {
@@ -30,6 +29,7 @@ int get_access_token(
     strncpy(result, "", length);
     CURL *curl = curl_easy_init();
     if (curl) {
+#define MAX_POST_LENGTH 1024
         char post[MAX_POST_LENGTH] = {0};
         char response[MAX_RESPONSE_LENGTH] = {0};
         long http_code = 0;

@@ -14,10 +14,10 @@
 #define GAMEPAD_DPAD_RIGHT 10
 #define GAMEPAD_DPAD_UP 11
 
-bool is_gamepad_connected();
-void handle_gamepad_input();
+bool is_gamepad_connected(void);
+void handle_gamepad_input(void);
 void init_joystick(int joy);
-void init_joystick_callbacks();
+void init_joystick_callbacks(void);
 void joystick_apply_move(double *sx, double *sz);
 void joystick_apply_look(double *mx, double *my, double px, double py);
 void joystick_apply_buttons(bool *jumping, bool *crouching);

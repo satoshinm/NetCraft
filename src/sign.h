@@ -2,6 +2,7 @@
 #define _sign_h_
 
 #define MAX_SIGN_LENGTH 64
+#define MAX_SIGN_LENGTH_FORMAT "63"
 
 typedef struct {
     int x;

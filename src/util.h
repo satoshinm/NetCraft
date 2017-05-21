@@ -3,6 +3,7 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <stdbool.h>
 #include "config.h"
 
 #define PI 3.14159265359
@@ -26,7 +27,7 @@ typedef struct {
 } FPS;
 
 int rand_int(int n);
-double rand_double();
+double rand_double(void);
 void update_fps(FPS *fps);
 
 GLuint gen_buffer(GLsizei size, GLfloat *data);

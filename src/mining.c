@@ -20,8 +20,8 @@ int target_z = 0;
 int target_face = 0;
 int target_w = 0;
 
-extern void on_mine();
-extern void on_build();
+extern void on_mine(void);
+extern void on_build(void);
 extern int get_targeted_block(int *x, int *y, int *z, int *face);
 
 bool is_mining() {

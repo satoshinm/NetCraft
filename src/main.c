@@ -39,6 +39,7 @@
 #define WORKERS 4
 #define MAX_TEXT_LENGTH 256
 #define MAX_NAME_LENGTH 32
+#define MAX_NAME_LENGTH_FORMAT "31"
 #define MAX_PATH_LENGTH 256
 #define MAX_ADDR_LENGTH 256
 
@@ -289,7 +290,7 @@ GLuint gen_sky_buffer() {
 // Generate a cube buffer textured with block type w
 GLuint gen_cube_buffer(float x, float y, float z, float n, int w) {
     GLfloat *data = malloc_faces(10, 6);
-    float ao[6][4] = {0};
+    float ao[6][4] = {{0}};
     float light[6][4] = {
         {0.5, 0.5, 0.5, 0.5},
         {0.5, 0.5, 0.5, 0.5},
@@ -306,7 +307,7 @@ GLuint gen_cube_buffer(float x, float y, float z, float n, int w) {
 GLuint gen_cube_buffer_faces(float x, float y, float z, float n,
     int wleft, int wright, int wtop, int wbottom, int wfront, int wback) {
     GLfloat *data = malloc_faces(10, 6);
-    float ao[6][4] = {0};
+    float ao[6][4] = {{0}};
     float light[6][4] = {
         {0.5, 0.5, 0.5, 0.5},
         {0.5, 0.5, 0.5, 0.5},
@@ -714,7 +715,6 @@ int hit_test(
 
 int hit_test_face(Player *player, int *x, int *y, int *z, int *face, int *nx, int *ny, int *nz) {
     State *s = &player->state;
-    int dx, dy, dz;
     int w = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, x, y, z);
     if (!w) return 0;
 
@@ -2842,22 +2842,16 @@ void parse_buffer(char *buffer) {
             char *text = line + 2;
             add_message(text);
         }
-        char format[64];
-        snprintf(
-            format, sizeof(format), "N,%%d,%%%ds", MAX_NAME_LENGTH - 1);
         char name[MAX_NAME_LENGTH];
-        if (sscanf(line, format, &pid, name) == 2) {
+        if (sscanf(line, "N,%d,%" MAX_NAME_LENGTH_FORMAT "s", &pid, name) == 2) {
             Player *player = find_player(pid);
             if (player) {
                 strncpy(player->name, name, MAX_NAME_LENGTH);
             }
         }
-        snprintf(
-            format, sizeof(format),
-            "S,%%d,%%d,%%d,%%d,%%d,%%d,%%%d[^\n]", MAX_SIGN_LENGTH - 1);
         int face;
         char text[MAX_SIGN_LENGTH] = {0};
-        if (sscanf(line, format,
+        if (sscanf(line, "S,%d,%d,%d,%d,%d,%d,%" MAX_SIGN_LENGTH_FORMAT "[^\n]",
             &bp, &bq, &bx, &by, &bz, &face, text) >= 6)
         {
             int rotation = 0;
@@ -2902,9 +2896,9 @@ void reset_model() {
     g->noclip = false;
 }
 
-void one_iter();
+void one_iter(void);
 void main_init(void *);
-void main_shutdown();
+void main_shutdown(void);
 
 static Attrib block_attrib = {0};
 static Attrib line_attrib = {0};
@@ -3067,7 +3061,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void main_inited();
+void main_inited(void);
 
 void client_opened(int fd, void *userData) {
     add_message("Connected to server");
@@ -3116,7 +3110,7 @@ void main_init(void *unused) {
 #ifdef __EMSCRIPTEN__
         emscripten_set_socket_error_callback("error", client_socket_error);
         emscripten_set_socket_open_callback("open", client_opened);
-        emscripten_set_socket_message_callback(parse_buffer, client_message);
+        emscripten_set_socket_message_callback((void *)parse_buffer, client_message);
         emscripten_set_socket_close_callback("close", client_closed);
         client_connect(g->server_addr, g->server_port);
 #else
@@ -3153,7 +3147,6 @@ void main_inited() {
 
 void main_shutdown() {
     // SHUTDOWN //
-    Player *me = g->players;
     State *s = &g->players->state;
 
     db_save_state(s->x, s->y, s->z, s->rx, s->ry);
@@ -3166,7 +3159,7 @@ void main_shutdown() {
     delete_all_players();
 }
 
-void render_scene();
+void render_scene(void);
 void one_iter() {
     Player *me = g->players;
     State *s = &g->players->state;

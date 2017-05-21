@@ -31,6 +31,8 @@ endif ()
 add_definitions(-std=c99 -O3)
 add_definitions(-DLODEPNG_NO_COMPILE_ZLIB)
 
+set_property(SOURCE ${SOURCE_FILES} PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-missing-field-initializers -Wno-sign-compare")
+
 if ($ENV{CIRCLECI})
     add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")
     add_definitions(-DBUILD_COMMIT="$ENV{CIRCLE_SHA1}")

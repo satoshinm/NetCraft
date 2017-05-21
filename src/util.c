@@ -279,7 +279,9 @@ int char_width(char input) {
         4, 7, 6, 6, 6, 6, 5, 6, 6, 2, 5, 5, 2, 9, 6, 6,
         6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 6, 4, 2, 5, 7, 0
     };
-    return lookup[input];
+    int i = (int)input;
+    if (i < 0 || i > sizeof(lookup)) return 1;
+    return lookup[i];
 }
 
 int string_width(const char *input) {
@@ -342,7 +344,6 @@ void screenshot(int width, int height) {
     GLubyte *pixels = malloc(size);
     if (pixels) {
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        printf("read pixels to %p\n", pixels);
 
         size_t png_size = 0;
         int level = MZ_DEFAULT_LEVEL;
@@ -362,7 +363,7 @@ void screenshot(int width, int height) {
             if (fp) {
                 size_t wrote = fwrite(png, 1, png_size, fp);
                 fclose(fp);
-                printf("Saved screenshot to %s\n", filename);
+                printf("Saved screenshot to %s, wrote %zu bytes\n", filename, wrote);
             } else {
                 printf("failed to open %s for writing\n", filename);
             }
