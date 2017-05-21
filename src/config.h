@@ -10,7 +10,8 @@
 #define SCROLL_THRESHOLD 0.1
 #define JUMP_FLY_THRESHOLD 0.2
 #define SCROLL_BLOCK_SELECT true
-#define MAX_MESSAGES 4
+#define MAX_MESSAGES 20
+#define MAX_VISIBLE_MESSAGES 4
 #define DB_PATH "craft.db"
 #ifdef __EMSCRIPTEN__
 #define USE_CACHE false
