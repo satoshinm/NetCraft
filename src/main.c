@@ -2756,12 +2756,24 @@ void handle_movement(double dt) {
             dy -= ut * 25;
             dy = MAX(dy, -250);
         }
+        float ox = s->x;
+        float oy = s->y;
+        float oz = s->z;
         s->x += vx;
         s->y += vy + dy * ut;
         s->z += vz;
         if (g->noclip) continue;
         if (collide(2, &s->x, &s->y, &s->z)) {
             dy = 0;
+        }
+        if (crouching && !g->flying) {
+            if (oy != s->y) {
+                // if crouching and was about to fall, don't move
+                // TODO: sliding along either x/z axes
+                s->x = ox;
+                s->y = oy;
+                s->z = oz;
+            }
         }
     }
     if (s->y < 0) {
