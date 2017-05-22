@@ -28,6 +28,7 @@
 #define SPONGE 24
 #define MELON 25
 #define END_STONE 26
+#define TNT 27
 #define WOOL_WHITE 32
 #define WOOL_ORANGE 33
 #define WOOL_MAGENTA 34
