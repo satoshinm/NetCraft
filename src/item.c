@@ -216,7 +216,7 @@ const int plants[256] = {
     RC(15,15), // 20 - sapling
     RC(14,12), // 21 - red mushroom
     RC(14,13), // 22 - brown mushroom
-    RC( 9,15), // 23 - deadbush
+    RC(12, 7), // 23 - deadbush
 };
 
 bool is_plant(int w) {
