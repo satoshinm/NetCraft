@@ -126,6 +126,7 @@ const char *item_names[] = {
     "Mossy Stone Brick",
     "Cracked Stone Brick",
     "Pumpkin",
+    "Jack-o'-Lantern",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -211,6 +212,7 @@ const int blocks[256][6] = {
     {RC( 9, 4), RC( 9, 4), RC( 9, 4), RC( 9, 4), RC( 9, 4), RC( 9, 4)}, // 76 - mossy stone brick
     {RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5)}, // 77 - cracked stone brick
     {RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 9, 6), RC( 9, 6)}, // 78 - pumpkin (TODO: face)
+    {RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 9, 6), RC( 9, 6)}, // 79 - jack-o'-lantern TODO: face side
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
 };
 
