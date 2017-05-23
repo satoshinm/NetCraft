@@ -87,6 +87,8 @@
 #define EMERALD_ORE 83
 #define SOUL_SAND 84
 #define NETHER_BRICK 85
+#define FARMLAND_WET 86
+#define FARMLAND_DRY 87
 
 #define RC(row, col) (row * 32 + col)
 

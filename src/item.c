@@ -133,6 +133,8 @@ const char *item_names[] = {
     "Emerald Ore",
     "Soul Sand",
     "Nether Brick",
+    "Wet Farmland",
+    "Dry Farmland",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -225,6 +227,9 @@ const int blocks[256][6] = {
     {RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11)}, // 83 - emerald ore
     {RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8)}, // 84 - soul sand
     {RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0)}, // 85 - nether brick
+    {RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(10, 6), RC(15, 2)}, // 86 - wet farmland
+    {RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(10, 7), RC(15, 2)}, // 87 - dry farmland
+    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
 };
 
