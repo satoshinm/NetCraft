@@ -23,7 +23,7 @@ const int items[] = {
     TALL_GRASS,
     YELLOW_FLOWER,
     RED_FLOWER,
-    SAPLING,
+    OAK_SAPLING,
     RED_MUSHROOM,
     BROWN_MUSHROOM,
     DEADBUSH,
@@ -67,18 +67,18 @@ const char *item_names[] = {
     "Tall Grass",
     "Yellow Flower",
     "Red Flower",
-    "Sapling",
+    "Oak Sapling",
     "Red Mushroom",
     "Brown Mushroom",
     "Deadbush",
     "Sponge",
     "Melon",
     "End Stone",
-    "x27",
-    "x28",
-    "x29",
-    "x30",
-    "x31",
+    "TNT",
+    "Emerald Block",
+    "Fern",
+    "Spruce Sapling",
+    "Birch Sapling",
     "White Wool",
     "Orange Wool",
     "Magenta Wool",
@@ -123,6 +123,20 @@ const char *item_names[] = {
     "Lapis Lazuli Ore",
     "Lapis Lazuli Block",
     "Sandstone",
+    "Mossy Stone Brick",
+    "Cracked Stone Brick",
+    "Pumpkin",
+    "Jack-o'-Lantern",
+    "Huge Brown Mushroom",
+    "Huge Red Mushroom",
+    "Command Block",
+    "Emerald Ore",
+    "Soul Sand",
+    "Nether Brick",
+    "Wet Farmland",
+    "Dry Farmland",
+    "Lamp Off",
+    "Lamp On",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -145,7 +159,7 @@ const int blocks[256][6] = {
     {RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12)}, // 13 - dark stone
     {RC(14,11), RC(14,11), RC(14,11), RC(14,11), RC(14,11), RC(14,11)}, // 14 - chest
     {RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4)}, // 15 - leaves
-    {RC( 0,15), RC( 0,15), RC( 0,15), RC( 0,15), RC( 0,15), RC( 0,15)}, // 16 - cloud
+    {RC( 0,10), RC( 0,10), RC( 0,10), RC( 0,10), RC( 0,10), RC( 0,10)}, // 16 - cloud
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 17
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 18
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 19
@@ -156,8 +170,8 @@ const int blocks[256][6] = {
     {RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0)}, // 24 - sponge
     {RC( 7, 8), RC( 7, 8), RC( 7, 8), RC( 7, 8), RC( 7, 9), RC( 7, 9)}, // 25 - melon
     {RC( 5,15), RC( 5,15), RC( 5,15), RC( 5,15), RC( 5,15), RC( 5,15)}, // 26 - end stone
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 27
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 28
+    {RC(15, 8), RC(15, 8), RC(15, 8), RC(15, 8), RC(15, 9), RC(15,10)}, // 27 - tnt
+    {RC(14, 9), RC(14, 9), RC(14, 9), RC(14, 9), RC(14, 9), RC(14, 9)}, // 28 - emerald block
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 29
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 30
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 31
@@ -189,7 +203,7 @@ const int blocks[256][6] = {
     {RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2), RC(11, 2)}, // 57 - snow block
     {RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3), RC(11, 3)}, // 58 - ice
     {RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8), RC(11, 8)}, // 59 - clay
-    {RC(11,11), RC(11,11), RC(11,11), RC(11,11), RC(12,11), RC(11,11)}, // 60 - jukebox
+    {RC(11,10), RC(11,10), RC(11,10), RC(11,10), RC(11,11), RC(11,10)}, // 60 - jukebox
     {RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 6), RC(11, 5), RC(11, 7)}, // 61 - cactus TODO: smaller model
     {RC(11,13), RC(11,13), RC(11,13), RC(11,13), RC(11,14), RC(11,13)}, // 62 - mycelium
     {RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7), RC( 9, 7)}, // 63 - netherrack
@@ -205,6 +219,21 @@ const int blocks[256][6] = {
     {RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0), RC( 5, 0)}, // 73 - lapis ore
     {RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0), RC( 6, 0)}, // 74 - lapis block
     {RC( 3, 0), RC( 3, 0), RC( 3, 0), RC( 3, 0), RC( 4, 0), RC( 2, 0)}, // 75 - sandstone
+    {RC( 9, 4), RC( 9, 4), RC( 9, 4), RC( 9, 4), RC( 9, 4), RC( 9, 4)}, // 76 - mossy stone brick
+    {RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5)}, // 77 - cracked stone brick
+    {RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 9, 6), RC( 9, 6)}, // 78 - pumpkin (TODO: face)
+    {RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 9, 6), RC( 9, 6)}, // 79 - jack-o'-lantern TODO: face side
+    {RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14)}, // 80 - huge brown mushroom TODO: skin inside
+    {RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13)}, // 81 - huge red mushroom TODO: skin inside
+    {RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8)}, // 82 - command block
+    {RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11)}, // 83 - emerald ore
+    {RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8)}, // 84 - soul sand
+    {RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0)}, // 85 - nether brick
+    {RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(10, 6), RC(15, 2)}, // 86 - wet farmland
+    {RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(10, 7), RC(15, 2)}, // 87 - dry farmland
+    {RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3)}, // 88 - lamp off
+    {RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4)}, // 89 - lamp on
+    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
 };
 
 const int plants[256] = {
@@ -213,10 +242,14 @@ const int plants[256] = {
     RC(13, 7), // 17 - tall grass
     RC(15,13), // 18 - yellow flower
     RC(15,12), // 19 - red flower
-    RC(15,15), // 20 - sapling
+    RC(15,15), // 20 - oak sapling
     RC(14,12), // 21 - red mushroom
     RC(14,13), // 22 - brown mushroom
     RC(12, 7), // 23 - deadbush
+    0, 0, 0, 0, 0, 0,
+    RC(12, 8), // 29 - fern
+    RC(12,15), // 30 - spruce sapling
+    RC(11,15), // 31 - birch sapling
 };
 
 bool is_plant(int w) {
@@ -224,10 +257,13 @@ bool is_plant(int w) {
         case TALL_GRASS:
         case YELLOW_FLOWER:
         case RED_FLOWER:
-        case SAPLING:
+        case OAK_SAPLING:
         case RED_MUSHROOM:
         case BROWN_MUSHROOM:
         case DEADBUSH:
+        case FERN:
+        case SPRUCE_SAPLING:
+        case BIRCH_SAPLING:
             return true;
         default:
             return false;

@@ -21,13 +21,18 @@
 #define TALL_GRASS 17
 #define YELLOW_FLOWER 18
 #define RED_FLOWER 19
-#define SAPLING 20
+#define OAK_SAPLING 20
 #define RED_MUSHROOM 21
 #define BROWN_MUSHROOM 22
 #define DEADBUSH 23
 #define SPONGE 24
 #define MELON 25
 #define END_STONE 26
+#define TNT 27
+#define EMERALD_BLOCK 28
+#define FERN 29
+#define SPRUCE_SAPLING 30
+#define BIRCH_SAPLING 31
 #define WOOL_WHITE 32
 #define WOOL_ORANGE 33
 #define WOOL_MAGENTA 34
@@ -72,6 +77,20 @@
 #define LAPIS_ORE 73
 #define LAPIS_BLOCK 74
 #define SANDSTONE 75
+#define MOSSY_STONE_BRICK 76
+#define CRACKED_STONE_BRICK 77
+#define PUMPKIN 78
+#define JACK_O_LANTERN 79
+#define HUGE_BROWN_MUSHROOM 80
+#define HUGE_RED_MUSHROOM 81
+#define COMMAND_BLOCK 82
+#define EMERALD_ORE 83
+#define SOUL_SAND 84
+#define NETHER_BRICK 85
+#define FARMLAND_WET 86
+#define FARMLAND_DRY 87
+#define LAMP_OFF 88
+#define LAMP_ON 89
 
 #define RC(row, col) (row * 32 + col)
 

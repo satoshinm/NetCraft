@@ -309,8 +309,11 @@ Transparency in glass blocks and plants (plants don’t take up the full rectang
 
 #### Textures
 
-Textures are based on the Pixeludi Pack by Wojtek Mroczek, Creative Commons CC-BY-SA, 2011,
-as used in [TrueCraft](https://github.com/SirCmpwn/TrueCraft/).
+Textures are based on:
+
+* [Craft](https://github.com/fogleman/Craft) by Michael Fogleman, MIT
+* Pixeludi Pack by Wojtek Mroczek, Creative Commons CC-BY-SA, 2011, as used in [TrueCraft](https://github.com/SirCmpwn/TrueCraft/).
+* [Piehole Plain](http://piehole.alexvoelk.de) by Alex Voelk, CC-BY-SA 3.0
 
 Custom textures can be loaded from the server, or by dragging-and-dropping a .zip file or .png texture atlas
 onto the game. NetCraft uses its own texture format, although there is some interoperability provided.
