@@ -83,6 +83,7 @@
 #define JACK_O_LANTERN 79
 #define HUGE_BROWN_MUSHROOM 80
 #define HUGE_RED_MUSHROOM 81
+#define COMMAND_BLOCK 82
 
 #define RC(row, col) (row * 32 + col)
 

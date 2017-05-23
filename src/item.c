@@ -129,6 +129,7 @@ const char *item_names[] = {
     "Jack-o'-Lantern",
     "Huge Brown Mushroom",
     "Huge Red Mushroom",
+    "Command Block",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -217,6 +218,7 @@ const int blocks[256][6] = {
     {RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 9, 6), RC( 9, 6)}, // 79 - jack-o'-lantern TODO: face side
     {RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14)}, // 80 - huge brown mushroom TODO: skin inside
     {RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13)}, // 81 - huge red mushroom TODO: skin inside
+    {RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8)}, // 82 - command block
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
 };
 
