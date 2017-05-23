@@ -3354,11 +3354,14 @@ void render_scene() {
            " build #" BUILD_NUM
 #endif
 #ifdef BUILD_WASM
-           "-wasm"
+           " wasm"
 #endif
            " "
 #ifdef BUILD_COMMIT
            BUILD_COMMIT " "
+#endif
+#ifdef BUILD_BRANCH
+           BUILD_BRANCH " "
 #endif
            __DATE__
            );

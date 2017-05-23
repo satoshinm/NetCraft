@@ -37,6 +37,7 @@ if ($ENV{CIRCLECI})
     add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")
     string(SUBSTRING "$ENV{CIRCLE_SHA1}" 0 10 TRUNCATED_CIRCLE_SHA1)
     add_definitions(-DBUILD_COMMIT="${TRUNCATED_CIRCLE_SHA1}")
+    add_definitions(-DBUILD_BRANCH="$ENV{CIRCLE_BRANCH}")
 endif()
 
 if (DEBUG)
