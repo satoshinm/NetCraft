@@ -89,6 +89,8 @@
 #define NETHER_BRICK 85
 #define FARMLAND_WET 86
 #define FARMLAND_DRY 87
+#define LAMP_OFF 88
+#define LAMP_ON 89
 
 #define RC(row, col) (row * 32 + col)
 

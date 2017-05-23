@@ -135,6 +135,8 @@ const char *item_names[] = {
     "Nether Brick",
     "Wet Farmland",
     "Dry Farmland",
+    "Lamp Off",
+    "Lamp On",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -229,7 +231,8 @@ const int blocks[256][6] = {
     {RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0)}, // 85 - nether brick
     {RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(10, 6), RC(15, 2)}, // 86 - wet farmland
     {RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(10, 7), RC(15, 2)}, // 87 - dry farmland
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
+    {RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3)}, // 88 - lamp off
+    {RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4)}, // 89 - lamp on
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
 };
 
