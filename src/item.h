@@ -81,6 +81,8 @@
 #define CRACKED_STONE_BRICK 77
 #define PUMPKIN 78
 #define JACK_O_LANTERN 79
+#define HUGE_BROWN_MUSHROOM 80
+#define HUGE_RED_MUSHROOM 81
 
 #define RC(row, col) (row * 32 + col)
 
