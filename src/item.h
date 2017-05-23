@@ -77,6 +77,8 @@
 #define LAPIS_ORE 73
 #define LAPIS_BLOCK 74
 #define SANDSTONE 75
+#define MOSSY_STONE_BRICK 76
+#define CRACKED_STONE_BRICK 77
 
 #define RC(row, col) (row * 32 + col)
 
