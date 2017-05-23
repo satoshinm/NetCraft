@@ -131,6 +131,8 @@ const char *item_names[] = {
     "Huge Red Mushroom",
     "Command Block",
     "Emerald Ore",
+    "Soul Sand",
+    "Nether Brick",
 };
 
 const int item_count = sizeof(items) / sizeof(int);
@@ -221,6 +223,8 @@ const int blocks[256][6] = {
     {RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13), RC( 8,13)}, // 81 - huge red mushroom TODO: skin inside
     {RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8), RC( 4, 8)}, // 82 - command block
     {RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11), RC( 5,11)}, // 83 - emerald ore
+    {RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8), RC( 9, 8)}, // 84 - soul sand
+    {RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0), RC( 1, 0)}, // 85 - nether brick
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
 };
 

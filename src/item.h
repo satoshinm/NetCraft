@@ -85,6 +85,8 @@
 #define HUGE_RED_MUSHROOM 81
 #define COMMAND_BLOCK 82
 #define EMERALD_ORE 83
+#define SOUL_SAND 84
+#define NETHER_BRICK 85
 
 #define RC(row, col) (row * 32 + col)
 
