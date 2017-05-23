@@ -79,6 +79,7 @@
 #define SANDSTONE 75
 #define MOSSY_STONE_BRICK 76
 #define CRACKED_STONE_BRICK 77
+#define PUMPKIN 78
 
 #define RC(row, col) (row * 32 + col)
 
