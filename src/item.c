@@ -23,7 +23,7 @@ const int items[] = {
     TALL_GRASS,
     YELLOW_FLOWER,
     RED_FLOWER,
-    SAPLING,
+    OAK_SAPLING,
     RED_MUSHROOM,
     BROWN_MUSHROOM,
     DEADBUSH,
@@ -67,7 +67,7 @@ const char *item_names[] = {
     "Tall Grass",
     "Yellow Flower",
     "Red Flower",
-    "Sapling",
+    "Oak Sapling",
     "Red Mushroom",
     "Brown Mushroom",
     "Deadbush",
@@ -224,7 +224,7 @@ bool is_plant(int w) {
         case TALL_GRASS:
         case YELLOW_FLOWER:
         case RED_FLOWER:
-        case SAPLING:
+        case OAK_SAPLING:
         case RED_MUSHROOM:
         case BROWN_MUSHROOM:
         case DEADBUSH:

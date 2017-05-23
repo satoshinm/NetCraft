@@ -21,7 +21,7 @@
 #define TALL_GRASS 17
 #define YELLOW_FLOWER 18
 #define RED_FLOWER 19
-#define SAPLING 20
+#define OAK_SAPLING 20
 #define RED_MUSHROOM 21
 #define BROWN_MUSHROOM 22
 #define DEADBUSH 23
