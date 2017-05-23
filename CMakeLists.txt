@@ -54,6 +54,7 @@ if (EMSCRIPTEN)
     endif ()
 
     if (WASM)
+        add_definitions(-DBUILD_WASM)
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -s WASM=1")
     endif ()
 endif ()
