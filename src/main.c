@@ -3349,12 +3349,19 @@ void render_scene() {
     if (g->show_info_text && g->show_ui && g->initialized) {
         snprintf(
            text_buffer, 1024,
-           "NetCraft "
+           "NetCraft"
 #ifdef BUILD_NUM
-           "build #" BUILD_NUM " "
+           " build #" BUILD_NUM
 #endif
+#ifdef BUILD_WASM
+           " wasm"
+#endif
+           " "
 #ifdef BUILD_COMMIT
            BUILD_COMMIT " "
+#endif
+#ifdef BUILD_BRANCH
+           BUILD_BRANCH " "
 #endif
            __DATE__
            );
