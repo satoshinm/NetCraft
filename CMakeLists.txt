@@ -35,7 +35,8 @@ set_property(SOURCE ${SOURCE_FILES} PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedan
 
 if ($ENV{CIRCLECI})
     add_definitions(-DBUILD_NUM="$ENV{CIRCLE_BUILD_NUM}")
-    add_definitions(-DBUILD_COMMIT="$ENV{CIRCLE_SHA1}")
+    string(SUBSTRING "$ENV{CIRCLE_SHA1}" 0 6 TRUNCATED_CIRCLE_SHA1)
+    add_definitions(-DBUILD_COMMIT="${TRUNCATED_CIRCLE_SHA1}")
 endif()
 
 if (DEBUG)
