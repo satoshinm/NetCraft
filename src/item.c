@@ -76,8 +76,8 @@ const char *item_names[] = {
     "End Stone",
     "TNT",
     "Emerald Block",
-    "x29",
-    "x30",
+    "Fern",
+    "Spruce Sapling",
     "x31",
     "White Wool",
     "Orange Wool",
@@ -213,10 +213,13 @@ const int plants[256] = {
     RC(13, 7), // 17 - tall grass
     RC(15,13), // 18 - yellow flower
     RC(15,12), // 19 - red flower
-    RC(15,15), // 20 - sapling
+    RC(15,15), // 20 - oak sapling
     RC(14,12), // 21 - red mushroom
     RC(14,13), // 22 - brown mushroom
     RC(12, 7), // 23 - deadbush
+    0, 0, 0, 0, 0, 0,
+    RC(12, 8), // 29 - fern
+    RC(12,15), // 30 - spruce sapling
 };
 
 bool is_plant(int w) {
@@ -228,6 +231,8 @@ bool is_plant(int w) {
         case RED_MUSHROOM:
         case BROWN_MUSHROOM:
         case DEADBUSH:
+        case FERN:
+        case SPRUCE_SAPLING:
             return true;
         default:
             return false;

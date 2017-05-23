@@ -30,6 +30,8 @@
 #define END_STONE 26
 #define TNT 27
 #define EMERALD_BLOCK 28
+#define FERN 29
+#define SPRUCE_SAPLING 30
 #define WOOL_WHITE 32
 #define WOOL_ORANGE 33
 #define WOOL_MAGENTA 34
