@@ -78,7 +78,7 @@ const char *item_names[] = {
     "Emerald Block",
     "Fern",
     "Spruce Sapling",
-    "x31",
+    "Birch Sapling",
     "White Wool",
     "Orange Wool",
     "Magenta Wool",
@@ -220,6 +220,7 @@ const int plants[256] = {
     0, 0, 0, 0, 0, 0,
     RC(12, 8), // 29 - fern
     RC(12,15), // 30 - spruce sapling
+    RC(11,15), // 31 - birch sapling
 };
 
 bool is_plant(int w) {
@@ -233,6 +234,7 @@ bool is_plant(int w) {
         case DEADBUSH:
         case FERN:
         case SPRUCE_SAPLING:
+        case BIRCH_SAPLING:
             return true;
         default:
             return false;
