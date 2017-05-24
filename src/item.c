@@ -348,3 +348,14 @@ float is_hardness(int w) {
             return 1.0;
     }
 }
+
+static int next_id = item_count;
+int register_block(char *name) {
+    int id = ++next_id;
+
+    item_names[id] = name;
+    // TODO: textures
+    // TODO: properties
+
+    return id;
+}
