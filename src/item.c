@@ -141,6 +141,7 @@ const char *item_names[] = {
 
 const int item_count = sizeof(items) / sizeof(int);
 
+#define notexture RC( 0, 0)
 const int blocks[256][6] = {
     // w => (front, back, left, right, top, bottom) tiles
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 0 - empty
@@ -160,21 +161,21 @@ const int blocks[256][6] = {
     {RC(14,11), RC(14,11), RC(14,11), RC(14,11), RC(14,11), RC(14,11)}, // 14 - chest
     {RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4)}, // 15 - leaves
     {RC( 0,10), RC( 0,10), RC( 0,10), RC( 0,10), RC( 0,10), RC( 0,10)}, // 16 - cloud
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 17
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 18
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 19
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 20
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 21
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 22
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 23
+    {RC(13, 7), notexture, notexture, notexture, notexture, notexture}, // 17 - tall grass
+    {RC(15,13), notexture, notexture, notexture, notexture, notexture}, // 18 - yellow flower
+    {RC(15,12), notexture, notexture, notexture, notexture, notexture}, // 19 - red flower
+    {RC(15,15), notexture, notexture, notexture, notexture, notexture}, // 20 - oak sapling
+    {RC(14,12), notexture, notexture, notexture, notexture, notexture}, // 21 - red mushroom
+    {RC(14,13), notexture, notexture, notexture, notexture, notexture}, // 22 - brown mushroom
+    {RC(12, 7), notexture, notexture, notexture, notexture, notexture}, // 23 - deadbush
     {RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0), RC(12, 0)}, // 24 - sponge
     {RC( 7, 8), RC( 7, 8), RC( 7, 8), RC( 7, 8), RC( 7, 9), RC( 7, 9)}, // 25 - melon
     {RC( 5,15), RC( 5,15), RC( 5,15), RC( 5,15), RC( 5,15), RC( 5,15)}, // 26 - end stone
     {RC(15, 8), RC(15, 8), RC(15, 8), RC(15, 8), RC(15, 9), RC(15,10)}, // 27 - tnt
     {RC(14, 9), RC(14, 9), RC(14, 9), RC(14, 9), RC(14, 9), RC(14, 9)}, // 28 - emerald block
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 29
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 30
-    {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)}, // 31
+    {RC(12, 8), notexture, notexture, notexture, notexture, notexture}, // 29 - fern
+    {RC(12,15), notexture, notexture, notexture, notexture, notexture}, // 30 - spruce sapling
+    {RC(11,15), notexture, notexture, notexture, notexture, notexture}, // 31 - birch sapling
     {RC(11, 0), RC(11, 0), RC(11, 0), RC(11, 0), RC(11, 0), RC(11, 0)}, // 32 - white
     {RC( 2, 2), RC( 2, 2), RC( 2, 2), RC( 2, 2), RC( 2, 2), RC( 2, 2)}, // 33 - orange
     {RC( 3, 2), RC( 3, 2), RC( 3, 2), RC( 3, 2), RC( 3, 2), RC( 3, 2)}, // 34 - magenta
@@ -234,22 +235,6 @@ const int blocks[256][6] = {
     {RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3)}, // 88 - lamp off
     {RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4)}, // 89 - lamp on
     {RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0), RC( 0, 0)},
-};
-
-const int plants[256] = {
-    // w => tile
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 0 - 16
-    RC(13, 7), // 17 - tall grass
-    RC(15,13), // 18 - yellow flower
-    RC(15,12), // 19 - red flower
-    RC(15,15), // 20 - oak sapling
-    RC(14,12), // 21 - red mushroom
-    RC(14,13), // 22 - brown mushroom
-    RC(12, 7), // 23 - deadbush
-    0, 0, 0, 0, 0, 0,
-    RC(12, 8), // 29 - fern
-    RC(12,15), // 30 - spruce sapling
-    RC(11,15), // 31 - birch sapling
 };
 
 bool is_plant(int w) {

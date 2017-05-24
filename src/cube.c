@@ -130,8 +130,8 @@ void make_plant(
     float s = 1.0 / 32;
     float a = 0;
     float b = s;
-    float du = (plants[w] % 32) * s;
-    float dv = (plants[w] / 32) * s;
+    float du = (blocks[w][0] % 32) * s;
+    float dv = (blocks[w][0] / 32) * s;
     for (int i = 0; i < 4; i++) {
         for (int v = 0; v < 6; v++) {
             int j = indices[i][v];
