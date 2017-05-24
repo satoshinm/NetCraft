@@ -334,7 +334,7 @@ float is_hardness(int w) {
     }
 }
 
-static int next_id = item_count;
+static int next_id = 0; // TODO: allocate all blocks through here
 int register_block(char *name) {
     int id = ++next_id;
 
