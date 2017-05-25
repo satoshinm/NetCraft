@@ -5,7 +5,7 @@
 #include "item.h"
 #include "util.h"
 
-int hotbar_items[] = {0};
+int hotbar_items[256] = {0};
 int hotbar_item_count = 0;
 
 const char *block_names[256] = {0};
