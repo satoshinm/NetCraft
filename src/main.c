@@ -3379,7 +3379,7 @@ void render_scene() {
         if (target_w) snprintf(block_info, 256,
                 "{%d, %d, %d, %d} #%d %s",
                 target_x, target_y, target_z, target_face, target_w,
-                item_names[target_w]);
+                block_names[target_w]);
 
         snprintf(
             text_buffer, 1024,

@@ -97,7 +97,7 @@
 
 extern int hotbar_items[];
 extern int hotbar_item_count;
-extern const char* item_names[];
+extern const char* block_names[];
 extern int block_textures[256][6];
 
 bool is_plant(int w);

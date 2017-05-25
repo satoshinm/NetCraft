@@ -8,7 +8,7 @@
 int hotbar_items[] = {0};
 int hotbar_item_count = 0;
 
-const char *item_names[256] = {0};
+const char *block_names[256] = {0};
 int block_count = 0;
 int block_textures[256][6] = {{0}};
 
@@ -112,7 +112,7 @@ float is_hardness(int w) {
 int register_block(char *name, int wfront, int wback, int wleft, int wright, int wtop, int wbottom) {
     int id = block_count++;
 
-    item_names[id] = name;
+    block_names[id] = name;
     block_textures[id][0] = wfront;
     block_textures[id][1] = wback;
     block_textures[id][2] = wleft;
@@ -127,7 +127,7 @@ int register_block(char *name, int wfront, int wback, int wleft, int wright, int
 
 int block_id_by_name(const char *name) {
     for (int i = 0; i < block_count; ++i) {
-        if (strcmp(name, item_names[i]) == 0) return i;
+        if (strcmp(name, block_names[i]) == 0) return i;
     }
     printf("no such block found: %s\n", name);
 
