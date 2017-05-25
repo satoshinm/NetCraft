@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include "item.h"
 #include "util.h"
 
@@ -85,6 +86,33 @@ int register_block(char *name, int wfront, int wback, int wleft, int wright, int
     is_transparents[id] = (flags & TRANSPARENT) != 0;
 
     return id;
+}
+
+static int to_master_blocks[256] = {0};
+
+int get_block_data(int id) {
+    int base_id = to_master_blocks[id];
+    int data = id - base_id;
+
+    return data;
+}
+
+int register_blocks(char *name, int count, float hardness, int flags, ...) {
+    va_list argp;
+    va_start(argp, flags);
+    int base_id = 0;
+
+    for (int i = 0; i < count; ++i) {
+        int id = register_block(name,
+            va_arg(argp, int), va_arg(argp, int), va_arg(argp, int),
+            va_arg(argp, int), va_arg(argp, int), va_arg(argp, int),
+            hardness, flags);
+        if (i == 0) base_id = id;
+
+        to_master_blocks[id] = base_id;
+    }
+
+    return base_id;
 }
 
 int block_id_by_name(const char *name) {
@@ -280,7 +308,22 @@ void init_blocks() {
     register_block("Lamp On",             RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4),
             1.0, LIGHT_LEVEL_15);
 
+    register_blocks("Furnace Test", 4, 2.0, 0,
+            RC(13,12), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13),
+            RC(13,13), RC(13,12), RC(13,13), RC(13,13), RC(12,14), RC(13,13),
+            RC(13,13), RC(13,13), RC(13,12), RC(13,13), RC(12,14), RC(13,13),
+            RC(13,13), RC(13,13), RC(13,13), RC(13,12), RC(12,14), RC(13,13));
+
     // hotbar_items the user can build
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Furnace Test");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Furnace Test")+1;
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Furnace Test")+2;
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Furnace Test")+3;
+    printf("data = %d\n", get_block_data(block_id_by_name("Furnace Test")));
+    printf("data = %d\n", get_block_data(block_id_by_name("Furnace Test")+1));
+    printf("data = %d\n", get_block_data(block_id_by_name("Furnace Test")+2));
+    printf("data = %d\n", get_block_data(block_id_by_name("Furnace Test")+3));
+
     hotbar_items[hotbar_item_count++] = block_id_by_name("Grass");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Sand");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Stone Brick");
