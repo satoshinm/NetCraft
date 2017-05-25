@@ -121,7 +121,7 @@ void init_blocks() {
             0.6, 0);
     register_block("Glass",               RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1), RC(12, 1),
             0.4, TRANSPARENT);
-    register_block("Cobble",              RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), // TODO: rename cobblestone
+    register_block("Cobblestone",         RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0),
             7.0, 0);
     register_block("Light Stone",         RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11), // TODO: remove/replace
             7.0, 0);
