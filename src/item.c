@@ -343,7 +343,7 @@ void init_blocks() {
     hotbar_items[hotbar_item_count++] = block_id_by_name("Plank");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Snow");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Glass");
-    hotbar_items[hotbar_item_count++] = block_id_by_name("Cobble");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Cobblestone");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Light Stone");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Dark Stone");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Chest");
