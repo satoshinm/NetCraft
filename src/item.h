@@ -98,7 +98,7 @@
 extern const int items[];
 extern const char* item_names[];
 extern int item_count;
-extern int blocks[256][6];
+extern int block_textures[256][6];
 
 bool is_plant(int w);
 bool is_obstacle(int w);

@@ -85,12 +85,12 @@ void make_cube(
     int left, int right, int top, int bottom, int front, int back,
     float x, float y, float z, float n, int w)
 {
-    int wfront = blocks[w][0];
-    int wback = blocks[w][1];
-    int wleft = blocks[w][2];
-    int wright = blocks[w][3];
-    int wtop = blocks[w][4];
-    int wbottom = blocks[w][5];
+    int wfront = block_textures[w][0];
+    int wback = block_textures[w][1];
+    int wleft = block_textures[w][2];
+    int wright = block_textures[w][3];
+    int wtop = block_textures[w][4];
+    int wbottom = block_textures[w][5];
     make_cube_faces(
         data, ao, light,
         left, right, top, bottom, front, back,
@@ -130,8 +130,8 @@ void make_plant(
     float s = 1.0 / 32;
     float a = 0;
     float b = s;
-    float du = (blocks[w][0] % 32) * s;
-    float dv = (blocks[w][0] / 32) * s;
+    float du = (block_textures[w][0] % 32) * s;
+    float dv = (block_textures[w][0] / 32) * s;
     for (int i = 0; i < 4; i++) {
         for (int v = 0; v < 6; v++) {
             int j = indices[i][v];

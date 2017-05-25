@@ -48,7 +48,7 @@ const int items[] = {
 
 const char *item_names[256] = {0};
 int item_count = 0;
-int blocks[256][6] = {{0}};
+int block_textures[256][6] = {{0}};
 
 bool is_plant(int w) {
     switch (w) {
@@ -151,12 +151,12 @@ int register_block(char *name, int wfront, int wback, int wleft, int wright, int
     int id = item_count++;
 
     item_names[id] = name;
-    blocks[id][0] = wfront;
-    blocks[id][1] = wback;
-    blocks[id][2] = wleft;
-    blocks[id][3] = wright;
-    blocks[id][4] = wtop;
-    blocks[id][5] = wbottom;
+    block_textures[id][0] = wfront;
+    block_textures[id][1] = wback;
+    block_textures[id][2] = wleft;
+    block_textures[id][3] = wright;
+    block_textures[id][4] = wtop;
+    block_textures[id][5] = wbottom;
 
     // TODO: properties
 
