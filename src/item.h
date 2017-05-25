@@ -95,7 +95,7 @@
 #define RC(row, col) (row * 32 + col)
 #define notexture RC( 0, 0)
 
-extern const int items[];
+extern int items[];
 extern const char* item_names[];
 extern int item_count;
 extern int block_textures[256][6];

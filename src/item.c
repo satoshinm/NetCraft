@@ -1,53 +1,15 @@
 #include <math.h>
+#include <string.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include "item.h"
 #include "util.h"
 
-const int items[] = {
-    // items the user can build
-    GRASS,
-    SAND,
-    STONE_BRICK,
-    BRICK,
-    WOOD,
-    STONE,
-    DIRT,
-    PLANK,
-    SNOW,
-    GLASS,
-    COBBLE,
-    LIGHT_STONE,
-    DARK_STONE,
-    CHEST,
-    LEAVES,
-    TALL_GRASS,
-    YELLOW_FLOWER,
-    RED_FLOWER,
-    OAK_SAPLING,
-    RED_MUSHROOM,
-    BROWN_MUSHROOM,
-    DEADBUSH,
-    WOOL_WHITE,
-    WOOL_ORANGE,
-    WOOL_MAGENTA,
-    WOOL_LIGHT_BLUE,
-    WOOL_YELLOW,
-    wOOL_LIME,
-    WOOL_PINK,
-    WOOL_GRAY,
-    WOOL_LIGHT_GRAY,
-    WOOL_CYAN,
-    WOOL_PURPLE,
-    WOOL_BLUE,
-    WOOL_BROWN,
-    WOOL_GREEN,
-    WOOL_RED,
-    WOOL_BLACK,
-    GLOWING_STONE
-};
+int items[] = {0};
+int item_count = 0;
 
 const char *item_names[256] = {0};
-int item_count = 0;
+int block_count = 0;
 int block_textures[256][6] = {{0}};
 
 bool is_plant(int w) {
@@ -148,7 +110,7 @@ float is_hardness(int w) {
 }
 
 int register_block(char *name, int wfront, int wback, int wleft, int wright, int wtop, int wbottom) {
-    int id = item_count++;
+    int id = block_count++;
 
     item_names[id] = name;
     block_textures[id][0] = wfront;
@@ -161,6 +123,15 @@ int register_block(char *name, int wfront, int wback, int wleft, int wright, int
     // TODO: properties
 
     return id;
+}
+
+int block_id_by_name(const char *name) {
+    for (int i = 0; i < block_count; ++i) {
+        if (strcmp(name, item_names[i]) == 0) return i;
+    }
+    printf("no such block found: %s\n", name);
+
+    return 0;
 }
 
 void init_blocks() {
@@ -255,4 +226,45 @@ void init_blocks() {
     register_block("Dry Farmland",        RC(15, 2), RC(15, 2), RC(15, 2), RC(15, 2), RC(10, 7), RC(15, 2));
     register_block("Lamp Off",            RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3));
     register_block("Lamp On",             RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4));
+
+    // items the user can build
+    items[item_count++] = block_id_by_name("Grass");
+    items[item_count++] = block_id_by_name("Sand");
+    items[item_count++] = block_id_by_name("Stone Brick");
+    items[item_count++] = block_id_by_name("Brick");
+    items[item_count++] = block_id_by_name("Wood");
+    items[item_count++] = block_id_by_name("Stone");
+    items[item_count++] = block_id_by_name("Dirt");
+    items[item_count++] = block_id_by_name("Plank");
+    items[item_count++] = block_id_by_name("Snow");
+    items[item_count++] = block_id_by_name("Glass");
+    items[item_count++] = block_id_by_name("Cobble");
+    items[item_count++] = block_id_by_name("Light Stone");
+    items[item_count++] = block_id_by_name("Dark Stone");
+    items[item_count++] = block_id_by_name("Chest");
+    items[item_count++] = block_id_by_name("Leaves");
+    items[item_count++] = block_id_by_name("Tall Grass");
+    items[item_count++] = block_id_by_name("Yellow Flower");
+    items[item_count++] = block_id_by_name("Red Flower");
+    items[item_count++] = block_id_by_name("Oak Sapling");
+    items[item_count++] = block_id_by_name("Red Mushroom");
+    items[item_count++] = block_id_by_name("Brown Mushroom");
+    items[item_count++] = block_id_by_name("Deadbush");
+    items[item_count++] = block_id_by_name("White Wool");
+    items[item_count++] = block_id_by_name("Orange Wool");
+    items[item_count++] = block_id_by_name("Magenta Wool");
+    items[item_count++] = block_id_by_name("Light Blue Wool");
+    items[item_count++] = block_id_by_name("Yellow Wool");
+    items[item_count++] = block_id_by_name("Lime Wool");
+    items[item_count++] = block_id_by_name("Pink Wool");
+    items[item_count++] = block_id_by_name("Gray Wool");
+    items[item_count++] = block_id_by_name("Light Gray Wool");
+    items[item_count++] = block_id_by_name("Cyan Wool");
+    items[item_count++] = block_id_by_name("Purple Wool");
+    items[item_count++] = block_id_by_name("Blue Wool");
+    items[item_count++] = block_id_by_name("Brown Wool");
+    items[item_count++] = block_id_by_name("Green Wool");
+    items[item_count++] = block_id_by_name("Red Wool");
+    items[item_count++] = block_id_by_name("Black Wool");
+    items[item_count++] = block_id_by_name("Glowstone");
 }
