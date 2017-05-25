@@ -28,8 +28,8 @@ else ()
         deps/tinycthread/tinycthread.c)
 endif ()
 
-add_definitions(-std=c99 -O3)
-add_definitions(-DLODEPNG_NO_COMPILE_ZLIB)
+set_source_files_properties(*.c PROPERTIES COMPILE_FLAGS "-std=c99 -O3")
+set_source_files_properties(deps/lodepng/lodepng.c PROPERTIES COMPILE_FLAGS -DLODEPNG_NO_COMPILE_ZLIB)
 
 set_property(SOURCE ${SOURCE_FILES} PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-missing-field-initializers -Wno-sign-compare")
 
@@ -80,6 +80,13 @@ include_directories(deps/lodepng)
 include_directories(deps/miniz)
 include_directories(deps/noise)
 include_directories(deps/tinycthread)
+
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+add_definitions(-DASSIMP_BUILD_BOOST_WORKAROUND)
+add_definitions(-DASSIMP_BUILD_NO_OWN_ZLIB)
+add_subdirectory(deps/assimp)
+include_directories(deps/assimp)
 
 if(MINGW OR MSVC)
     set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
