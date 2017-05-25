@@ -17,5 +17,7 @@ int is_illuminated(int w);
 float is_hardness(int w);
 
 void init_blocks(void);
+int get_block_data(int id);
+bool has_block_data(int id);
 
 #endif

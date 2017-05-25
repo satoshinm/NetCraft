@@ -97,6 +97,10 @@ int get_block_data(int id) {
     return data;
 }
 
+bool has_block_data(int id) {
+    return to_master_blocks[id] != 0;
+}
+
 int register_blocks(char *name, int count, float hardness, int flags, ...) {
     va_list argp;
     va_start(argp, flags);

@@ -3377,8 +3377,10 @@ void render_scene() {
         // Targeted block information
         char block_info[256] = {0};
         if (target_w) snprintf(block_info, 256,
-                "{%d, %d, %d, %d} #%d %s",
+                "{%d, %d, %d, %d} #%d%s%.d %s",
                 target_x, target_y, target_z, target_face, target_w,
+                has_block_data(target_w) ? ":" : "",
+                has_block_data(target_w) ? get_block_data(target_w) : 0,
                 block_names[target_w]);
 
         snprintf(
