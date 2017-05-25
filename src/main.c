@@ -2972,6 +2972,7 @@ int main(int argc, char **argv) {
     glfwSetScrollCallback(g->window, on_scroll);
     init_joystick_callbacks();
     init_touch_callbacks(g->window);
+    init_blocks();
 
 #ifdef __EMSCRIPTEN__
     EM_ASM(
