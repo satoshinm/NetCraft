@@ -298,9 +298,9 @@ void init_blocks() {
             7.0, 0);
     register_block("Cracked Stone Brick", RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5), RC( 9, 5),
             7.0, 0);
-    register_block("Pumpkin",             RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 9, 6), RC( 9, 6),
+    register_block("Pumpkin (Faceless)",  RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 9, 6), RC( 9, 6),
             1.0, 0);
-    register_block("Jack-o'-Lantern",     RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 9, 6), RC( 9, 6),
+    register_block("Jack-o'-Lantern(All)",RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 8, 8), RC( 9, 6), RC( 9, 6),
             1.0, LIGHT_LEVEL_15);
     register_block("Huge Brown Mushroom", RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14), RC( 8,14),
             1.0, 0);
@@ -327,7 +327,10 @@ void init_blocks() {
             2.0, 0);
     register_rot4b("Burning Furnace",     RC(12,13), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13),
             2.0, 0);
-
+    register_rot4b("Pumpkin",             RC( 8, 7), RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 9, 6), RC( 9, 6),
+            1.0, 0);
+    register_rot4b("Jack-o'-Lantern",     RC( 8, 8), RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 9, 6), RC( 9, 6),
+            1.0, LIGHT_LEVEL_15);
 
     // hotbar_items the user can build
     hotbar_items[hotbar_item_count++] = block_id_by_name("Grass");
