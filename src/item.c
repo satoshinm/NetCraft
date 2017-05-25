@@ -33,7 +33,7 @@ bool is_obstacle(int w) {
 }
 
 bool is_transparent(int w) {
-    if (w == EMPTY) {
+    if (!w) {
         return true;
     }
     w = ABS(w);
