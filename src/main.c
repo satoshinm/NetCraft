@@ -1874,7 +1874,7 @@ void render_item(Attrib *attrib) {
     glUniform3f(attrib->camera, 0, 0, 5);
     glUniform1i(attrib->sampler, 0);
     glUniform1f(attrib->timer, time_of_day());
-    int w = items[g->item_index];
+    int w = hotbar_items[g->item_index];
     if (is_plant(w)) {
         GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
         draw_plant(attrib, buffer);
@@ -2284,8 +2284,8 @@ void on_build() {
         }
 
         if (!player_intersects_block(2, s->x, s->y, s->z, hx, hy, hz)) {
-            set_block(hx, hy, hz, items[g->item_index]);
-            record_block(hx, hy, hz, items[g->item_index]);
+            set_block(hx, hy, hz, hotbar_items[g->item_index]);
+            record_block(hx, hy, hz, hotbar_items[g->item_index]);
         }
     }
 }
@@ -2294,8 +2294,8 @@ void on_middle_click() {
     State *s = &g->players->state;
     int hx, hy, hz;
     int hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
-    for (int i = 0; i < item_count; i++) {
-        if (items[i] == hw) {
+    for (int i = 0; i < hotbar_item_count; i++) {
+        if (hotbar_items[i] == hw) {
             g->item_index = i;
             break;
         }
@@ -2445,12 +2445,12 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
             g->item_index = 9;
         }
         if (key == CRAFT_KEY_ITEM_NEXT) {
-            g->item_index = (g->item_index + 1) % item_count;
+            g->item_index = (g->item_index + 1) % hotbar_item_count;
         }
         if (key == CRAFT_KEY_ITEM_PREV) {
             g->item_index--;
             if (g->item_index < 0) {
-                g->item_index = item_count - 1;
+                g->item_index = hotbar_item_count - 1;
             }
         }
         if (key == CRAFT_KEY_OBSERVE) {
@@ -2516,13 +2516,13 @@ void _on_scroll_blockselect(double ydelta) {
     static double ypos = 0;
     ypos += ydelta;
     if (ypos < -SCROLL_THRESHOLD) {
-        g->item_index = (g->item_index + 1) % item_count;
+        g->item_index = (g->item_index + 1) % hotbar_item_count;
         ypos = 0;
     }
     if (ypos > SCROLL_THRESHOLD) {
         g->item_index--;
         if (g->item_index < 0) {
-            g->item_index = item_count - 1;
+            g->item_index = hotbar_item_count - 1;
         }
         ypos = 0;
     }

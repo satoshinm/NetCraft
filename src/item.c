@@ -5,8 +5,8 @@
 #include "item.h"
 #include "util.h"
 
-int items[] = {0};
-int item_count = 0;
+int hotbar_items[] = {0};
+int hotbar_item_count = 0;
 
 const char *item_names[256] = {0};
 int block_count = 0;
@@ -227,44 +227,44 @@ void init_blocks() {
     register_block("Lamp Off",            RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3), RC( 2, 3));
     register_block("Lamp On",             RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4), RC( 2, 4));
 
-    // items the user can build
-    items[item_count++] = block_id_by_name("Grass");
-    items[item_count++] = block_id_by_name("Sand");
-    items[item_count++] = block_id_by_name("Stone Brick");
-    items[item_count++] = block_id_by_name("Brick");
-    items[item_count++] = block_id_by_name("Wood");
-    items[item_count++] = block_id_by_name("Stone");
-    items[item_count++] = block_id_by_name("Dirt");
-    items[item_count++] = block_id_by_name("Plank");
-    items[item_count++] = block_id_by_name("Snow");
-    items[item_count++] = block_id_by_name("Glass");
-    items[item_count++] = block_id_by_name("Cobble");
-    items[item_count++] = block_id_by_name("Light Stone");
-    items[item_count++] = block_id_by_name("Dark Stone");
-    items[item_count++] = block_id_by_name("Chest");
-    items[item_count++] = block_id_by_name("Leaves");
-    items[item_count++] = block_id_by_name("Tall Grass");
-    items[item_count++] = block_id_by_name("Yellow Flower");
-    items[item_count++] = block_id_by_name("Red Flower");
-    items[item_count++] = block_id_by_name("Oak Sapling");
-    items[item_count++] = block_id_by_name("Red Mushroom");
-    items[item_count++] = block_id_by_name("Brown Mushroom");
-    items[item_count++] = block_id_by_name("Deadbush");
-    items[item_count++] = block_id_by_name("White Wool");
-    items[item_count++] = block_id_by_name("Orange Wool");
-    items[item_count++] = block_id_by_name("Magenta Wool");
-    items[item_count++] = block_id_by_name("Light Blue Wool");
-    items[item_count++] = block_id_by_name("Yellow Wool");
-    items[item_count++] = block_id_by_name("Lime Wool");
-    items[item_count++] = block_id_by_name("Pink Wool");
-    items[item_count++] = block_id_by_name("Gray Wool");
-    items[item_count++] = block_id_by_name("Light Gray Wool");
-    items[item_count++] = block_id_by_name("Cyan Wool");
-    items[item_count++] = block_id_by_name("Purple Wool");
-    items[item_count++] = block_id_by_name("Blue Wool");
-    items[item_count++] = block_id_by_name("Brown Wool");
-    items[item_count++] = block_id_by_name("Green Wool");
-    items[item_count++] = block_id_by_name("Red Wool");
-    items[item_count++] = block_id_by_name("Black Wool");
-    items[item_count++] = block_id_by_name("Glowstone");
+    // hotbar_items the user can build
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Grass");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Sand");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Stone Brick");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Brick");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Wood");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Stone");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Dirt");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Plank");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Snow");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Glass");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Cobble");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Light Stone");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Dark Stone");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Chest");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Leaves");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Tall Grass");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Yellow Flower");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Red Flower");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Oak Sapling");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Red Mushroom");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Brown Mushroom");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Deadbush");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("White Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Orange Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Magenta Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Light Blue Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Yellow Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Lime Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Pink Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Gray Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Light Gray Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Cyan Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Purple Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Blue Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Brown Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Green Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Red Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Black Wool");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Glowstone");
 }

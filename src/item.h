@@ -95,9 +95,9 @@
 #define RC(row, col) (row * 32 + col)
 #define notexture RC( 0, 0)
 
-extern int items[];
+extern int hotbar_items[];
+extern int hotbar_item_count;
 extern const char* item_names[];
-extern int item_count;
 extern int block_textures[256][6];
 
 bool is_plant(int w);
