@@ -246,9 +246,9 @@ void init_blocks() {
             9.0, 0);
     register_block("Workbench",           RC(12,12), RC(12,11), RC(12,11), RC(12,11), RC(13,11), RC(12,11),
             3.0, 0);
-    register_block("Furnace",             RC(13,12), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13),
+    register_block("Furnace (Obsolete)",  RC(13,12), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13), // nondirectional, TODO: remove/replace
             2.0, 0);
-    register_block("Burning Furnace",     RC(12,13), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13),
+    register_block("Burning Furnace(Old)",RC(12,13), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13), // nondirectional, TODO: remove/replace
             2.0, 0);
     register_block("Monster Spawner",     RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1), RC(11, 1),
             4.0, 0);
@@ -321,6 +321,9 @@ void init_blocks() {
 
     register_rot4b("Furnace",             RC(13,12), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13),
             2.0, 0);
+    register_rot4b("Burning Furnace",     RC(12,13), RC(13,13), RC(13,13), RC(13,13), RC(12,14), RC(13,13),
+            2.0, 0);
+
 
     // hotbar_items the user can build
     hotbar_items[hotbar_item_count++] = block_id_by_name("Grass");
