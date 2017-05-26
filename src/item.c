@@ -332,6 +332,9 @@ void init_blocks() {
     register_rot4b("Jack-o'-Lantern",     RC( 8, 8), RC( 8, 6), RC( 8, 6), RC( 8, 6), RC( 9, 6), RC( 9, 6),
             1.0, LIGHT_LEVEL_15);
 
+    register_block("Barrier",             RC( 0,13), RC( 0,13), RC( 0,13), RC( 0,13), RC( 0,13), RC( 0,13), // an empty/unused texture TODO: move?
+            INFINITY, TRANSPARENT);
+
     // hotbar_items the user can build
     hotbar_items[hotbar_item_count++] = block_id_by_name("Grass");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Sand");
