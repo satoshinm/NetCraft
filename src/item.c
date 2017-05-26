@@ -152,7 +152,7 @@ void init_blocks() {
             7.0, 0);
     register_block("Brick",               RC(15, 7), RC(15, 7), RC(15, 7), RC(15, 7), RC(15, 7), RC(15, 7),
             7.0, 0);
-    register_block("Wood",                RC(14, 4), RC(14, 4), RC(14, 4), RC(14, 4), RC(14, 5), RC(14, 5),
+    register_block("Oak Wood Log",        RC(14, 4), RC(14, 4), RC(14, 4), RC(14, 4), RC(14, 5), RC(14, 5),
             3.0, 0);
     register_block("Stone",               RC(15, 1), RC(15, 1), RC(15, 1), RC(15, 1), RC(15, 1), RC(15, 1),
             7.0, 0);
@@ -334,13 +334,19 @@ void init_blocks() {
 
     register_block("Barrier",             RC( 0,13), RC( 0,13), RC( 0,13), RC( 0,13), RC( 0,13), RC( 0,13), // an empty/unused texture TODO: move?
             INFINITY, TRANSPARENT);
+    register_block("Spruce Wood Log",     RC( 8, 4), RC( 8, 4), RC( 8, 4), RC( 8, 4), RC(14, 5), RC(14, 5),
+            3.0, 0);
+    register_block("Birch Wood Log",      RC( 8, 5), RC( 8, 5), RC( 8, 5), RC( 8, 5), RC(14, 5), RC(14, 5),
+            3.0, 0);
+    register_block("Spruce Leaves",       RC( 7, 4), RC( 7, 4), RC( 7, 4), RC( 7, 4), RC( 7, 4), RC( 7, 4),
+            0.2, TRANSPARENT);
 
     // hotbar_items the user can build
     hotbar_items[hotbar_item_count++] = block_id_by_name("Grass");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Sand");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Stone Brick");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Brick");
-    hotbar_items[hotbar_item_count++] = block_id_by_name("Wood");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Oak Wood Log");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Stone");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Dirt");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Plank");
