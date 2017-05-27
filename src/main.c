@@ -1913,10 +1913,24 @@ void add_message(const char *text) {
     if (g->message_view_index < 0) g->message_view_index += MAX_MESSAGES;
 }
 
+static char username[128] = {0};
+static char access_token[128] = {0};
+static bool have_access_token = false;
+
+void set_access_token(char *username_in, char *access_token_in) {
+    strncpy(username, username_in, sizeof(username) - 1);
+    strncpy(access_token, access_token_in, sizeof(access_token) - 1);
+    have_access_token = true;
+}
+
 void login() {
-    char username[128] = {0};
+    if (have_access_token) {
+        printf("Logging in with provided access token for %s\n", username);
+        client_login(username, access_token);
+        return;
+    }
+
     char identity_token[128] = {0};
-    char access_token[128] = {0};
     if (db_auth_get_selected(username, 128, identity_token, 128)) {
         printf("Contacting login server for username: %s\n", username);
         if (get_access_token(
@@ -2870,11 +2884,11 @@ void parse_buffer(char *buffer) {
         char url[256] = {0};
         if (sscanf(line, "t,%256[^\n]", url) == 1) {
             printf("server provided texture url: %s\n", url);
-            if (strcmp(url, "-") == 0) {
+            if (strcmp(url, "-") == 0 || strlen(url) == 0) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdollar-in-identifier-extension" // EM_ASM JavaScript
                 EM_ASM_ARGS({
-                    // Special case '-' connects back to ourselves
+                    // Special case '-' or empty string connects back to ourselves
                     // TODO: refactor with similar code in src/client.c
                     var protocol = document.location.protocol + String.fromCharCode(47) + String.fromCharCode(47); // to avoid //
                     var path = '/textures.zip';
@@ -3047,11 +3061,15 @@ int main(int argc, char **argv) {
     sky_attrib.timer = glGetUniformLocation(program, "timer");
 
     // CHECK COMMAND LINE ARGUMENTS //
-    if (argc == 2 || argc == 3) {
+    if (argc > 1) {
         g->mode = MODE_ONLINE;
         strncpy(g->server_addr, argv[1], MAX_ADDR_LENGTH);
-        g->server_port = argc == 3 ? atoi(argv[2]) : DEFAULT_PORT;
+        g->server_port = (argc == 3 && strcmp(argv[2], "-") != 0 && strlen(argv[2]) != 0) ? atoi(argv[2]) : DEFAULT_PORT;
         set_db_path();
+
+        if (argc > 4) {
+            set_access_token(argv[3], argv[4]);
+        }
     }
     else {
         g->mode = MODE_OFFLINE;
