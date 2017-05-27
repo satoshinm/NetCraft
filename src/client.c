@@ -271,8 +271,8 @@ void client_connect(char *hostname, int port) {
             console.log('websocket inputs, host='+host+', port='+port);
             const ws = 'ws:' + String.fromCharCode(47) + String.fromCharCode(47); // to avoid //
             const wss = 'wss:' + String.fromCharCode(47) + String.fromCharCode(47);
-            if (host === '-') {
-                // Special case '-' connects back to ourselves
+            if (host === '-' || host.length === 0) {
+                // Special case '-' or empty connects back to ourselves
                 var protocol = document.location.protocol === 'https:' ? wss : ws;
                 var path = '/craftws';
                 // Note, document.location.host contains both hostname AND port, if any

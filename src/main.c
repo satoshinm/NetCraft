@@ -2884,11 +2884,11 @@ void parse_buffer(char *buffer) {
         char url[256] = {0};
         if (sscanf(line, "t,%256[^\n]", url) == 1) {
             printf("server provided texture url: %s\n", url);
-            if (strcmp(url, "-") == 0) {
+            if (strcmp(url, "-") == 0 || strlen(url) == 0) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdollar-in-identifier-extension" // EM_ASM JavaScript
                 EM_ASM_ARGS({
-                    // Special case '-' connects back to ourselves
+                    // Special case '-' or empty string connects back to ourselves
                     // TODO: refactor with similar code in src/client.c
                     var protocol = document.location.protocol + String.fromCharCode(47) + String.fromCharCode(47); // to avoid //
                     var path = '/textures.zip';
@@ -3064,7 +3064,7 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         g->mode = MODE_ONLINE;
         strncpy(g->server_addr, argv[1], MAX_ADDR_LENGTH);
-        g->server_port = (argc == 3 && argv[2][0] != '-') ? atoi(argv[2]) : DEFAULT_PORT;
+        g->server_port = (argc == 3 && strcmp(argv[2], "-") != 0 && strlen(argv[2]) != 0) ? atoi(argv[2]) : DEFAULT_PORT;
         set_db_path();
 
         if (argc > 4) {
