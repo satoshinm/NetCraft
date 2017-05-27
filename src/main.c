@@ -3064,7 +3064,7 @@ int main(int argc, char **argv) {
     if (argc > 1) {
         g->mode = MODE_ONLINE;
         strncpy(g->server_addr, argv[1], MAX_ADDR_LENGTH);
-        g->server_port = argc == 3 ? atoi(argv[2]) : DEFAULT_PORT;
+        g->server_port = (argc == 3 && argv[2][0] != '-') ? atoi(argv[2]) : DEFAULT_PORT;
         set_db_path();
 
         if (argc > 4) {
