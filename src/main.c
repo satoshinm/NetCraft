@@ -3269,8 +3269,10 @@ void one_iter() {
     }
 
     // PREPARE TO RENDER //
-    g->observe1 = g->observe1 % g->player_count;
-    g->observe2 = g->observe2 % g->player_count;
+    if (g->player_count != 0) {
+        g->observe1 = g->observe1 % g->player_count;
+        g->observe2 = g->observe2 % g->player_count;
+    }
     delete_chunks();
     del_buffer(me->buffer);
     me->buffer = gen_player_buffer(s->x, s->y, s->z, s->rx, s->ry);
