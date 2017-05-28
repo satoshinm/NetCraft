@@ -70,6 +70,7 @@ if (EMSCRIPTEN)
     if (WASM)
         add_definitions(-DBUILD_WASM)
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -s WASM=1")
+        set_target_properties(craft PROPERTIES OUTPUT_NAME "craftw")
     endif ()
 endif ()
 

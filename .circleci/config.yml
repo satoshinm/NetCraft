@@ -54,6 +54,6 @@ jobs:
                     cd wasm-build
                     source ~/emsdk-portable/emsdk_env.sh
                     make
-                    cp craft.* /tmp/artifacts/wasm-build
+                    cp craftw.* /tmp/artifacts/wasm-build
             - store_artifacts:
                 path: /tmp/artifacts/wasm-build
