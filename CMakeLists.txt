@@ -48,8 +48,20 @@ endif ()
 if (EMSCRIPTEN)
     add_definitions(-DNO_CRAFT_AUTH)
 
-    # Emscripten default is GLFW 2.x but we use GLFW 3.x, also include data files
-    set_target_properties(craft PROPERTIES LINK_FLAGS "-s USE_GLFW=3 --pre-js ../src/pre.js --shell-file ../src/shell.html --embed-file ../shaders/ -s TOTAL_MEMORY=33554432 --embed-file ../textures/ -s EXPORTED_FUNCTIONS=\"['_main','_is_typing']\"")
+    # Emscripten default is GLFW 2.x but we use GLFW 3.x
+    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS "-s USE_GLFW=3")
+
+    # Customize and embed data files
+    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --pre-js ../src/pre.js --shell-file ../src/shell.html")
+    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --embed-file ../shaders/ --embed-file ../textures/")
+
+    # Increase memory limit from 16 MB default
+    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -s TOTAL_MEMORY=33554432")
+
+    # C functions callable from JavaScript
+    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -s EXPORTED_FUNCTIONS=\"['_main','_is_typing']\"")
+
+    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --memory-init-file=0")
 
     if (CMAKE_RELEASE_TYPE EQUAL "Release")
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -O3")
