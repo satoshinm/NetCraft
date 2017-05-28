@@ -7,7 +7,7 @@
 #include "matrix.h"
 #include "util.h"
 
-extern void render_scene();
+extern void render_scene(void);
 extern void translate_camera_x_offset(float);
 
 static int width;
@@ -45,7 +45,7 @@ static GLuint quad_vertexbuffer;
 
 static bool skipBarrelDistortion = false;
 
-struct {
+static struct {
     GLuint program;
     GLuint position;
     GLuint normal;
@@ -136,7 +136,7 @@ void init_vr(GLFWwindow *window) {
     // But with lens distortion it is increased (see Oculus SDK Documentation)
     float r = -1.0 - (4 * (hScreenSize/4 - lensSeparationDistance/2) / hScreenSize);
     float distScale = (distortionK[0] + distortionK[1] * powf(r,2) + distortionK[2] * powf(r,4) + distortionK[3] * powf(r,6));
-    float fov = 2*atan2f(vScreenSize*distScale, 2*eyeToScreenDistance);
+    //float fov = 2*atan2f(vScreenSize*distScale, 2*eyeToScreenDistance); // TODO: use in perspective matrix transform!
 
     // Compute x translation offset (h) for projection matrix
     double h = 4 * (hScreenSize/4 - interpupillaryDistance/2) / hScreenSize;

@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 #include "mining.h"
+#include "touch.h"
 
 bool touch_forward = false;
 bool touch_jump = false;
@@ -10,18 +11,17 @@ long touch_active = 0;
 long touch_clientX = 0;
 long touch_clientY = 0;
 
-GLFWwindow *window = NULL;
-
 #ifndef __EMSCRIPTEN__
 void init_touch_callbacks(GLFWwindow *w) {}
 
 #else
 #include <emscripten/html5.h>
 
+static GLFWwindow *window = NULL;
 static double touch_activated_at = 0;
 static bool touch_just_activated = false;
 
-extern void set_just_clicked();
+extern void set_just_clicked(void);
 
 static EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
     if (touch_active) {

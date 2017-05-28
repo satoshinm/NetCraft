@@ -3,6 +3,7 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <stdbool.h>
 #include "config.h"
 
 #define PI 3.14159265359
@@ -26,7 +27,7 @@ typedef struct {
 } FPS;
 
 int rand_int(int n);
-double rand_double();
+double rand_double(void);
 void update_fps(FPS *fps);
 
 GLuint gen_buffer(GLsizei size, GLfloat *data);
@@ -39,6 +40,8 @@ GLuint make_program(GLuint shader1, GLuint shader2);
 GLuint load_program(const char *path1, const char *path2);
 void load_png_texture(const char *file_name);
 void load_main_texture(const char *file_name);
+void load_zipped_textures(const char *file_name);
+void fail_load_texture(const char *file_name);
 void load_block_texture(const char *file_name);
 void load_font_texture(const char *file_name);
 void load_sky_texture(const char *file_name);

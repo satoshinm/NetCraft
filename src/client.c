@@ -17,20 +17,23 @@
 #include "tinycthread.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#else
+#define RECV_SIZE 4096
 #endif
 
 #define QUEUE_SIZE 1048576
-#define RECV_SIZE 4096
 
 static bool client_enabled = false;
 static bool running = 0;
 static int sd = 0;
 static int bytes_sent = 0;
+#ifndef __EMSCRIPTEN__
 static int bytes_received = 0;
+static mtx_t mutex;
+static thrd_t recv_thread;
+#endif
 static char *queue = 0;
 static int qsize = 0;
-static thrd_t recv_thread;
-static mtx_t mutex;
 
 void client_enable() {
     client_enabled = true;
@@ -167,7 +170,7 @@ void client_message(int fd, void *userData) {
 
     buf[len] = 0;
 
-    void (*parse_buffer)(char *) = userData;
+    void (*parse_buffer)(char *) = (void (*)(char *))userData;
     parse_buffer(buf);
 }
 #else
@@ -252,6 +255,8 @@ void client_connect(char *hostname, int port) {
     // If ws:// or wss:// URL is given, pass it directly - this is how secure WebSockets
     // can be used, example: wss://localhost:1234/craftws. Or alternate paths.
     // Otherwise, use hostname and port, ws scheme, and /craftws path by default.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdollar-in-identifier-extension" // EM_ASM JavaScript
     EM_ASM_ARGS({
             function getString(p) {
                 var s = String(); // not '' because empty C character constant warning
@@ -266,8 +271,8 @@ void client_connect(char *hostname, int port) {
             console.log('websocket inputs, host='+host+', port='+port);
             const ws = 'ws:' + String.fromCharCode(47) + String.fromCharCode(47); // to avoid //
             const wss = 'wss:' + String.fromCharCode(47) + String.fromCharCode(47);
-            if (host === '-') {
-                // Special case '-' connects back to ourselves
+            if (host === '-' || host.length === 0) {
+                // Special case '-' or empty connects back to ourselves
                 var protocol = document.location.protocol === 'https:' ? wss : ws;
                 var path = '/craftws';
                 // Note, document.location.host contains both hostname AND port, if any
@@ -281,6 +286,7 @@ void client_connect(char *hostname, int port) {
             }
             console.log('websocket url:', Module['websocket']['url']);
         }, hostname, port);
+#pragma clang diagnostic pop
 #endif
 
     if (connect(sd, (struct sockaddr *)&address, sizeof(address)) == -1) {

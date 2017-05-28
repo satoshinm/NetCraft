@@ -6,6 +6,7 @@
 #include "miniz.h"
 #include "matrix.h"
 #include "util.h"
+#include "miniz.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
@@ -162,6 +163,35 @@ void load_main_texture(const char *path) {
     load_png_texture(path);
 }
 
+void load_zipped_textures(const char *path) {
+    mz_zip_archive zip_archive;
+    mz_bool status = mz_zip_reader_init_file(&zip_archive, path, 0);
+    if (!status) {
+        printf("failed to init zip file: %s\n", path);
+        return;
+    }
+
+    printf("num files: %d\n", (int)mz_zip_reader_get_num_files(&zip_archive));
+
+    status = mz_zip_reader_extract_file_to_file(&zip_archive, "terrain.png", "/tmp/terrain.png", 0);
+    if (!status) {
+        printf("failed to extract terrain.png, is this a compatible texture pack? %s\n", path);
+        mz_zip_end(&zip_archive);
+        return;
+    }
+
+    printf("found terrain.png in zip, loading\n");
+    load_block_texture("/tmp/terrain.png");
+    // TODO: load other textures
+    // TODO: support "resource pack" format
+
+    mz_zip_end(&zip_archive);
+}
+
+void fail_load_texture(const char *path) {
+    printf("failed to load texture: %s\n", path);
+}
+
 // Load a 256x256 block texture into the lower-left corner of the main texture
 void load_block_texture(const char *path) {
     GLuint texture;
@@ -279,7 +309,9 @@ int char_width(char input) {
         4, 7, 6, 6, 6, 6, 5, 6, 6, 2, 5, 5, 2, 9, 6, 6,
         6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 6, 4, 2, 5, 7, 0
     };
-    return lookup[input];
+    int i = (int)input;
+    if (i < 0 || i > sizeof(lookup)) return 1;
+    return lookup[i];
 }
 
 int string_width(const char *input) {
@@ -342,7 +374,6 @@ void screenshot(int width, int height) {
     GLubyte *pixels = malloc(size);
     if (pixels) {
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-        printf("read pixels to %p\n", pixels);
 
         size_t png_size = 0;
         int level = MZ_DEFAULT_LEVEL;
@@ -362,7 +393,7 @@ void screenshot(int width, int height) {
             if (fp) {
                 size_t wrote = fwrite(png, 1, png_size, fp);
                 fclose(fp);
-                printf("Saved screenshot to %s\n", filename);
+                printf("Saved screenshot to %s, wrote %zu bytes\n", filename, wrote);
             } else {
                 printf("failed to open %s for writing\n", filename);
             }
