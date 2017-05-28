@@ -51,9 +51,8 @@ if (EMSCRIPTEN)
     # Emscripten default is GLFW 2.x but we use GLFW 3.x
     set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS "-s USE_GLFW=3")
 
-    # Customize and embed data files
+    # Customize the shell file loader
     set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --pre-js ../src/pre.js --shell-file ../src/shell.html")
-    set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --embed-file ../shaders/ --embed-file ../textures/")
 
     # Increase memory limit from 16 MB default
     set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -s TOTAL_MEMORY=33554432")
@@ -65,6 +64,12 @@ if (EMSCRIPTEN)
 
     if (CMAKE_RELEASE_TYPE EQUAL "Release")
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -O3")
+
+        # Generate a .data file preloaded with shaders and textures
+        set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --preload-file ../shaders/ --preload-file ../textures/")
+    else ()
+        # Embedding data files in the .js is less efficient, but allows running from a local file so is useful for testing
+        set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --embed-file ../shaders/ --embed-file ../textures/")
     endif ()
 
     if (WASM)
