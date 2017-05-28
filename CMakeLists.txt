@@ -62,12 +62,13 @@ if (EMSCRIPTEN)
 
     set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --memory-init-file=0")
 
-    if (CMAKE_RELEASE_TYPE EQUAL "Release")
+    if (CMAKE_BUILD_TYPE MATCHES "Release")
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " -O3")
 
         # Generate a .data file preloaded with shaders and textures
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --preload-file ../shaders/ --preload-file ../textures/")
     else ()
+        message("warning: embedding data files in .js, for a smaller build rerun cmake with -CMAKE_BUILD_TYPE=Release")
         # Embedding data files in the .js is less efficient, but allows running from a local file so is useful for testing
         set_property(TARGET craft APPEND_STRING PROPERTY LINK_FLAGS " --embed-file ../shaders/ --embed-file ../textures/")
     endif ()
