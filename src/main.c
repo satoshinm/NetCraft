@@ -3368,8 +3368,7 @@ void render_scene() {
     float tx = ts / 2;
     float ty = g->height - ts;
     if (g->show_info_text && g->show_ui && g->initialized) {
-        snprintf(
-           text_buffer, 1024,
+        static char *build_info_string =
            "NetCraft"
 #ifdef BUILD_NUM
            " build #" BUILD_NUM
@@ -3384,9 +3383,8 @@ void render_scene() {
 #ifdef BUILD_BRANCH
            BUILD_BRANCH " "
 #endif
-           __DATE__
-           );
-        render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, text_buffer);
+           __DATE__;
+        render_text(&text_attrib, ALIGN_LEFT, tx, ty, ts, build_info_string);
         ty -= ts * 2;
 
         int hour = time_of_day() * 24;
