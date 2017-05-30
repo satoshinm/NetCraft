@@ -353,17 +353,29 @@ void init_blocks() {
     hotbar_items[hotbar_item_count++] = block_id_by_name("Snow");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Glass");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Cobblestone");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Sandstone");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Water");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Lava");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Chest");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Leaves");
+
     hotbar_items[hotbar_item_count++] = block_id_by_name("Tall Grass");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Yellow Flower");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Red Flower");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Oak Sapling");
+    /* TODO: sapling data (on server-side)
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Spruce Sapling");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Birch Sapling");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Fern");
+    */
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Pumpkin (Faceless)");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Jack-o'-Lantern(All)");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Melon");
+
     hotbar_items[hotbar_item_count++] = block_id_by_name("Red Mushroom");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Brown Mushroom");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Deadbush");
+
     hotbar_items[hotbar_item_count++] = block_id_by_name("White Wool");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Orange Wool");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Magenta Wool");
@@ -380,5 +392,45 @@ void init_blocks() {
     hotbar_items[hotbar_item_count++] = block_id_by_name("Green Wool");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Red Wool");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Black Wool");
+
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Ice");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Clay");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Gravel");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Obsidian");
+    //hotbar_items[hotbar_item_count++] = block_id_by_name("Bedrock");
+
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Bookshelf");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Jukebox");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Workbench");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Snow Block");
+    //hotbar_items[hotbar_item_count++] = block_id_by_name("Cactus");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Mycelium");
+
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Gold Ore");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Iron Ore");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Coal Ore");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Emerald Ore");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Lapis Lazuli Ore");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Diamond Ore");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Redstone Ore");
+
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Iron Block");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Gold Block");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Diamond Block");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Lapis Lazuli Block");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Emerald Block");
+
+    hotbar_items[hotbar_item_count++] = block_id_by_name("TNT");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Netherrack");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Soul Sand");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("End Stone");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Nether Brick");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Mossy Cobblestone");
+    /* TODO
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Mossy Stone Brick");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Cracked Stone Brick");
+    */
+
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Sponge");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Glowstone");
 }
