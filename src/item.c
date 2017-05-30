@@ -166,10 +166,10 @@ void init_blocks() {
             0.4, TRANSPARENT);
     register_block("Cobblestone",         RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0), RC(14, 0),
             7.0, 0);
-    register_block("Light Stone",         RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11), RC( 0,11), // TODO: remove/replace
-            7.0, 0);
-    register_block("Dark Stone",          RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12), RC( 0,12), // TODO: remove/replace
-            7.0, 0);
+    register_block("Water",               RC( 3,13), RC( 3,13), RC( 3,13), RC( 3,13), RC( 3,13), RC( 3,13),
+            INFINITY, TRANSPARENT | NON_OBSTACLE);
+    register_block("Lava",                RC( 1,13), RC( 1,13), RC( 1,13), RC( 1,13), RC( 1,13), RC( 1,13),
+            INFINITY, NON_OBSTACLE);
     register_block("Chest",               RC(14,11), RC(14,11), RC(14,11), RC(14,11), RC(14,11), RC(14,11),
             3.0, 0);
     register_block("Leaves",              RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4), RC(12, 4),
@@ -353,8 +353,8 @@ void init_blocks() {
     hotbar_items[hotbar_item_count++] = block_id_by_name("Snow");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Glass");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Cobblestone");
-    hotbar_items[hotbar_item_count++] = block_id_by_name("Light Stone");
-    hotbar_items[hotbar_item_count++] = block_id_by_name("Dark Stone");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Water");
+    hotbar_items[hotbar_item_count++] = block_id_by_name("Lava");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Chest");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Leaves");
     hotbar_items[hotbar_item_count++] = block_id_by_name("Tall Grass");
