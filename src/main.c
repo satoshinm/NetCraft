@@ -33,6 +33,7 @@
 #include "joy.h"
 #include "touch.h"
 #include "fullscreen.h"
+#include "miniz.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -2786,7 +2787,61 @@ void handle_movement(double dt) {
     }
 }
 
-void parse_buffer(char *buffer) {
+void handle_compressed_multiblock_update(char *buffer, int len,
+        int sx, int sy, int sz, int ex, int ey, int ez) {
+    unsigned short raw[32768];
+    mz_ulong raw_len = sizeof(raw) * sizeof(raw[0]);
+
+    int status = uncompress((mz_uint8 *)raw, &raw_len, (const unsigned char *)buffer, len);
+    if (status != Z_OK) {
+        printf("error decompressing %d-byte multiblock update: %d\n", len, status);
+        return;
+    }
+
+    printf("decompressed multiblock update to %lu bytes\n", raw_len);
+    int x = sx;
+    int y = sy;
+    int z = sz;
+    int block_count = 0;
+    for (int i = 0; i < raw_len / sizeof(raw[0]); ++i) {
+        int p = 0;
+        int q = 0;
+        int w = raw[i];
+
+        _set_block(p, q, x, y, z, w, false);
+
+        if (w != 0) ++block_count;
+
+        ++z;
+        if (z > ez) {
+            z = sz;
+            ++x;
+        }
+        if (x > ex) {
+            x = sx;
+            ++y;
+        }
+        if (y > ey) {
+            if (i != raw_len / sizeof(raw[0]) - 1) {
+                printf("prematurely reached end of multiblock compressed stream: i=%d but end=%lu",
+                        i, raw_len / sizeof(raw[0]) - 1);
+                break;
+            }
+        }
+    }
+    printf("set %d blocks\n", block_count);
+}
+
+void parse_buffer(char *buffer, int len) {
+    static bool multiblock_pending = false;
+    static int sx, sy, sz, ex, ey, ez;
+    if (multiblock_pending) {
+        multiblock_pending = false;
+        printf("received multiblock update %d bytes\n", len);
+        handle_compressed_multiblock_update(buffer, len, sx, sy, sz, ex, ey, ez);
+        return;
+    }
+
     Player *me = g->players;
     State *s = &g->players->state;
     char *key;
@@ -2812,6 +2867,12 @@ void parse_buffer(char *buffer) {
             if (player_intersects_block(2, s->x, s->y, s->z, bx, by, bz)) {
                 s->y = highest_block(s->x, s->z) + 2;
             }
+        }
+        if (sscanf(line, "b,%d,%d,%d,%d,%d,%d",
+            &sx, &sy, &sz, &ex, &ey, &ez) == 6) {
+            printf("multi-block update pending: (%d,%d,%d)-(%d,%d,%d)\n",
+                    sx, sy, sz, ex, ey, ez);
+            multiblock_pending = true;
         }
         if (sscanf(line, "L,%d,%d,%d,%d,%d,%d",
             &bp, &bq, &bx, &by, &bz, &bw) == 6)
@@ -3252,7 +3313,7 @@ void one_iter() {
     // HANDLE DATA FROM SERVER //
     char *buffer = client_recv();
     if (buffer) {
-        parse_buffer(buffer);
+        parse_buffer(buffer, strlen(buffer));
         free(buffer);
     }
 #endif
