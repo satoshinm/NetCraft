@@ -2814,14 +2814,14 @@ void handle_compressed_multiblock_update(char *buffer, int len,
 
         ++z;
         if (z > ez) {
-            z = sx;
-            ++y;
-        }
-        if (y > ey) {
-            y = sy;
+            z = sz;
             ++x;
         }
         if (x > ex) {
+            x = sx;
+            ++y;
+        }
+        if (y > ey) {
             if (i != raw_len / sizeof(raw[0]) - 1) {
                 printf("prematurely reached end of multiblock compressed stream: i=%d but end=%lu",
                         i, raw_len / sizeof(raw[0]) - 1);
