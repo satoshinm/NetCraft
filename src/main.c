@@ -1923,7 +1923,7 @@ void render_text(
 void render_item_count(Attrib *attrib, float ts) {
     const int buf_len = 4;
 
-    float pos = 15.0f;
+    float ty = 15.0f;
     for (int i = 0; i <= 6; ++i) {
         if (g->item_index + i >= hotbar_item_count) {
             break;
@@ -1931,13 +1931,14 @@ void render_item_count(Attrib *attrib, float ts) {
 
         char buf[buf_len];
         snprintf(buf, buf_len, "%d\n", 16);
-        render_text(attrib, ALIGN_CENTER, g->width - 20.0f, pos, ts, buf);
+        float tx = g->width - 20.0f;
+        render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
 
         float ratio_to_hardcoded = (g->height / 768.0f);
         if (i) {
-            pos += 96.0f * ratio_to_hardcoded;
+            ty += 96.0f * ratio_to_hardcoded;
         } else {
-            pos += 140.0f * ratio_to_hardcoded;
+            ty += 140.0f * ratio_to_hardcoded;
         }
     }
 }
