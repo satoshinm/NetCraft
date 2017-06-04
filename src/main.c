@@ -1876,7 +1876,7 @@ void render_item(Attrib *attrib) {
     glUniform1i(attrib->sampler, 0);
     glUniform1f(attrib->timer, time_of_day());
 
-    for (int i = 0; i <= 6; ++i) {
+    for (int i = 0; i < 9; ++i) {
         if (g->item_index + i >= hotbar_item_count) {
             break;
         }
@@ -1896,10 +1896,9 @@ void render_item(Attrib *attrib) {
 
         if (!i) {
             set_matrix_item(matrix, g->width, g->height, g->scale);
-            matrix[13] += 0.1f;
         }
 
-        matrix[13] += 0.25f;
+        matrix[13] += 0.2126;
     }
 }
 
@@ -1921,7 +1920,7 @@ void render_text(
 
 void render_item_count(Attrib *attrib, float ts) {
     float ty = 15.0f;
-    for (int i = 0; i <= 6; ++i) {
+    for (int i = 0; i < 9; ++i) {
         if (g->item_index + i >= hotbar_item_count) {
             break;
         }
@@ -1932,11 +1931,7 @@ void render_item_count(Attrib *attrib, float ts) {
         render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
 
         float ratio_to_hardcoded = (g->height / 768.0f);
-        if (i) {
-            ty += 96.0f * ratio_to_hardcoded;
-        } else {
-            ty += 140.0f * ratio_to_hardcoded;
-        }
+		ty += 81.705 * ratio_to_hardcoded;
     }
 }
 
