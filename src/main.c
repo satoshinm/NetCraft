@@ -1879,13 +1879,19 @@ void render_item(Attrib *attrib) {
     glUniform1f(attrib->timer, time_of_day());
 
     for (int i = 0; i < 9; ++i) {
-        if (g->item_index + i >= hotbar_item_count) {
-            break;
-        }
-
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
 
-        int w = hotbar_items[g->item_index + i];
+        int w;
+        if (is_creative_gamemode()) {
+            if (g->item_index + i >= hotbar_item_count) {
+                break;
+            }
+
+            w = hotbar_items[g->item_index + i];
+        } else {
+            w = hotbar[i].type;
+        }
+        if (!w) continue;
         if (is_plant(w)) {
             GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
             draw_plant(attrib, buffer);
@@ -1923,12 +1929,12 @@ void render_text(
 void render_item_count(Attrib *attrib, float ts) {
     float ty = 15.0f;
     for (int i = 0; i < 9; ++i) {
-        if (g->item_index + i >= hotbar_item_count) {
-            break;
-        }
-
         char buf[4] = {0};
-        if (is_survival_gamemode()) {
+        if (is_creative_gamemode()) {
+            if (g->item_index + i >= hotbar_item_count) {
+                break;
+            }
+        } else {
             snprintf(buf, sizeof(buf), "%d", hotbar[i].count);
         }
         float tx = g->width - 20.0f;
