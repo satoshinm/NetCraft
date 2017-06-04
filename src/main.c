@@ -1891,15 +1891,17 @@ void render_item(Attrib *attrib) {
         } else {
             w = hotbar[i].type;
         }
-        if (!w) continue;
-        if (is_plant(w)) {
-            GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
-            draw_plant(attrib, buffer);
-            del_buffer(buffer);
-        } else {
-            GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
-            draw_cube(attrib, buffer);
-            del_buffer(buffer);
+
+        if (w) {
+            if (is_plant(w)) {
+                GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
+                draw_plant(attrib, buffer);
+                del_buffer(buffer);
+            } else {
+                GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
+                draw_cube(attrib, buffer);
+                del_buffer(buffer);
+            }
         }
 
         if (!i) {
