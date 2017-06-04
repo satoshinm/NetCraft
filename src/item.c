@@ -56,6 +56,9 @@ int is_illuminated(int w) {
 // Get block hardness in seconds to mine
 float is_hardness(int w) {
     if (is_creative) {
+        if (!isfinite(hardnesses[w])) {
+            return hardnesses[w];
+        }
         return 0.05;
     }
 
