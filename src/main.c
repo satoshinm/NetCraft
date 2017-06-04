@@ -1896,7 +1896,6 @@ void render_item(Attrib *attrib) {
 
         if (!i) {
             set_matrix_item(matrix, g->width, g->height, g->scale);
-            matrix[12] += 0.08f;
             matrix[13] += 0.1f;
         }
 
