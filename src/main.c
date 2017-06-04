@@ -34,6 +34,7 @@
 #include "touch.h"
 #include "fullscreen.h"
 #include "miniz.h"
+#include "gamemode.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -1926,7 +1927,9 @@ void render_item_count(Attrib *attrib, float ts) {
         }
 
         char buf[4] = {0};
-        //snprintf(buf, sizeof(buf), "%d", 16); // TODO: finite inventory
+        if (is_survival_gamemode()) {
+            snprintf(buf, sizeof(buf), "%d", 16);
+        }
         float tx = g->width - 20.0f;
         render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
 
@@ -2288,6 +2291,14 @@ void parse_command(const char *buffer, bool forward) {
     }
     else if (strcmp(buffer, "/noclip") == 0) {
         g->noclip = !g->noclip;
+    }
+    else if (strcmp(buffer, "/survival") == 0) {
+        set_survival_gamemode();
+        add_message("Game mode set to survival");
+    }
+    else if (strcmp(buffer, "/creative") == 0) {
+        set_creative_gamemode();
+        add_message("Game mode set to creative");
     }
     else if (forward) {
         client_talk(buffer);
