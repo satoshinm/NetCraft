@@ -35,6 +35,19 @@ int itemstack_add(struct ItemStack *stack, int quantity) {
     return remainder;
 }
 
+int itemstack_subtract(struct ItemStack *stack, int quantity) {
+    int missing = 0;
+
+    stack->count -= quantity;
+    if (stack->count <= 0) {
+        missing = -stack->count;
+        stack->count = 0;
+        stack->type = 0;
+    }
+
+    return missing;
+}
+
 int inventory_add(struct ItemStack *inventory, int size, struct ItemStack *stack) {
     int remainder = stack->count;
 
@@ -47,4 +60,17 @@ int inventory_add(struct ItemStack *inventory, int size, struct ItemStack *stack
     }
 
     return remainder;
+}
+
+int inventory_subtract(struct ItemStack *inventory, int size, struct ItemStack *stack) {
+    int missing = stack->type;
+
+    for (int i = 0; i < size; ++i) {
+        if (inventory[i].type == stack->type) {
+            missing = itemstack_subtract(&inventory[i], stack->count);
+            if (missing == 0) break;
+        }
+    }
+
+    return missing;
 }

@@ -2339,7 +2339,7 @@ void on_mine() {
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
 
-        struct ItemStack stack = { hw, 1 };
+        struct ItemStack stack = { .type = hw, .count = 1 };
         inventory_add(hotbar, HOTBAR_INVENTORY_SIZE, &stack);
 
         record_block(hx, hy, hz, 0);
@@ -2364,6 +2364,12 @@ void on_build() {
                 hw = hotbar_items[g->item_index];
             } else {
                 hw = hotbar[g->item_index % HOTBAR_INVENTORY_SIZE].type;
+                struct ItemStack stack = { .type = hw, .count = 1 };
+                int missing = inventory_subtract(hotbar, HOTBAR_INVENTORY_SIZE, &stack);
+                if (missing) {
+                    add_message("Out of blocks to build, go mine some");
+                    return;
+                }
             }
 
             set_block(hx, hy, hz, hw);

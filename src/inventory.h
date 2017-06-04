@@ -7,6 +7,9 @@ extern struct ItemStack hotbar[9];
 
 bool itemstack_can_merge(struct ItemStack *stack1, struct ItemStack *stack2);
 int itemstack_add(struct ItemStack *stack, int quantity);
+int itemstack_subtract(struct ItemStack *stack, int quantity);
+
 int inventory_add(struct ItemStack *inventory, int size, struct ItemStack *stack);
+int inventory_subtract(struct ItemStack *inventory, int size, struct ItemStack *stack);
 
 #define HOTBAR_INVENTORY_SIZE 9
