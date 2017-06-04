@@ -2339,7 +2339,7 @@ int get_targeted_block(int *x, int *y, int *z, int *face) {
 void on_mine() {
     int hx, hy, hz, face;
     int hw = get_targeted_block(&hx, &hy, &hz, &face);
-    if (hy > 0 && hy < 256 && is_destructable(hw)) {
+    if (hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
 
         struct ItemStack stack = { .type = hw, .count = 1 };
@@ -2356,7 +2356,7 @@ void on_build() {
     State *s = &g->players->state;
     int hx, hy, hz;
     int hw = hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
-    if (hy > 0 && hy < 256) {
+    if (hy < 256) {
         if (!is_obstacle(hw)) {
             hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
         }
