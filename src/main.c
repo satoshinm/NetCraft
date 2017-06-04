@@ -1935,8 +1935,13 @@ void render_item_count(Attrib *attrib, float ts) {
                 break;
             }
         } else {
-            if (hotbar[i].type != 0) {
-                snprintf(buf, sizeof(buf), "%d", hotbar[i].count);
+            if (g->item_index % HOTBAR_INVENTORY_SIZE == i) {
+                // annotate the active survival hotbar slot TODO: graphical outline? vs text
+                snprintf(buf, sizeof(buf), "+%d", hotbar[i].count);
+            } else {
+                if (hotbar[i].type != 0) {
+                    snprintf(buf, sizeof(buf), "%d", hotbar[i].count);
+                }
             }
         }
         float tx = g->width - 20.0f;
