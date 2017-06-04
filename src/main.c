@@ -185,6 +185,7 @@ typedef struct {
     bool show_vr;
     bool take_screenshot;
     bool noclip;
+    bool crouching;
 } Model;
 
 static Model model;
@@ -2405,6 +2406,7 @@ void change_ortho_zoom(double ydelta) {
 void start_typing(void);
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     bool control = (mods & GLFW_MOD_CONTROL) != 0;
+    bool super = (mods & GLFW_MOD_SUPER) != 0;
     if (window == NULL) window = g->window;
     bool exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
@@ -2417,6 +2419,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
                 building_stop();
             }
         }
+        if (key == CRAFT_KEY_CROUCH) g->crouching = false;
         return;
     }
     if (g->typing) {
@@ -2446,6 +2449,13 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
 
     if (action != GLFW_PRESS) {
         return;
+    }
+    if (key == CRAFT_KEY_CROUCH && !g->typing) {
+        if (super) {
+            g->crouching = false;
+        } else {
+            g->crouching = true;
+        }
     }
     if (key == CRAFT_KEY_JUMP || touch_jump) {
         static double last_jumped = 0;
@@ -2811,7 +2821,7 @@ void handle_movement(double dt) {
     bool sprinting = false;
     if (!g->typing) {
         jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) != GLFW_RELEASE || touch_jump;
-        crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH) != GLFW_RELEASE;
+        crouching = g->crouching;
         sprinting = glfwGetKey(g->window, CRAFT_KEY_SPRINT) != GLFW_RELEASE;
 
         joystick_apply_buttons(&jumping, &crouching);
@@ -2828,7 +2838,7 @@ void handle_movement(double dt) {
             if (g->flying) {
                 bool exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
-                if (exclusive || !glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
+                if (exclusive) {
                     vy--;
                 }
             }
@@ -3107,6 +3117,7 @@ void reset_model() {
     g->show_vr = false;
     g->take_screenshot = false;
     g->noclip = false;
+    g->crouching = false;
 }
 
 void one_iter(void);
