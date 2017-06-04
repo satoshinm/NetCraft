@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include "inventory.h"
 
-#define MAX_COUNT 64
+#define MAX_COUNT 16
 
 struct ItemStack hotbar[9] = {
     {0, 0},
