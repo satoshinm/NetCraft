@@ -2331,6 +2331,10 @@ void on_mine() {
     int hw = get_targeted_block(&hx, &hy, &hz, &face);
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
+
+        struct ItemStack stack = { hw, 1 };
+        inventory_add(hotbar, 9, &stack);
+
         record_block(hx, hy, hz, 0);
         if (is_plant(get_block(hx, hy + 1, hz))) {
             set_block(hx, hy + 1, hz, 0);
