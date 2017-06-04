@@ -1878,7 +1878,7 @@ void render_item(Attrib *attrib) {
     glUniform1i(attrib->sampler, 0);
     glUniform1f(attrib->timer, time_of_day());
 
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < HOTBAR_INVENTORY_SIZE; ++i) {
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
 
         int w;
@@ -1928,7 +1928,7 @@ void render_text(
 
 void render_item_count(Attrib *attrib, float ts) {
     float ty = 15.0f;
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < HOTBAR_INVENTORY_SIZE; ++i) {
         char buf[4] = {0};
         if (is_creative) {
             if (g->item_index + i >= hotbar_item_count) {
@@ -2333,7 +2333,7 @@ void on_mine() {
         set_block(hx, hy, hz, 0);
 
         struct ItemStack stack = { hw, 1 };
-        inventory_add(hotbar, 9, &stack);
+        inventory_add(hotbar, HOTBAR_INVENTORY_SIZE, &stack);
 
         record_block(hx, hy, hz, 0);
         if (is_plant(get_block(hx, hy + 1, hz))) {
