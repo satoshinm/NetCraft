@@ -63,11 +63,11 @@ int inventory_add(struct ItemStack *inventory, int size, struct ItemStack *stack
 }
 
 int inventory_subtract(struct ItemStack *inventory, int size, struct ItemStack *stack) {
-    int missing = stack->type;
+    int missing = stack->count;
 
     for (int i = 0; i < size; ++i) {
         if (inventory[i].type == stack->type) {
-            missing = itemstack_subtract(&inventory[i], stack->count);
+            missing = itemstack_subtract(&inventory[i], missing);
             if (missing == 0) break;
         }
     }
