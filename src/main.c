@@ -1935,7 +1935,9 @@ void render_item_count(Attrib *attrib, float ts) {
                 break;
             }
         } else {
-            snprintf(buf, sizeof(buf), "%d", hotbar[i].count);
+            if (hotbar[i].type != 0) {
+                snprintf(buf, sizeof(buf), "%d", hotbar[i].count);
+            }
         }
         float tx = g->width - 20.0f;
         render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
