@@ -35,6 +35,7 @@
 #include "fullscreen.h"
 #include "miniz.h"
 #include "gamemode.h"
+#include "inventory.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -1928,7 +1929,7 @@ void render_item_count(Attrib *attrib, float ts) {
 
         char buf[4] = {0};
         if (is_survival_gamemode()) {
-            snprintf(buf, sizeof(buf), "%d", 16);
+            snprintf(buf, sizeof(buf), "%d", hotbar[i].count);
         }
         float tx = g->width - 20.0f;
         render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
