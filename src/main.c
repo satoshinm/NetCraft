@@ -34,6 +34,8 @@
 #include "touch.h"
 #include "fullscreen.h"
 #include "miniz.h"
+#include "gamemode.h"
+#include "inventory.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -1876,22 +1878,30 @@ void render_item(Attrib *attrib) {
     glUniform1i(attrib->sampler, 0);
     glUniform1f(attrib->timer, time_of_day());
 
-    for (int i = 0; i < 9; ++i) {
-        if (g->item_index + i >= hotbar_item_count) {
-            break;
-        }
-
+    for (int i = 0; i < HOTBAR_INVENTORY_SIZE; ++i) {
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
 
-        int w = hotbar_items[g->item_index + i];
-        if (is_plant(w)) {
-            GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
-            draw_plant(attrib, buffer);
-            del_buffer(buffer);
+        int w;
+        if (is_creative) {
+            if (g->item_index + i >= hotbar_item_count) {
+                break;
+            }
+
+            w = hotbar_items[g->item_index + i];
         } else {
-            GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
-            draw_cube(attrib, buffer);
-            del_buffer(buffer);
+            w = hotbar[i].type;
+        }
+
+        if (w) {
+            if (is_plant(w)) {
+                GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
+                draw_plant(attrib, buffer);
+                del_buffer(buffer);
+            } else {
+                GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
+                draw_cube(attrib, buffer);
+                del_buffer(buffer);
+            }
         }
 
         if (!i) {
@@ -1920,13 +1930,22 @@ void render_text(
 
 void render_item_count(Attrib *attrib, float ts) {
     float ty = 15.0f;
-    for (int i = 0; i < 9; ++i) {
-        if (g->item_index + i >= hotbar_item_count) {
-            break;
-        }
-
+    for (int i = 0; i < HOTBAR_INVENTORY_SIZE; ++i) {
         char buf[4] = {0};
-        //snprintf(buf, sizeof(buf), "%d", 16); // TODO: finite inventory
+        if (is_creative) {
+            if (g->item_index + i >= hotbar_item_count) {
+                break;
+            }
+        } else {
+            if (g->item_index % HOTBAR_INVENTORY_SIZE == i) {
+                // annotate the active survival hotbar slot TODO: graphical outline? vs text
+                snprintf(buf, sizeof(buf), "+%d", hotbar[i].count);
+            } else {
+                if (hotbar[i].type != 0) {
+                    snprintf(buf, sizeof(buf), "%d", hotbar[i].count);
+                }
+            }
+        }
         float tx = g->width - 20.0f;
         render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
 
@@ -2289,6 +2308,14 @@ void parse_command(const char *buffer, bool forward) {
     else if (strcmp(buffer, "/noclip") == 0) {
         g->noclip = !g->noclip;
     }
+    else if (strcmp(buffer, "/survival") == 0) {
+        set_survival_gamemode();
+        add_message("Game mode set to survival");
+    }
+    else if (strcmp(buffer, "/creative") == 0) {
+        set_creative_gamemode();
+        add_message("Game mode set to creative");
+    }
     else if (forward) {
         client_talk(buffer);
     }
@@ -2313,6 +2340,10 @@ void on_mine() {
     int hw = get_targeted_block(&hx, &hy, &hz, &face);
     if (hy > 0 && hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
+
+        struct ItemStack stack = { .type = hw, .count = 1 };
+        inventory_add(hotbar, HOTBAR_INVENTORY_SIZE, &stack);
+
         record_block(hx, hy, hz, 0);
         if (is_plant(get_block(hx, hy + 1, hz))) {
             set_block(hx, hy + 1, hz, 0);
@@ -2330,8 +2361,21 @@ void on_build() {
         }
 
         if (!player_intersects_block(2, s->x, s->y, s->z, hx, hy, hz)) {
-            set_block(hx, hy, hz, hotbar_items[g->item_index]);
-            record_block(hx, hy, hz, hotbar_items[g->item_index]);
+            int hw;
+            if (is_creative) {
+                hw = hotbar_items[g->item_index];
+            } else {
+                hw = hotbar[g->item_index % HOTBAR_INVENTORY_SIZE].type;
+                struct ItemStack stack = { .type = hw, .count = 1 };
+                int missing = inventory_subtract(hotbar, HOTBAR_INVENTORY_SIZE, &stack);
+                if (missing) {
+                    add_message("Out of blocks to build, go mine some");
+                    return;
+                }
+            }
+
+            set_block(hx, hy, hz, hw);
+            record_block(hx, hy, hz, hw);
         }
     }
 }
@@ -2963,6 +3007,14 @@ void parse_buffer(char *buffer, int len) {
             glfwSetTime(fmod(elapsed, day_length));
             g->day_length = day_length;
             g->time_changed = true;
+        }
+        int gamemode;
+        if (sscanf(line, "m,%d", &gamemode) == 1) {
+            switch (gamemode) {
+                case 0: set_survival_gamemode(); break;
+                case 1: set_creative_gamemode(); break;
+                default: break;
+            }
         }
         if (line[0] == 'T' && line[1] == ',') {
             char *text = line + 2;
