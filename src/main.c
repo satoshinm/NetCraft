@@ -1929,7 +1929,7 @@ void render_item_count(Attrib *attrib, float ts) {
         }
 
         char buf[buf_len];
-        snprintf(buf, buf_len, "%d\n", 16);
+        snprintf(buf, buf_len, "%d", 16);
         float tx = g->width - 20.0f;
         render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
 
