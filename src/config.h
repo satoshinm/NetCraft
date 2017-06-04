@@ -27,7 +27,7 @@
 #define SHOW_PLANTS true
 #define SHOW_CLOUDS true
 #define SHOW_TREES true
-#define SHOW_ITEM true
+#define SHOW_ITEM_HOTBAR true
 #define SHOW_CROSSHAIRS true
 #define SHOW_WIREFRAME true
 #define SHOW_INFO_TEXT true

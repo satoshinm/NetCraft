@@ -1867,9 +1867,9 @@ void render_crosshairs(Attrib *attrib) {
 #endif
 }
 
-void render_item(Attrib *attrib) {
+void render_item_hotbar(Attrib *attrib) {
     float matrix[16];
-    set_matrix_item(matrix, g->width, g->height, g->scale);
+    set_matrix_item_hotbar(matrix, g->width, g->height, g->scale);
     glUseProgram(attrib->program);
     glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
     glUniform3f(attrib->camera, 0, 0, 5);
@@ -1895,7 +1895,7 @@ void render_item(Attrib *attrib) {
         }
 
         if (!i) {
-            set_matrix_item(matrix, g->width, g->height, g->scale);
+            set_matrix_item_hotbar(matrix, g->width, g->height, g->scale);
             matrix[13] += 0.1f;
         }
 
@@ -3431,8 +3431,8 @@ void render_scene() {
         if (SHOW_CROSSHAIRS && g->show_ui) {
             render_crosshairs(&line_attrib);
         }
-        if (SHOW_ITEM && g->show_ui) {
-            render_item(&block_attrib);
+        if (SHOW_ITEM_HOTBAR && g->show_ui) {
+            render_item_hotbar(&block_attrib);
         }
     } else {
         face_count = 0;

@@ -237,7 +237,7 @@ void set_matrix_3d(
     mat_multiply(matrix, a, matrix);
 }
 
-void set_matrix_item(float *matrix, int width, int height, int scale) {
+void set_matrix_item_hotbar(float *matrix, int width, int height, int scale) {
     float a[16];
     float b[16];
     float aspect = (float)width / height;
