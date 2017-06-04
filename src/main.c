@@ -3008,6 +3008,14 @@ void parse_buffer(char *buffer, int len) {
             g->day_length = day_length;
             g->time_changed = true;
         }
+        int gamemode;
+        if (sscanf(line, "m,%d", &gamemode) == 1) {
+            switch (gamemode) {
+                case 0: set_survival_gamemode(); break;
+                case 1: set_creative_gamemode(); break;
+                default: break;
+            }
+        }
         if (line[0] == 'T' && line[1] == ',') {
             char *text = line + 2;
             add_message(text);
