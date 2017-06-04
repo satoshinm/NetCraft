@@ -1926,7 +1926,7 @@ void render_item_count(Attrib *attrib, float ts) {
         }
 
         char buf[4] = {0};
-        snprintf(buf, sizeof(buf), "%d", 16);
+        //snprintf(buf, sizeof(buf), "%d", 16); // TODO: finite inventory
         float tx = g->width - 20.0f;
         render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
 
