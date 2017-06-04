@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include "gamemode.h"
 
-static bool survival = true;
+static bool survival = false;
 
 bool is_creative_gamemode() {
     return !survival;
