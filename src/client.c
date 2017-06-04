@@ -14,10 +14,10 @@
 #include <string.h>
 #include <errno.h>
 #include "client.h"
-#include "tinycthread.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #else
+#include "tinycthread.h"
 #define RECV_SIZE 4096
 #endif
 
