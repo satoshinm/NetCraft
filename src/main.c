@@ -1875,16 +1875,30 @@ void render_item(Attrib *attrib) {
     glUniform3f(attrib->camera, 0, 0, 5);
     glUniform1i(attrib->sampler, 0);
     glUniform1f(attrib->timer, time_of_day());
-    int w = hotbar_items[g->item_index];
-    if (is_plant(w)) {
-        GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
-        draw_plant(attrib, buffer);
-        del_buffer(buffer);
-    }
-    else {
-        GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
-        draw_cube(attrib, buffer);
-        del_buffer(buffer);
+
+    for (int i = 0; i < 9; ++i) {
+        if (g->item_index + i >= hotbar_item_count) {
+            break;
+        }
+
+        glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
+
+        int w = hotbar_items[g->item_index + i];
+        if (is_plant(w)) {
+            GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
+            draw_plant(attrib, buffer);
+            del_buffer(buffer);
+        } else {
+            GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
+            draw_cube(attrib, buffer);
+            del_buffer(buffer);
+        }
+
+        if (!i) {
+            set_matrix_item(matrix, g->width, g->height, g->scale);
+        }
+
+        matrix[13] += 0.2126;
     }
 }
 
@@ -1902,6 +1916,23 @@ void render_text(
     GLuint buffer = gen_text_buffer(x, y, n, text);
     draw_text(attrib, buffer, length);
     del_buffer(buffer);
+}
+
+void render_item_count(Attrib *attrib, float ts) {
+    float ty = 15.0f;
+    for (int i = 0; i < 9; ++i) {
+        if (g->item_index + i >= hotbar_item_count) {
+            break;
+        }
+
+        char buf[4] = {0};
+        //snprintf(buf, sizeof(buf), "%d", 16); // TODO: finite inventory
+        float tx = g->width - 20.0f;
+        render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
+
+        float ratio_to_hardcoded = (g->height / 768.0f);
+		ty += 81.705 * ratio_to_hardcoded;
+    }
 }
 
 void add_message(const char *text) {
@@ -3397,6 +3428,7 @@ void render_scene() {
     // RENDER 3-D SCENE //
     render_sky(&sky_attrib, player, sky_buffer);
     int face_count;
+    float ts = 12 * g->scale;
     if (g->initialized) {
         glClear(GL_DEPTH_BUFFER_BIT);
         face_count = render_chunks(&block_attrib, player);
@@ -3418,6 +3450,7 @@ void render_scene() {
         }
         if (SHOW_ITEM && g->show_ui) {
             render_item(&block_attrib);
+            render_item_count(&text_attrib, ts);
         }
     } else {
         face_count = 0;
@@ -3425,7 +3458,6 @@ void render_scene() {
 
     // RENDER TEXT //
     char text_buffer[1024];
-    float ts = 12 * g->scale;
     float tx = ts / 2;
     float ty = g->height - ts;
     if (g->show_info_text && g->show_ui && g->initialized) {
