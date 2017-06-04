@@ -55,7 +55,7 @@ int is_illuminated(int w) {
 
 // Get block hardness in seconds to mine
 float is_hardness(int w) {
-    if (is_creative_gamemode()) {
+    if (is_creative) {
         return 0.05;
     }
 

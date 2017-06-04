@@ -1,21 +1,13 @@
 #include <stdbool.h>
 #include "gamemode.h"
 
-static bool survival = false;
-
-bool is_creative_gamemode() {
-    return !survival;
-}
-
-bool is_survival_gamemode() {
-    return survival;
-}
+bool is_creative = true;
 
 void set_survival_gamemode() {
-    survival = true;
+    is_creative = false;
 }
 
 void set_creative_gamemode() {
-    survival = false;
+    is_creative = true;
 }
 

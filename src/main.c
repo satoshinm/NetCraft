@@ -1882,7 +1882,7 @@ void render_item(Attrib *attrib) {
         glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
 
         int w;
-        if (is_creative_gamemode()) {
+        if (is_creative) {
             if (g->item_index + i >= hotbar_item_count) {
                 break;
             }
@@ -1930,7 +1930,7 @@ void render_item_count(Attrib *attrib, float ts) {
     float ty = 15.0f;
     for (int i = 0; i < 9; ++i) {
         char buf[4] = {0};
-        if (is_creative_gamemode()) {
+        if (is_creative) {
             if (g->item_index + i >= hotbar_item_count) {
                 break;
             }
