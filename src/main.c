@@ -2359,8 +2359,15 @@ void on_build() {
         }
 
         if (!player_intersects_block(2, s->x, s->y, s->z, hx, hy, hz)) {
-            set_block(hx, hy, hz, hotbar_items[g->item_index]);
-            record_block(hx, hy, hz, hotbar_items[g->item_index]);
+            int hw;
+            if (is_creative) {
+                hw = hotbar_items[g->item_index];
+            } else {
+                hw = hotbar[g->item_index % HOTBAR_INVENTORY_SIZE].type;
+            }
+
+            set_block(hx, hy, hz, hw);
+            record_block(hx, hy, hz, hw);
         }
     }
 }
