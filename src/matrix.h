@@ -23,6 +23,6 @@ void set_matrix_3d(
     float *matrix, int width, int height,
     float x, float y, float z, float rx, float ry,
     float fov, int ortho, float ortho_zoom, int radius);
-void set_matrix_item_hotbar(float *matrix, int width, int height, int scale);
+void set_matrix_item(float *matrix, int width, int height, int scale);
 
 #endif
