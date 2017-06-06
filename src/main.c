@@ -3115,6 +3115,7 @@ void reset_model() {
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = true;
     g->show_vr = false;
+    if (g->show_vr) init_vr(g->window);
     g->take_screenshot = false;
     g->noclip = false;
     g->crouching = false;

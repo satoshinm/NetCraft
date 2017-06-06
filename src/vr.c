@@ -81,11 +81,6 @@ static void load_vr_shader() {
 }
 
 void init_vr(GLFWwindow *window) {
-    static int inited = 0;
-    if (inited) return;
-
-    inited = 1;
-
     load_vr_shader();
 
     // based on https://github.com/mrdoob/three.js/blob/36565aa86a44d02cdb9c8af4ba91816928180fab/examples/js/effects/OculusRiftEffect.js#L13
@@ -107,9 +102,12 @@ void init_vr(GLFWwindow *window) {
     chromaAbParameter[2] = 1.014;
     chromaAbParameter[3] = 0.0;
     */
+
+    glfwGetFramebufferSize(window, &hResolution, &vResolution);
+
     // DK2
-    hResolution = 1920;
-    vResolution = 1080;
+    //hResolution = 1920;
+    //vResolution = 1080;
     hScreenSize = 0.12576;
     vScreenSize = 0.07074;
     interpupillaryDistance = 0.0635;
