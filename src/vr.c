@@ -195,9 +195,6 @@ void init_vr(GLFWwindow *window) {
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
-    GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, drawBuffers);
-
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         printf("error setting up framebuffer l: %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
         exit(1);
