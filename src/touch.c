@@ -42,6 +42,9 @@ static EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEve
     touch_activated_at = glfwGetTime();
     touch_just_activated = true;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    mining_start();
+
     return EM_TRUE;
 }
 
@@ -56,6 +59,10 @@ static EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEven
 }
 
 static EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
+    if (touchEvent->numTouches <= 1) {
+        mining_stop();
+    }
+
     if (touchEvent->numTouches <= 2) {
         touch_forward = false;
     }
