@@ -83,44 +83,79 @@ static void load_vr_shader() {
 void init_vr(GLFWwindow *window) {
     load_vr_shader();
 
-    // based on https://github.com/mrdoob/three.js/blob/36565aa86a44d02cdb9c8af4ba91816928180fab/examples/js/effects/OculusRiftEffect.js#L13
-    // DK1
-    /*
-    hResolution = 1280;
-    vResolution = 800;
-    hScreenSize = 0.14976;
-    vScreenSize = 0.0936;
-    interpupillaryDistance = 0.064;
-    lensSeparationDistance = 0.064;
-    eyeToScreenDistance = 0.041;
-    distortionK[0] = 1.0;
-    distortionK[1] = 0.22;
-    distortionK[2] = 1.24;
-    distortionK[3] = 0.0;
-    chromaAbParameter[0] = 0.996;
-    chromaAbParameter[1] = -0.004;
-    chromaAbParameter[2] = 1.014;
-    chromaAbParameter[3] = 0.0;
-    */
-
     glfwGetFramebufferSize(window, &hResolution, &vResolution);
+    if (hResolution == 1280 && vResolution == 800) {
+        // based on https://github.com/mrdoob/three.js/blob/36565aa86a44d02cdb9c8af4ba91816928180fab/examples/js/effects/OculusRiftEffect.js#L13
+        // DK1
+        hScreenSize = 0.14976;
+        vScreenSize = 0.0936;
+        interpupillaryDistance = 0.064;
+        lensSeparationDistance = 0.064;
+        eyeToScreenDistance = 0.041;
+        distortionK[0] = 1.0;
+        distortionK[1] = 0.22;
+        distortionK[2] = 1.24;
+        distortionK[3] = 0.0;
+        chromaAbParameter[0] = 0.996;
+        chromaAbParameter[1] = -0.004;
+        chromaAbParameter[2] = 1.014;
+        chromaAbParameter[3] = 0.0;
+    } else if (hResolution == 1920 && vResolution == 1080) {
+        // DK2
+        hScreenSize = 0.12576;
+        vScreenSize = 0.07074;
+        interpupillaryDistance = 0.0635;
+        lensSeparationDistance = 0.0635;
+        eyeToScreenDistance = 0.041;
+        distortionK[0] = 1.0;
+        distortionK[1] = 0.22;
+        distortionK[2] = 1.24;
+        distortionK[3] = 0.0;
+        chromaAbParameter[0] = 0.996;
+        chromaAbParameter[1] = -0.004;
+        chromaAbParameter[2] = 1.014;
+        chromaAbParameter[3] = 0.0;
+    } else {
+        // TODO: Google Cardboard
+        // https://github.com/toji/webvr.info/blob/e00559c5b8bd1bc7ad050e9be07991ccf8c986ad/samples/js/third-party/webvr-polyfill.js#L2279
+        /*
+  CardboardV1:
+    label: 'Cardboard I/O 2014',
+    fov: 40,
+    interLensDistance: 0.060,
+    baselineLensDistance: 0.035,
+    screenLensDistance: 0.042,
+    distortionCoefficients: [0.441, 0.156],
+    inverseCoefficients: [-0.4410035, 0.42756155, -0.4804439, 0.5460139,
+      -0.58821183, 0.5733938, -0.48303202, 0.33299083, -0.17573841,
+      0.0651772, -0.01488963, 0.001559834]
 
-    // DK2
-    //hResolution = 1920;
-    //vResolution = 1080;
-    hScreenSize = 0.12576;
-    vScreenSize = 0.07074;
-    interpupillaryDistance = 0.0635;
-    lensSeparationDistance = 0.0635;
-    eyeToScreenDistance = 0.041;
-    distortionK[0] = 1.0;
-    distortionK[1] = 0.22;
-    distortionK[2] = 1.24;
-    distortionK[3] = 0.0;
-    chromaAbParameter[0] = 0.996;
-    chromaAbParameter[1] = -0.004;
-    chromaAbParameter[2] = 1.014;
-    chromaAbParameter[3] = 0.0;
+  CardboardV2:
+    id: 'CardboardV2',
+    label: 'Cardboard I/O 2015',
+    fov: 60,
+    interLensDistance: 0.064,
+    baselineLensDistance: 0.035,
+    screenLensDistance: 0.039,
+    distortionCoefficients: [0.34, 0.55],
+    inverseCoefficients: [-0.33836704, -0.18162185, 0.862655, -1.2462051,
+      1.0560602, -0.58208317, 0.21609078, -0.05444823, 0.009177956,
+      -9.904169E-4, 6.183535E-5, -1.6981803E-6]
+*/
+        hScreenSize = 0.12576;
+        vScreenSize = 0.07074;
+        interpupillaryDistance = 0.0635;
+        lensSeparationDistance = 0.0635;
+        eyeToScreenDistance = 0.041;
+        distortionK[0] = 1.0;
+        distortionK[1] = 0.22;
+        distortionK[2] = 1.24;
+        distortionK[3] = 0.0;
+        chromaAbParameter[0] = 0.996;
+        chromaAbParameter[1] = -0.004;
+        chromaAbParameter[2] = 1.014;
+        chromaAbParameter[3] = 0.0;
+    }
 
     worldFactor = 1;
     skipBarrelDistortion = false;
