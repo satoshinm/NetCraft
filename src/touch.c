@@ -43,6 +43,7 @@ static EM_BOOL on_touchstart(int eventType, const EmscriptenTouchEvent *touchEve
     touch_just_activated = true;
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    // Hold = mine
     mining_start();
 
     return EM_TRUE;
@@ -59,10 +60,6 @@ static EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEven
 }
 
 static EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData) {
-    if (touchEvent->numTouches <= 1) {
-        mining_stop();
-    }
-
     if (touchEvent->numTouches <= 2) {
         touch_forward = false;
     }
@@ -76,25 +73,14 @@ static EM_BOOL on_touchend(int eventType, const EmscriptenTouchEvent *touchEvent
         if (touch.isChanged && touch.identifier == touch_active) {
             // Was the first touch released? If so, exit touch.
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            mining_stop();
             touch_active = 0;
 
             double duration = glfwGetTime() - touch_activated_at;
             if (duration < 0.07) {
-                // Short duration = tap = left-click = break blocks
+                // Short duration = tap = build
                 // TODO: only tap if touchstart position =~ touchend position?
-
-                int width = 0, height = 0;
-                glfwGetWindowSize(window, &width, &height);
-
-                //printf("tap at (%ld,%ld) within (%d,%d)\n", touch.clientX, touch.clientY, width, height);
-
-                if (touch.clientX < 80) { // TODO: && touch.clientY < height - 80? (bottom left center vs corner)
-                    // Tapping near the item icon = place
-                    on_build();
-                } else {
-                    // Tapping elswhere = break
-                    on_mine();
-                }
+                on_build();
             }
         }
     }
