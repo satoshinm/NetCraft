@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include "item.h"
 #include "util.h"
+#include "gamemode.h"
 
 int hotbar_items[256] = {0};
 int hotbar_item_count = 0;
@@ -54,6 +55,13 @@ int is_illuminated(int w) {
 
 // Get block hardness in seconds to mine
 float is_hardness(int w) {
+    if (is_creative) {
+        if (!isfinite(hardnesses[w])) {
+            return hardnesses[w];
+        }
+        return 0.05;
+    }
+
     return hardnesses[w];
 }
 

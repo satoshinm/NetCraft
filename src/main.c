@@ -33,6 +33,9 @@
 #include "joy.h"
 #include "touch.h"
 #include "fullscreen.h"
+#include "miniz.h"
+#include "gamemode.h"
+#include "inventory.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -182,6 +185,7 @@ typedef struct {
     bool show_vr;
     bool take_screenshot;
     bool noclip;
+    bool crouching;
 } Model;
 
 static Model model;
@@ -1874,16 +1878,38 @@ void render_item(Attrib *attrib) {
     glUniform3f(attrib->camera, 0, 0, 5);
     glUniform1i(attrib->sampler, 0);
     glUniform1f(attrib->timer, time_of_day());
-    int w = hotbar_items[g->item_index];
-    if (is_plant(w)) {
-        GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
-        draw_plant(attrib, buffer);
-        del_buffer(buffer);
-    }
-    else {
-        GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
-        draw_cube(attrib, buffer);
-        del_buffer(buffer);
+
+    for (int i = 0; i < HOTBAR_INVENTORY_SIZE; ++i) {
+        glUniformMatrix4fv(attrib->matrix, 1, GL_FALSE, matrix);
+
+        int w;
+        if (is_creative) {
+            if (g->item_index + i >= hotbar_item_count) {
+                break;
+            }
+
+            w = hotbar_items[g->item_index + i];
+        } else {
+            w = hotbar[i].type;
+        }
+
+        if (w) {
+            if (is_plant(w)) {
+                GLuint buffer = gen_plant_buffer(0, 0, 0, 0.5, w);
+                draw_plant(attrib, buffer);
+                del_buffer(buffer);
+            } else {
+                GLuint buffer = gen_cube_buffer(0, 0, 0, 0.5, w);
+                draw_cube(attrib, buffer);
+                del_buffer(buffer);
+            }
+        }
+
+        if (!i) {
+            set_matrix_item(matrix, g->width, g->height, g->scale);
+        }
+
+        matrix[13] += 0.2126;
     }
 }
 
@@ -1901,6 +1927,32 @@ void render_text(
     GLuint buffer = gen_text_buffer(x, y, n, text);
     draw_text(attrib, buffer, length);
     del_buffer(buffer);
+}
+
+void render_item_count(Attrib *attrib, float ts) {
+    float ty = 15.0f;
+    for (int i = 0; i < HOTBAR_INVENTORY_SIZE; ++i) {
+        char buf[4] = {0};
+        if (is_creative) {
+            if (g->item_index + i >= hotbar_item_count) {
+                break;
+            }
+        } else {
+            if (g->item_index % HOTBAR_INVENTORY_SIZE == i) {
+                // annotate the active survival hotbar slot TODO: graphical outline? vs text
+                snprintf(buf, sizeof(buf), "+%d", hotbar[i].count);
+            } else {
+                if (hotbar[i].type != 0) {
+                    snprintf(buf, sizeof(buf), "%d", hotbar[i].count);
+                }
+            }
+        }
+        float tx = g->width - 20.0f;
+        render_text(attrib, ALIGN_CENTER, tx, ty, ts, buf);
+
+        float ratio_to_hardcoded = (g->height / 768.0f);
+		ty += 81.705 * ratio_to_hardcoded;
+    }
 }
 
 void add_message(const char *text) {
@@ -2257,6 +2309,14 @@ void parse_command(const char *buffer, bool forward) {
     else if (strcmp(buffer, "/noclip") == 0) {
         g->noclip = !g->noclip;
     }
+    else if (strcmp(buffer, "/survival") == 0) {
+        set_survival_gamemode();
+        add_message("Game mode set to survival");
+    }
+    else if (strcmp(buffer, "/creative") == 0) {
+        set_creative_gamemode();
+        add_message("Game mode set to creative");
+    }
     else if (forward) {
         client_talk(buffer);
     }
@@ -2279,8 +2339,12 @@ int get_targeted_block(int *x, int *y, int *z, int *face) {
 void on_mine() {
     int hx, hy, hz, face;
     int hw = get_targeted_block(&hx, &hy, &hz, &face);
-    if (hy > 0 && hy < 256 && is_destructable(hw)) {
+    if (hy < 256 && is_destructable(hw)) {
         set_block(hx, hy, hz, 0);
+
+        struct ItemStack stack = { .type = hw, .count = 1 };
+        inventory_add(hotbar, HOTBAR_INVENTORY_SIZE, &stack);
+
         record_block(hx, hy, hz, 0);
         if (is_plant(get_block(hx, hy + 1, hz))) {
             set_block(hx, hy + 1, hz, 0);
@@ -2292,14 +2356,27 @@ void on_build() {
     State *s = &g->players->state;
     int hx, hy, hz;
     int hw = hit_test(true, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
-    if (hy > 0 && hy < 256) {
+    if (hy < 256) {
         if (!is_obstacle(hw)) {
             hw = hit_test(false, s->x, s->y, s->z, s->rx, s->ry, &hx, &hy, &hz);
         }
 
         if (!player_intersects_block(2, s->x, s->y, s->z, hx, hy, hz)) {
-            set_block(hx, hy, hz, hotbar_items[g->item_index]);
-            record_block(hx, hy, hz, hotbar_items[g->item_index]);
+            int hw;
+            if (is_creative) {
+                hw = hotbar_items[g->item_index];
+            } else {
+                hw = hotbar[g->item_index % HOTBAR_INVENTORY_SIZE].type;
+                struct ItemStack stack = { .type = hw, .count = 1 };
+                int missing = inventory_subtract(hotbar, HOTBAR_INVENTORY_SIZE, &stack);
+                if (missing) {
+                    add_message("Out of blocks to build, go mine some");
+                    return;
+                }
+            }
+
+            set_block(hx, hy, hz, hw);
+            record_block(hx, hy, hz, hw);
         }
     }
 }
@@ -2329,6 +2406,7 @@ void change_ortho_zoom(double ydelta) {
 void start_typing(void);
 void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
     bool control = (mods & GLFW_MOD_CONTROL) != 0;
+    bool super = (mods & GLFW_MOD_SUPER) != 0;
     if (window == NULL) window = g->window;
     bool exclusive =
         glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED;
@@ -2341,6 +2419,7 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
                 building_stop();
             }
         }
+        if (key == CRAFT_KEY_CROUCH) g->crouching = false;
         return;
     }
     if (g->typing) {
@@ -2370,6 +2449,13 @@ void on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
 
     if (action != GLFW_PRESS) {
         return;
+    }
+    if (key == CRAFT_KEY_CROUCH && !g->typing) {
+        if (super) {
+            g->crouching = false;
+        } else {
+            g->crouching = true;
+        }
     }
     if (key == CRAFT_KEY_JUMP || touch_jump) {
         static double last_jumped = 0;
@@ -2729,9 +2815,14 @@ void handle_movement(double dt) {
     }
     float vx, vy = 0, vz;
     get_motion_vector(g->flying, sz, sx, s->rx, s->ry, &vx, &vy, &vz);
+
+    bool jumping = false;
+    bool crouching = false;
+    bool sprinting = false;
     if (!g->typing) {
-        bool jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) != GLFW_RELEASE || touch_jump;
-        bool crouching = glfwGetKey(g->window, CRAFT_KEY_CROUCH) != GLFW_RELEASE;
+        jumping = glfwGetKey(g->window, CRAFT_KEY_JUMP) != GLFW_RELEASE || touch_jump;
+        crouching = g->crouching;
+        sprinting = glfwGetKey(g->window, CRAFT_KEY_SPRINT) != GLFW_RELEASE;
 
         joystick_apply_buttons(&jumping, &crouching);
 
@@ -2747,15 +2838,15 @@ void handle_movement(double dt) {
             if (g->flying) {
                 bool exclusive = glfwGetInputMode(g->window, GLFW_CURSOR)
                     == GLFW_CURSOR_DISABLED;
-                if (exclusive || !glfwGetKey(g->window, CRAFT_KEY_CROUCH)) {
+                if (exclusive) {
                     vy--;
                 }
             }
         }
     }
     float speed = g->flying ? 20 : 5;
-    if (glfwGetKey(g->window, CRAFT_KEY_SPRINT)) speed *= 2;
-    if (glfwGetKey(g->window, CRAFT_KEY_CROUCH) && !g->flying) speed /= 2;
+    if (sprinting) speed *= 2;
+    if (crouching && !g->flying) speed /= 2;
     int estimate = roundf(sqrtf(
         powf(vx * speed, 2) +
         powf(vy * speed + ABS(dy) * 2, 2) +
@@ -2773,6 +2864,9 @@ void handle_movement(double dt) {
             dy -= ut * 25;
             dy = MAX(dy, -250);
         }
+        float ox = s->x;
+        float oy = s->y;
+        float oz = s->z;
         s->x += vx;
         s->y += vy + dy * ut;
         s->z += vz;
@@ -2780,13 +2874,76 @@ void handle_movement(double dt) {
         if (collide(2, &s->x, &s->y, &s->z)) {
             dy = 0;
         }
+        if (crouching && !g->flying) {
+            if (oy != s->y) {
+                // if crouching and was about to fall, don't move
+                // TODO: sliding along either x/z axes
+                s->x = ox;
+                s->y = oy;
+                s->z = oz;
+            }
+        }
     }
     if (s->y < 0) {
         s->y = highest_block(s->x, s->z) + 2;
     }
 }
 
-void parse_buffer(char *buffer) {
+void handle_compressed_multiblock_update(char *buffer, int len,
+        int sx, int sy, int sz, int ex, int ey, int ez) {
+    unsigned short raw[32768];
+    mz_ulong raw_len = sizeof(raw) * sizeof(raw[0]);
+
+    int status = uncompress((mz_uint8 *)raw, &raw_len, (const unsigned char *)buffer, len);
+    if (status != Z_OK) {
+        printf("error decompressing %d-byte multiblock update: %d\n", len, status);
+        return;
+    }
+
+    printf("decompressed multiblock update to %lu bytes\n", raw_len);
+    int x = sx;
+    int y = sy;
+    int z = sz;
+    int block_count = 0;
+    for (int i = 0; i < raw_len / sizeof(raw[0]); ++i) {
+        int p = 0;
+        int q = 0;
+        int w = raw[i];
+
+        _set_block(p, q, x, y, z, w, false);
+
+        if (w != 0) ++block_count;
+
+        ++z;
+        if (z > ez) {
+            z = sz;
+            ++x;
+        }
+        if (x > ex) {
+            x = sx;
+            ++y;
+        }
+        if (y > ey) {
+            if (i != raw_len / sizeof(raw[0]) - 1) {
+                printf("prematurely reached end of multiblock compressed stream: i=%d but end=%lu",
+                        i, raw_len / sizeof(raw[0]) - 1);
+                break;
+            }
+        }
+    }
+    printf("set %d blocks\n", block_count);
+}
+
+void parse_buffer(char *buffer, int len) {
+    static bool multiblock_pending = false;
+    static int sx, sy, sz, ex, ey, ez;
+    if (multiblock_pending) {
+        multiblock_pending = false;
+        printf("received multiblock update %d bytes\n", len);
+        handle_compressed_multiblock_update(buffer, len, sx, sy, sz, ex, ey, ez);
+        return;
+    }
+
     Player *me = g->players;
     State *s = &g->players->state;
     char *key;
@@ -2812,6 +2969,12 @@ void parse_buffer(char *buffer) {
             if (player_intersects_block(2, s->x, s->y, s->z, bx, by, bz)) {
                 s->y = highest_block(s->x, s->z) + 2;
             }
+        }
+        if (sscanf(line, "b,%d,%d,%d,%d,%d,%d",
+            &sx, &sy, &sz, &ex, &ey, &ez) == 6) {
+            printf("multi-block update pending: (%d,%d,%d)-(%d,%d,%d)\n",
+                    sx, sy, sz, ex, ey, ez);
+            multiblock_pending = true;
         }
         if (sscanf(line, "L,%d,%d,%d,%d,%d,%d",
             &bp, &bq, &bx, &by, &bz, &bw) == 6)
@@ -2854,6 +3017,14 @@ void parse_buffer(char *buffer) {
             glfwSetTime(fmod(elapsed, day_length));
             g->day_length = day_length;
             g->time_changed = true;
+        }
+        int gamemode;
+        if (sscanf(line, "m,%d", &gamemode) == 1) {
+            switch (gamemode) {
+                case 0: set_survival_gamemode(); break;
+                case 1: set_creative_gamemode(); break;
+                default: break;
+            }
         }
         if (line[0] == 'T' && line[1] == ',') {
             char *text = line + 2;
@@ -2944,8 +3115,10 @@ void reset_model() {
     g->show_info_text = SHOW_INFO_TEXT;
     g->show_ui = true;
     g->show_vr = false;
+    if (g->show_vr) init_vr(g->window);
     g->take_screenshot = false;
     g->noclip = false;
+    g->crouching = false;
 }
 
 void one_iter(void);
@@ -3252,7 +3425,7 @@ void one_iter() {
     // HANDLE DATA FROM SERVER //
     char *buffer = client_recv();
     if (buffer) {
-        parse_buffer(buffer);
+        parse_buffer(buffer, strlen(buffer));
         free(buffer);
     }
 #endif
@@ -3336,6 +3509,7 @@ void render_scene() {
     // RENDER 3-D SCENE //
     render_sky(&sky_attrib, player, sky_buffer);
     int face_count;
+    float ts = 12 * g->scale;
     if (g->initialized) {
         glClear(GL_DEPTH_BUFFER_BIT);
         face_count = render_chunks(&block_attrib, player);
@@ -3357,6 +3531,7 @@ void render_scene() {
         }
         if (SHOW_ITEM && g->show_ui) {
             render_item(&block_attrib);
+            render_item_count(&text_attrib, ts);
         }
     } else {
         face_count = 0;
@@ -3364,7 +3539,6 @@ void render_scene() {
 
     // RENDER TEXT //
     char text_buffer[1024];
-    float ts = 12 * g->scale;
     float tx = ts / 2;
     float ty = g->height - ts;
     if (g->show_info_text && g->show_ui && g->initialized) {

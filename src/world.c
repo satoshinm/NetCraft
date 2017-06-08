@@ -23,8 +23,10 @@ void create_world(int p, int q, world_func func, void *arg) {
                 h = t;
                 w = 2;
             }
+            // bedrock
+            func(x, 0, z, 65, arg);
             // sand and grass terrain
-            for (int y = 0; y < h; y++) {
+            for (int y = 1; y < h; y++) {
                 func(x, y, z, w * flag, arg);
             }
             if (w == 1) {

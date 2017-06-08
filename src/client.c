@@ -14,10 +14,10 @@
 #include <string.h>
 #include <errno.h>
 #include "client.h"
-#include "tinycthread.h"
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #else
+#include "tinycthread.h"
 #define RECV_SIZE 4096
 #endif
 
@@ -162,7 +162,7 @@ void client_talk(const char *text) {
 
 #ifdef __EMSCRIPTEN__
 void client_message(int fd, void *userData) {
-    char buf[4096];
+    char buf[16384];
     int len = recv(fd, &buf, sizeof(buf), 0);
 
     //fprintf(stderr, "read %d bytes\n", len);
@@ -170,8 +170,8 @@ void client_message(int fd, void *userData) {
 
     buf[len] = 0;
 
-    void (*parse_buffer)(char *) = (void (*)(char *))userData;
-    parse_buffer(buf);
+    void (*parse_buffer)(char *, int) = (void (*)(char *, int))userData;
+    parse_buffer(buf, len);
 }
 #else
 char *client_recv() {
