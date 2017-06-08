@@ -240,8 +240,8 @@ Touch:
 - Swipe to free look.
 - 2-finger touch to walk forward.
 - 3-finger tap to jump.
-- Tap to destroy a block.
-- Tap left edge to create a block.
+- Tap and hold to destroy a block.
+- Tap to create a block.
 
 ### Chat Commands
 
