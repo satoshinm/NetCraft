@@ -1296,7 +1296,9 @@ void create_chunk(Chunk *chunk, int p, int q) {
     item->q = chunk->q;
     item->block_maps[1][1] = &chunk->map;
     item->light_maps[1][1] = &chunk->lights;
-    load_chunk(item);
+    if (!get_client_enabled()) {
+        load_chunk(item);
+    }
 
     request_chunk(p, q);
 }
