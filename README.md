@@ -115,6 +115,14 @@ the installation:
 
     brew install cmake
 
+You can use `make` or Xcode to compile. To use Xcode, generate the project using:
+
+    mkdir osx
+    cd osx
+    cmake .. -G "Xcode"
+
+then open the `.xcodeproj` file and choose run.
+
 #### Linux (Ubuntu 16.04.2 LTS)
 
     sudo apt install cmake libglew-dev xorg-dev libcurl4-openssl-dev
