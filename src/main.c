@@ -1296,7 +1296,15 @@ void create_chunk(Chunk *chunk, int p, int q) {
     item->q = chunk->q;
     item->block_maps[1][1] = &chunk->map;
     item->light_maps[1][1] = &chunk->lights;
+#ifdef __EMSCRIPTEN__
+    // web version: all terrain in online mode comes from the server, no local generation
+    // TODO: reconcile with native version, server.py should also send full terrain (vs delta)
+    if (!get_client_enabled()) {
+        load_chunk(item);
+    }
+#else
     load_chunk(item);
+#endif
 
     request_chunk(p, q);
 }
