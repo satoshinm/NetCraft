@@ -1,7 +1,8 @@
 //========================================================================
-// GLFW 3.1 OS X - www.glfw.org
+// GLFW 3.3 - www.glfw.org
 //------------------------------------------------------------------------
-// Copyright (c) 2009-2010 Camilla Berglund <elmindreda@elmindreda.org>
+// Copyright (c) 2016 Google Inc.
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -26,46 +27,24 @@
 
 #include "internal.h"
 
-#include <mach/mach_time.h>
-
-
-// Return raw time
-//
-static uint64_t getRawTime(void)
-{
-    return mach_absolute_time();
-}
-
-
-//////////////////////////////////////////////////////////////////////////
-//////                       GLFW internal API                      //////
-//////////////////////////////////////////////////////////////////////////
-
-// Initialise timer
-//
-void _glfwInitTimer(void)
-{
-    mach_timebase_info_data_t info;
-    mach_timebase_info(&info);
-
-    _glfw.ns_time.resolution = (double) info.numer / (info.denom * 1.0e9);
-    _glfw.ns_time.base = getRawTime();
-}
-
 
 //////////////////////////////////////////////////////////////////////////
 //////                       GLFW platform API                      //////
 //////////////////////////////////////////////////////////////////////////
 
-double _glfwPlatformGetTime(void)
+int _glfwPlatformInit(void)
 {
-    return (double) (getRawTime() - _glfw.ns_time.base) *
-        _glfw.ns_time.resolution;
+    _glfwInitTimerPOSIX();
+    return GLFW_TRUE;
 }
 
-void _glfwPlatformSetTime(double time)
+void _glfwPlatformTerminate(void)
 {
-    _glfw.ns_time.base = getRawTime() -
-        (uint64_t) (time / _glfw.ns_time.resolution);
+    _glfwTerminateOSMesa();
+}
+
+const char* _glfwPlatformGetVersionString(void)
+{
+    return _GLFW_VERSION_NUMBER " null OSMesa";
 }
 

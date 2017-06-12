@@ -5,17 +5,12 @@
  * Modified for GLFW by Sylvain Hellegouarch - sh@programmationworld.com
  * Modified for variable frame rate by Marcus Geelnard
  * 2003-Jan-31: Minor cleanups and speedups / MG
- * 2010-10-24: Formatting and cleanup - Camilla Berglund
+ * 2010-10-24: Formatting and cleanup - Camilla Löwy
  *****************************************************************************/
 
 #if defined(_MSC_VER)
  // Make MS math.h define M_PI
  #define _USE_MATH_DEFINES
-#elif __GNUC__
- #define _GNU_SOURCE
-#endif
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
 #endif
 
 #include <stdio.h>
