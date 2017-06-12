@@ -186,7 +186,6 @@ typedef struct {
     bool take_screenshot;
     bool noclip;
     bool crouching;
-    bool localterrain;
 } Model;
 
 static Model model;
@@ -1297,7 +1296,7 @@ void create_chunk(Chunk *chunk, int p, int q) {
     item->q = chunk->q;
     item->block_maps[1][1] = &chunk->map;
     item->light_maps[1][1] = &chunk->lights;
-    if (g->localterrain) {
+    if (!get_client_enabled()) {
         load_chunk(item);
     }
 
@@ -3054,11 +3053,6 @@ void parse_buffer(char *buffer, int len) {
             }
             _set_sign(bp, bq, bx, by, bz, face, rotation, text, 0);
         }
-        int localterrain;
-        if (sscanf(line, "l,%d", &localterrain) == 1) {
-            g->localterrain = localterrain;
-            printf("local terrain generation set to %d\n", g->localterrain);
-        }
 #ifdef __EMSCRIPTEN__
         char url[256] = {0};
         if (sscanf(line, "t,%256[^\n]", url) == 1) {
@@ -3127,7 +3121,6 @@ void reset_model() {
     g->take_screenshot = false;
     g->noclip = false;
     g->crouching = false;
-    g->localterrain = true;
 }
 
 void one_iter(void);
