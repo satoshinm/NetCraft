@@ -200,7 +200,7 @@ float time_of_day() {
         return 0.5;
     }
     float t;
-    t = glfwGetTime() + g->day_length/1.5;
+    t = glfwGetTime();
     t = t / g->day_length;
     t = t - (int)t;
     return t;
@@ -1296,7 +1296,15 @@ void create_chunk(Chunk *chunk, int p, int q) {
     item->q = chunk->q;
     item->block_maps[1][1] = &chunk->map;
     item->light_maps[1][1] = &chunk->lights;
+#ifdef __EMSCRIPTEN__
+    // web version: all terrain in online mode comes from the server, no local generation
+    // TODO: reconcile with native version, server.py should also send full terrain (vs delta)
+    if (!get_client_enabled()) {
+        load_chunk(item);
+    }
+#else
     load_chunk(item);
+#endif
 
     request_chunk(p, q);
 }
@@ -2864,24 +2872,12 @@ void handle_movement(double dt) {
             dy -= ut * 25;
             dy = MAX(dy, -250);
         }
-        float ox = s->x;
-        float oy = s->y;
-        float oz = s->z;
         s->x += vx;
         s->y += vy + dy * ut;
         s->z += vz;
         if (g->noclip) continue;
         if (collide(2, &s->x, &s->y, &s->z)) {
             dy = 0;
-        }
-        if (crouching && !g->flying) {
-            if (oy != s->y) {
-                // if crouching and was about to fall, don't move
-                // TODO: sliding along either x/z axes
-                s->x = ox;
-                s->y = oy;
-                s->z = oz;
-            }
         }
     }
     if (s->y < 0) {

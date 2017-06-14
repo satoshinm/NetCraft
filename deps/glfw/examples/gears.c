@@ -15,7 +15,7 @@
  *   - Slightly modified camera that should work better for stereo viewing
  *
  *
- * Camilla Berglund:
+ * Camilla Löwy:
  *   - Removed FPS counter (this is not a benchmark)
  *   - Added a few comments
  *   - Enabled vsync
@@ -24,11 +24,6 @@
 #if defined(_MSC_VER)
  // Make MS math.h define M_PI
  #define _USE_MATH_DEFINES
-#elif __GNUC__
- #define _GNU_SOURCE
-#endif
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
 #endif
 
 #include <math.h>

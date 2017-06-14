@@ -1,5 +1,5 @@
 diff --git a/src/library_glfw.js b/src/library_glfw.js
-index b71bab38e..8595489e9 100644
+index b71bab38e..05012d2e9 100644
 --- a/src/library_glfw.js
 +++ b/src/library_glfw.js
 @@ -13,11 +13,9 @@
@@ -257,6 +257,15 @@ index b71bab38e..8595489e9 100644
      Module["canvas"].width = Module["canvas"].height = 1;
      GLFW.windows = null;
      GLFW.active = null;
+@@ -1012,7 +1177,7 @@ var LibraryGLFW = {
+   },
+ 
+   glfwSetTime: function(time) {
+-    GLFW.initialTime = GLFW.getTime() + time;
++    GLFW.initialTime = GLFW.getTime() - time;
+   },
+ 
+   glfwExtensionSupported: function(extension) {
 @@ -1092,14 +1257,15 @@ var LibraryGLFW = {
      GLFW.monitorFunc = cbfun;
    },

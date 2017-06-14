@@ -95,9 +95,9 @@ static EM_BOOL on_touchcancel(int eventType, const EmscriptenTouchEvent *touchEv
 
 void init_touch_callbacks(GLFWwindow *w) {
     window = w;
-    emscripten_set_touchstart_callback(NULL, NULL, EM_FALSE, on_touchstart);
-    emscripten_set_touchmove_callback(NULL, NULL, EM_FALSE, on_touchmove);
-    emscripten_set_touchend_callback(NULL, NULL, EM_FALSE, on_touchend);
-    emscripten_set_touchcancel_callback(NULL, NULL, EM_FALSE, on_touchcancel);
+    emscripten_set_touchstart_callback("#document", NULL, EM_FALSE, on_touchstart);
+    emscripten_set_touchmove_callback("#document", NULL, EM_FALSE, on_touchmove);
+    emscripten_set_touchend_callback("#document", NULL, EM_FALSE, on_touchend);
+    emscripten_set_touchcancel_callback("#document", NULL, EM_FALSE, on_touchcancel);
 }
 #endif

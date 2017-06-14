@@ -1,8 +1,8 @@
 //========================================================================
-// GLFW 3.1 Win32 - www.glfw.org
+// GLFW 3.3 POSIX - www.glfw.org
 //------------------------------------------------------------------------
 // Copyright (c) 2002-2006 Marcus Geelnard
-// Copyright (c) 2006-2010 Camilla Berglund <elmindreda@elmindreda.org>
+// Copyright (c) 2006-2016 Camilla Löwy <elmindreda@glfw.org>
 //
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
@@ -25,24 +25,27 @@
 //
 //========================================================================
 
-#ifndef _glfw3_win32_tls_h_
-#define _glfw3_win32_tls_h_
+#include <pthread.h>
 
-#define _GLFW_PLATFORM_LIBRARY_TLS_STATE _GLFWtlsWin32 win32_tls
+#define _GLFW_PLATFORM_TLS_STATE    _GLFWtlsPOSIX   posix
+#define _GLFW_PLATFORM_MUTEX_STATE  _GLFWmutexPOSIX posix
 
 
-// Win32-specific global TLS data
+// POSIX-specific thread local storage data
 //
-typedef struct _GLFWtlsWin32
+typedef struct _GLFWtlsPOSIX
 {
-    GLboolean       allocated;
-    DWORD           context;
+    GLFWbool        allocated;
+    pthread_key_t   key;
 
-} _GLFWtlsWin32;
+} _GLFWtlsPOSIX;
 
+// POSIX-specific mutex data
+//
+typedef struct _GLFWmutexPOSIX
+{
+    GLFWbool        allocated;
+    pthread_mutex_t handle;
 
-int _glfwCreateContextTLS(void);
-void _glfwDestroyContextTLS(void);
-void _glfwSetContextTLS(_GLFWwindow* context);
+} _GLFWmutexPOSIX;
 
-#endif // _glfw3_win32_tls_h_
