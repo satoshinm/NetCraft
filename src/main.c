@@ -2217,6 +2217,7 @@ void parse_command(const char *buffer, bool forward) {
     int server_port = DEFAULT_PORT;
     char filename[MAX_PATH_LENGTH];
     int radius, count, xc, yc, zc;
+    float elapsed;
     if (sscanf(buffer, "/identity %128s %128s", username, token) == 2) {
         db_auth_set(username, token);
         add_message("Successfully imported identity token!");
@@ -2324,6 +2325,10 @@ void parse_command(const char *buffer, bool forward) {
     else if (strcmp(buffer, "/creative") == 0) {
         set_creative_gamemode();
         add_message("Game mode set to creative");
+    }
+    else if (sscanf(buffer, "/time %g", &elapsed) == 1) {
+        glfwSetTime(fmod(elapsed, g->day_length));
+        g->time_changed = true;
     }
     else if (forward) {
         client_talk(buffer);
