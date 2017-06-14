@@ -2330,6 +2330,10 @@ void parse_command(const char *buffer, bool forward) {
         glfwSetTime(fmod(elapsed, g->day_length));
         g->time_changed = true;
     }
+    else if (sscanf(buffer, "/daylength %d", &count) == 1) {
+        g->day_length = count;
+        g->time_changed = true;
+    }
     else if (forward) {
         client_talk(buffer);
     }
