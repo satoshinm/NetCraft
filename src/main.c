@@ -2334,6 +2334,24 @@ void parse_command(const char *buffer, bool forward) {
         g->day_length = count;
         g->time_changed = true;
     }
+    else if (strcmp(buffer, "/list") == 0) {
+        char buf[256] = {0};
+
+        for (int i = 0; i < g->player_count; i++) {
+            Player *player = g->players + i;
+            // TODO: show your own player name, too (doesn't seem to be set - not in U)
+            strncat(buf, player->name[0] ? player->name : "(self)", sizeof(buf) - 1);
+            printf("%d = %s(%d)\n", i, player->name, player->id);
+            if (i < g->player_count - 1) {
+                strncat(buf, ", ", sizeof(buf) - 1);
+            }
+            // TODO: if exceeds line length, start new line (or wrap)
+        }
+        add_message(buf);
+
+        snprintf(buf, sizeof(buf), "%d player(s) listed", g->player_count);
+        add_message(buf);
+    }
     else if (forward) {
         client_talk(buffer);
     }
