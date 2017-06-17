@@ -2334,6 +2334,28 @@ void parse_command(const char *buffer, bool forward) {
         g->day_length = count;
         g->time_changed = true;
     }
+    else if (strcmp(buffer, "/list") == 0) {
+        char buf[256] = {0};
+
+        for (int i = 0; i < g->player_count; i++) {
+            Player *player = g->players + i;
+            if (player->name[0]) {
+                strncat(buf, player->name, sizeof(buf) - 1);
+            } else {
+                // TODO: show id if no name
+                strncat(buf, "(null)", sizeof(buf) - 1);
+            }
+            printf("%d = %s(%d)\n", i, player->name, player->id);
+            if (i < g->player_count - 1) {
+                strncat(buf, ", ", sizeof(buf) - 1);
+            }
+            // TODO: if exceeds line length, start new line (or wrap)
+        }
+        add_message(buf);
+
+        snprintf(buf, sizeof(buf), "%d player(s) listed", g->player_count);
+        add_message(buf);
+    }
     else if (forward) {
         client_talk(buffer);
     }
@@ -3040,6 +3062,13 @@ void parse_buffer(char *buffer, int len) {
             Player *player = find_player(pid);
             if (player) {
                 strncpy(player->name, name, MAX_NAME_LENGTH);
+            }
+        }
+        if (sscanf(line, "u,%" MAX_NAME_LENGTH_FORMAT "s", name) == 1) {
+            printf("We are %s\n", name);
+            Player *me = g->players;
+            if (me) {
+                strncpy(me->name, name, MAX_NAME_LENGTH);
             }
         }
         int face;
