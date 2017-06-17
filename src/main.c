@@ -2339,8 +2339,12 @@ void parse_command(const char *buffer, bool forward) {
 
         for (int i = 0; i < g->player_count; i++) {
             Player *player = g->players + i;
-            // TODO: show your own player name, too (doesn't seem to be set - not in U)
-            strncat(buf, player->name[0] ? player->name : "(self)", sizeof(buf) - 1);
+            if (player->name[0]) {
+                strncat(buf, player->name, sizeof(buf) - 1);
+            } else {
+                // TODO: show id if no name
+                strncat(buf, "(null)", sizeof(buf) - 1);
+            }
             printf("%d = %s(%d)\n", i, player->name, player->id);
             if (i < g->player_count - 1) {
                 strncat(buf, ", ", sizeof(buf) - 1);
@@ -3058,6 +3062,13 @@ void parse_buffer(char *buffer, int len) {
             Player *player = find_player(pid);
             if (player) {
                 strncpy(player->name, name, MAX_NAME_LENGTH);
+            }
+        }
+        if (sscanf(line, "u,%" MAX_NAME_LENGTH_FORMAT "s", name) == 1) {
+            printf("We are %s\n", name);
+            Player *me = g->players;
+            if (me) {
+                strncpy(me->name, name, MAX_NAME_LENGTH);
             }
         }
         int face;
