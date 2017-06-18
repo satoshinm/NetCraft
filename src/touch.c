@@ -56,6 +56,9 @@ static EM_BOOL on_touchmove(int eventType, const EmscriptenTouchEvent *touchEven
     }
     touch_clientX = touchEvent->touches[0].clientX;
     touch_clientY = touchEvent->touches[0].clientY;
+
+    mining_stop();
+
     return EM_TRUE;
 }
 
