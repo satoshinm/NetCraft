@@ -36,6 +36,7 @@
 #include "miniz.h"
 #include "gamemode.h"
 #include "inventory.h"
+#include "accel.h"
 
 #define MAX_CHUNKS 8192
 #define MAX_PLAYERS 128
@@ -3193,6 +3194,7 @@ int main(int argc, char **argv) {
     glfwSetScrollCallback(g->window, on_scroll);
     init_joystick_callbacks();
     init_touch_callbacks(g->window);
+    init_accel_callbacks();
     init_blocks();
 
 #ifdef __EMSCRIPTEN__
