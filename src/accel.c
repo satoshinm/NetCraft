@@ -7,7 +7,7 @@ void init_accel_callbacks(void) {
 #include <emscripten/html5.h>
 
 static EM_BOOL on_devicemotion(int eventtype, const EmscriptenDeviceMotionEvent *event, void *userData) {
-    printf("accel x=%g, y=%g, %g\n", event->accelerationX, event->accelerationY, event->accelerationZ);
+    //printf("accel x=%g, y=%g, %g\n", event->accelerationX, event->accelerationY, event->accelerationZ);
     // TODO: free look
 
     return EM_TRUE;
